@@ -12,7 +12,13 @@ export function Header() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-3 sm:px-4 lg:px-8">
         <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-4 lg:gap-8">
           <Link to="/" className="flex shrink-0 items-center gap-2 text-xl font-black tracking-tight sm:text-2xl">
-            <img src={betrixLogo} alt="Betrix logo" width={32} height={32} className="h-8 w-8 object-contain" />
+            <img
+              src={betrixLogo}
+              alt="Betrix logo"
+              width={40}
+              height={40}
+              className="h-9 w-9 rounded-lg object-contain shadow-lg shadow-black/30 ring-1 ring-white/10 sm:h-10 sm:w-10"
+            />
             <span className="hidden bg-gradient-to-r from-primary to-betrix-green-dim bg-clip-text text-transparent drop-shadow-sm sm:inline">
               Betrix
             </span>
