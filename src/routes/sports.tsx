@@ -40,7 +40,7 @@ function SportsPage() {
             Top competitions
           </h2>
           <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">
-            {LEAGUE_BRANDS.map((brand) => (
+            {LEAGUE_BRANDS.filter((b) => SPORTS.some((s) => s.id === b.sportId)).map((brand) => (
               <Link
                 key={brand.name}
                 to="/sports/$sportId"
