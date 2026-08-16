@@ -1,6 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Clock, Radio } from "lucide-react";
 import { OddsButton } from "@/components/OddsButton";
+import { LeagueBadge } from "@/components/LeagueLogo";
 import { useBetting } from "@/lib/betting-store";
 import { EVENTS, getEventById } from "@/lib/betting-data";
 import { formatDateTime } from "@/lib/format";
@@ -33,7 +34,7 @@ function EventDetailPage() {
       <div className="mx-auto max-w-4xl">
         <div className="mb-6">
           <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <span className="rounded-md bg-secondary px-2 py-1 text-foreground">{event.league}</span>
+            <LeagueBadge league={event.league} size={22} />
             {event.status === "live" ? (
               <span className="flex items-center gap-1 text-accent">
                 <Radio className="h-3 w-3 animate-pulse" />
