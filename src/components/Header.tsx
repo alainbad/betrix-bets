@@ -54,23 +54,15 @@ export function Header() {
   );
 }
 
-function TopTab({ to, label, mobile = false }: { to: string; label: string; mobile?: boolean }) {
+function TopTab({ to, label }: { to: string; label: string }) {
   return (
     <Link
       to={to}
-      activeProps={{
-        className: mobile
-          ? "border-b-2 border-primary text-primary bg-primary/10"
-          : "border-b-2 border-primary text-primary bg-primary/10",
-      }}
+      activeProps={{ className: "border-b-2 border-primary text-primary bg-primary/10" }}
       inactiveProps={{
         className: "border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50",
       }}
-      className={`inline-flex items-center justify-center font-semibold transition-colors ${
-        mobile
-          ? "h-11 flex-1 px-2 text-sm"
-          : "h-14 px-5 text-sm lg:px-7 lg:text-base"
-      }`}
+      className="inline-flex h-14 items-center justify-center whitespace-nowrap px-3 text-sm font-semibold transition-colors sm:px-5 lg:px-7 lg:text-base"
     >
       {label}
     </Link>
