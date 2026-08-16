@@ -9,6 +9,7 @@ import baccarat from "@/assets/casino-baccarat.jpg";
 import holdem from "@/assets/casino-holdem.jpg";
 import livePoker from "@/assets/casino-live-poker.jpg";
 import videoPoker from "@/assets/casino-video-poker.jpg";
+import luckyWheel from "@/assets/casino-lucky-wheel.jpg";
 
 export const CASINO_GAME_IMAGES: Record<string, string> = {
   "vault-rush": vaultRush,
@@ -22,6 +23,7 @@ export const CASINO_GAME_IMAGES: Record<string, string> = {
   "texas-holdem": holdem,
   "live-poker-room": livePoker,
   "video-poker-deuces": videoPoker,
+  "lucky-wheel": luckyWheel,
 };
 
 export function casinoGameImage(id: string): string {
