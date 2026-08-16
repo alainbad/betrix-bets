@@ -4,6 +4,9 @@ import { Dices, Search, Sparkles } from "lucide-react";
 import { CASINO_CATEGORIES, CASINO_GAMES, type CasinoCategory } from "@/lib/casino-data";
 import { casinoGameImage } from "@/lib/casino-media";
 import { cn } from "@/lib/utils";
+import ogAsset from "@/assets/betrix-og.jpg.asset.json";
+
+const CASINO_OG_IMAGE = `https://project--6a0e946c-c85b-4a07-8f34-3b6259233927.lovable.app${ogAsset.url}`;
 
 export const Route = createFileRoute("/casino")({
   head: () => ({
@@ -13,7 +16,9 @@ export const Route = createFileRoute("/casino")({
       { property: "og:title", content: "Betrix Casino Simulation" },
       { property: "og:description", content: "Slots, instant-win originals and table games — all played with virtual credits." },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: CASINO_OG_IMAGE },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: CASINO_OG_IMAGE },
     ],
   }),
   component: CasinoPage,
@@ -72,38 +77,46 @@ function CasinoPage() {
           </label>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {games.map((game) => (
             <Link
               key={game.id}
               to="/casino/$gameId"
               params={{ gameId: game.id }}
-              className="group overflow-hidden rounded-2xl border border-border bg-card transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
+              className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10"
             >
-              <div className="relative h-36 overflow-hidden">
+              <div className="relative aspect-[4/5] overflow-hidden">
                 <img
                   src={casinoGameImage(game.id)}
                   alt={`${game.name} by ${game.provider}`}
                   loading="lazy"
                   width={800}
-                  height={600}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  height={1000}
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/55 to-transparent" />
+                <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  <div className="absolute inset-0 bg-background/45" />
+                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary px-5 py-2 text-xs font-black uppercase tracking-widest text-primary-foreground shadow-lg">
+                    Play
+                  </span>
+                </div>
+
                 {game.badge && (
-                  <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent">
+                  <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-background/85 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent backdrop-blur-sm">
                     <Sparkles className="h-3 w-3" />
                     {game.badge}
                   </span>
                 )}
-              </div>
-              <div className="p-4">
-                <p className="text-sm font-bold text-foreground">{game.name}</p>
-                <p className="text-xs text-muted-foreground">{game.provider}</p>
-                <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{game.tagline}</p>
-                <div className="mt-3 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  <span>RTP {game.rtp}%</span>
-                  <span>{game.volatility} vol.</span>
+                <span className="absolute right-3 top-3 rounded-full bg-background/85 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary backdrop-blur-sm">
+                  RTP {game.rtp}%
+                </span>
+
+                <div className="absolute inset-x-0 bottom-0 p-3">
+                  <p className="truncate text-sm font-black leading-tight text-foreground">{game.name}</p>
+                  <p className="mt-0.5 truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    {game.provider} · {game.volatility} vol.
+                  </p>
                 </div>
               </div>
             </Link>

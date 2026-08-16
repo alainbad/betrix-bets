@@ -3,6 +3,10 @@ import { EventCard } from "@/components/EventCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { SportPill } from "@/components/SportPill";
 import { SPORTS, getFeaturedEvents } from "@/lib/betting-data";
+import ogAsset from "@/assets/betrix-og.jpg.asset.json";
+
+const OG_IMAGE = `https://project--6a0e946c-c85b-4a07-8f34-3b6259233927.lovable.app${ogAsset.url}`;
+
 
 
 export const Route = createFileRoute("/")({
@@ -13,7 +17,9 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Betrix — Play-Money Sports Betting" },
       { property: "og:description", content: "Track picks, explore live odds, and compete with friends on Betrix." },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: OG_IMAGE },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: OG_IMAGE },
     ],
   }),
   component: HomePage,
