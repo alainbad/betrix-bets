@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Flame, Trophy } from "lucide-react";
 import { EventCard } from "@/components/EventCard";
+import { HeroCarousel } from "@/components/HeroCarousel";
 import { SportPill } from "@/components/SportPill";
 import { SPORTS, getFeaturedEvents } from "@/lib/betting-data";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
