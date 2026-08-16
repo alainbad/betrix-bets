@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { Sport } from "@/lib/betting-data";
-import { SPORT_IMAGES } from "@/lib/sport-media";
+import { getSportImage } from "@/lib/sport-media";
 
 export function SportPill({ sport }: { sport: Sport }) {
   return (
@@ -11,7 +11,7 @@ export function SportPill({ sport }: { sport: Sport }) {
       className="group relative h-24 w-40 shrink-0 overflow-hidden rounded-xl border border-border bg-card"
     >
       <img
-        src={SPORT_IMAGES[sport.id]}
+        src={getSportImage(sport.id)}
         alt={`${sport.name} betting`}
         loading="lazy"
         width={640}

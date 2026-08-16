@@ -1,9 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Activity, Radio, Timer } from "lucide-react";
-import { EVENTS } from "@/lib/betting-data";
+import { getLiveEvents, getUpcomingEvents } from "@/lib/sports-data";
 import { EventCard } from "@/components/EventCard";
 
 export const Route = createFileRoute("/live")({
+  loader: async () => {
+    const [live, soon] = await Promise.all([getLiveEvents(), getUpcomingEvents(3)]);
+    return { live, soon };
+  },
   head: () => ({
     meta: [
       { title: "Live Betting — In-Play Odds on Betrix" },
@@ -18,8 +22,7 @@ export const Route = createFileRoute("/live")({
 });
 
 function LivePage() {
-  const live = EVENTS.filter((e) => e.status === "live");
-  const soon = EVENTS.filter((e) => e.status === "upcoming").slice(0, 3);
+  const { live, soon } = Route.useLoaderData();
 
   return (
     <main className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">

@@ -4,10 +4,14 @@ import { EventCard } from "@/components/EventCard";
 import { SportPill } from "@/components/SportPill";
 import { LeagueLogo } from "@/components/LeagueLogo";
 import { LEAGUE_BRANDS } from "@/lib/league-logos";
-import { EVENTS, SPORTS } from "@/lib/betting-data";
+import { getAllEvents, getSports } from "@/lib/sports-data";
 
 
 export const Route = createFileRoute("/sports")({
+  loader: async () => {
+    const [sports, events] = await Promise.all([getSports(), getAllEvents()]);
+    return { sports, events };
+  },
   head: () => ({
     meta: [
       { title: "All Sports — Betrix" },
@@ -22,6 +26,8 @@ export const Route = createFileRoute("/sports")({
 });
 
 function SportsPage() {
+  const { sports, events } = Route.useLoaderData();
+
   return (
     <main className="min-h-screen bg-background px-4 pb-16 pt-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -30,7 +36,7 @@ function SportsPage() {
 
         <div className="mt-6 flex gap-3 overflow-x-auto pb-2">
           <AllSportsPill active />
-          {SPORTS.map((sport) => (
+          {sports.map((sport) => (
             <SportPill key={sport.id} sport={sport} />
           ))}
         </div>
@@ -40,7 +46,7 @@ function SportsPage() {
             Top competitions
           </h2>
           <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">
-            {LEAGUE_BRANDS.filter((b) => SPORTS.some((s) => s.id === b.sportId)).map((brand) => (
+            {LEAGUE_BRANDS.filter((b) => sports.some((s) => s.id === b.sportId)).map((brand) => (
               <Link
                 key={brand.name}
                 to="/sports/$sportId"
@@ -55,7 +61,7 @@ function SportsPage() {
         </section>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {EVENTS.map((event) => (
+          {events.map((event) => (
             <EventCard key={event.id} event={event} />
           ))}
         </div>

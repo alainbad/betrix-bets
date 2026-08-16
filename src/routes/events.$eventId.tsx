@@ -4,12 +4,12 @@ import { OddsButton } from "@/components/OddsButton";
 import { TeamLogo } from "@/components/TeamLogo";
 import { LeagueBadge } from "@/components/LeagueLogo";
 import { useBetting } from "@/lib/betting-store";
-import { EVENTS, getEventById } from "@/lib/betting-data";
+import { getEventById } from "@/lib/sports-data";
 import { formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/events/$eventId")({
-  loader: ({ params }) => {
-    const event = getEventById(params.eventId);
+  loader: async ({ params }) => {
+    const event = await getEventById(params.eventId);
     if (!event) throw notFound();
     return { event };
   },
