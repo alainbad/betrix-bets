@@ -17,6 +17,7 @@ import { Route as CasinoRouteImport } from './routes/casino'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LiveRouteImport } from './routes/live'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SportsRouteImport } from './routes/sports'
@@ -64,6 +65,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/live': typeof LiveRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sports': typeof SportsRouteWithChildren
@@ -120,6 +127,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/live': typeof LiveRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sports': typeof SportsRouteWithChildren
@@ -137,6 +145,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/live': typeof LiveRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sports': typeof SportsRouteWithChildren
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/live'
     | '/login'
+    | '/profile'
     | '/register'
     | '/reset-password'
     | '/sports'
@@ -171,6 +181,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/live'
     | '/login'
+    | '/profile'
     | '/register'
     | '/reset-password'
     | '/sports'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/live'
     | '/login'
+    | '/profile'
     | '/register'
     | '/reset-password'
     | '/sports'
@@ -204,6 +216,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LiveRoute: typeof LiveRoute
   LoginRoute: typeof LoginRoute
+  ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SportsRoute: typeof SportsRouteWithChildren
@@ -266,6 +279,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -344,6 +364,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LiveRoute: LiveRoute,
   LoginRoute: LoginRoute,
+  ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SportsRoute: SportsRouteWithChildren,

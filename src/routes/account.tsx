@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { LogOut, TrendingUp, Wallet } from "lucide-react";
+import { LogOut, TrendingUp, UserCog, Wallet } from "lucide-react";
 import { useBetting } from "@/lib/betting-store";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
@@ -86,9 +86,16 @@ function AccountPage() {
             </p>
           </div>
           {user && (
-            <Button variant="outline" size="sm" onClick={() => void signOut()} className="gap-2">
-              <LogOut className="h-4 w-4" /> Sign out
-            </Button>
+            <div className="flex gap-2">
+              <Link to="/profile">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <UserCog className="h-4 w-4" /> Profile
+                </Button>
+              </Link>
+              <Button variant="outline" size="sm" onClick={() => void signOut()} className="gap-2">
+                <LogOut className="h-4 w-4" /> Sign out
+              </Button>
+            </div>
           )}
         </div>
 
