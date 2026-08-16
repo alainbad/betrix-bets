@@ -1,17 +1,22 @@
 import { Link } from "@tanstack/react-router";
 import { Ticket, User, Wallet } from "lucide-react";
 import { useBetting } from "@/lib/betting-store";
+import { useAuth } from "@/lib/auth-context";
 import { formatCurrency } from "@/lib/format";
 import betrixLogo from "@/assets/betrix-logo-alt.png";
 
 export function Header() {
   const { balance, slip } = useBetting();
+  const { user, loading } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-3 sm:px-4 lg:px-8">
         <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-4 lg:gap-8">
-          <Link to="/" className="flex shrink-0 items-center gap-2 text-xl font-black tracking-tight sm:text-2xl">
+          <Link
+            to="/"
+            className="flex shrink-0 items-center gap-2 text-xl font-black tracking-tight sm:text-2xl"
+          >
             <img
               src={betrixLogo}
               alt="Betrix logo"
@@ -49,8 +54,25 @@ export function Header() {
             )}
           </Link>
 
+          {!loading && !user ? (
+            <div className="hidden items-center gap-2 sm:flex">
+              <Link
+                to="/login"
+                className="rounded-full px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:text-primary"
+              >
+                Log in
+              </Link>
+              <Link
+                to="/register"
+                className="rounded-full border border-border bg-secondary px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-betrix-surface-elevated"
+              >
+                Sign up
+              </Link>
+            </div>
+          ) : null}
+
           <Link
-            to="/account"
+            to={user ? "/account" : "/login"}
             className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-accent hover:text-accent-foreground sm:h-10 sm:w-10"
             aria-label="Account"
           >
@@ -68,7 +90,8 @@ function TopTab({ to, label }: { to: string; label: string }) {
       to={to}
       activeProps={{ className: "border-b-2 border-primary text-primary bg-primary/10" }}
       inactiveProps={{
-        className: "border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50",
+        className:
+          "border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50",
       }}
       className="inline-flex h-14 items-center justify-center whitespace-nowrap px-3 text-sm font-semibold transition-colors sm:px-5 lg:px-7 lg:text-base"
     >
