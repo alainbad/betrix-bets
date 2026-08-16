@@ -216,8 +216,11 @@ async function syncFixture(
 
 async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): Promise<SyncCounts> {
   const counts: SyncCounts = { sports: 0, competitions: 0, events: 0, markets: 0, selections: 0 };
+  console.log("step: upsertProvider");
   const providerId = await upsertProvider(supabase, provider.code);
+  console.log("providerId", providerId);
 
+  console.log("step: countries");
   const countries = await provider.getCountries();
   const countryIdByCode = new Map<string, string>();
   for (const country of countries) {
@@ -230,8 +233,10 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
     countryIdByCode.set(country.code, data.id as string);
   }
 
+  console.log("step: sports");
   const sports = await provider.getSports();
   for (const sport of sports) {
+    console.log("upserting sport", sport.code);
     const { data: sportRow, error: sportError } = await supabase
       .from("sports")
       .upsert({ code: sport.code, name: sport.name, icon: sport.icon ?? null }, { onConflict: "code" })
@@ -269,18 +274,27 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
 
 Deno.serve(async () => {
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    console.log("env check", { hasUrl: !!supabaseUrl, hasServiceRoleKey: !!serviceRoleKey });
+    if (!supabaseUrl || !serviceRoleKey) {
+      throw new Error(
+        `Missing env vars: SUPABASE_URL=${!!supabaseUrl} SUPABASE_SERVICE_ROLE_KEY=${!!serviceRoleKey}`,
+      );
+    }
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const provider = getProvider();
+    console.log("provider", provider.code);
     const counts = await runSync(supabase, provider);
+    console.log("sync done", counts);
 
     return new Response(JSON.stringify({ ok: true, provider: provider.code, counts }), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    console.error("sync-sports-data failed", err);
+    const message = err instanceof Error ? (err.stack ?? err.message) : String(err);
     return new Response(JSON.stringify({ ok: false, error: message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
