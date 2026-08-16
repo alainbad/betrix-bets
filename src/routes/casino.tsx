@@ -79,10 +79,16 @@ function CasinoPage() {
               params={{ gameId: game.id }}
               className="group overflow-hidden rounded-2xl border border-border bg-card transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
             >
-              <div className={cn("relative flex h-36 items-center justify-center bg-gradient-to-br", game.hue)}>
-                <span className="text-3xl font-black tracking-tighter text-foreground/80 transition-transform group-hover:scale-105">
-                  {game.name.split(" ").map((w) => w[0]).join("")}
-                </span>
+              <div className="relative h-36 overflow-hidden">
+                <img
+                  src={casinoGameImage(game.id)}
+                  alt={`${game.name} by ${game.provider}`}
+                  loading="lazy"
+                  width={800}
+                  height={600}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent" />
                 {game.badge && (
                   <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent">
                     <Sparkles className="h-3 w-3" />
