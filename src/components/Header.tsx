@@ -10,17 +10,15 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 lg:gap-8">
           <Link to="/" className="flex items-center gap-2 text-2xl font-black tracking-tight text-foreground">
             <img src={betrixLogo} alt="Betrix logo" width={36} height={36} className="h-9 w-9 object-contain" />
             Betrix
           </Link>
-          <nav className="hidden items-center gap-1 md:flex">
-            <NavLink to="/sports">Sports</NavLink>
-            <NavLink to="/live">Live</NavLink>
-            <NavLink to="/casino">Casino</NavLink>
-            <NavLink to="/account">My Bets</NavLink>
-            <NavLink to="/admin">Admin</NavLink>
+          <nav className="hidden items-center md:flex">
+            <TopTab to="/sports" label="Sports" />
+            <TopTab to="/live" label="Live" />
+            <TopTab to="/casino" label="Casino" />
           </nav>
         </div>
 
@@ -52,18 +50,37 @@ export function Header() {
           </Link>
         </div>
       </div>
+
+      <div className="border-t border-border md:hidden">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-2">
+          <TopTab to="/sports" label="Sports" mobile />
+          <TopTab to="/live" label="Live" mobile />
+          <TopTab to="/casino" label="Casino" mobile />
+        </div>
+      </div>
     </header>
   );
 }
 
-function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
+function TopTab({ to, label, mobile = false }: { to: string; label: string; mobile?: boolean }) {
   return (
     <Link
       to={to}
-      activeProps={{ className: "text-primary" }}
-      className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+      activeProps={{
+        className: mobile
+          ? "border-b-2 border-primary text-primary bg-primary/10"
+          : "border-b-2 border-primary text-primary bg-primary/10",
+      }}
+      inactiveProps={{
+        className: "border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50",
+      }}
+      className={`inline-flex items-center justify-center font-semibold transition-colors ${
+        mobile
+          ? "h-11 flex-1 px-2 text-sm"
+          : "h-14 px-5 text-sm lg:px-7 lg:text-base"
+      }`}
     >
-      {children}
+      {label}
     </Link>
   );
 }
