@@ -72,10 +72,10 @@ export function HeroCarousel() {
             width={1920}
             height={1088}
             loading={i === 0 ? "eager" : "lazy"}
-            className="h-full w-full scale-105 object-cover brightness-[1.25] contrast-[1.05]"
+            className="h-full w-full scale-105 object-cover brightness-[1.35] saturate-[1.08]"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/30 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/55 via-background/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/65 via-transparent to-transparent" />
 
           <div className="absolute inset-0 flex items-center px-5 sm:px-10 lg:px-16">
             <div className="max-w-xl">
