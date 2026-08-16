@@ -10,33 +10,101 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountRouteImport } from './routes/account'
+import { Route as BetSlipRouteImport } from './routes/bet-slip'
+import { Route as SportsRouteImport } from './routes/sports'
+import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
+import { Route as SportsSportIdRouteImport } from './routes/sports.$sportId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BetSlipRoute = BetSlipRouteImport.update({
+  id: '/bet-slip',
+  path: '/bet-slip',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SportsRoute = SportsRouteImport.update({
+  id: '/sports',
+  path: '/sports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsEventIdRoute = EventsEventIdRouteImport.update({
+  id: '/events/$eventId',
+  path: '/events/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SportsSportIdRoute = SportsSportIdRouteImport.update({
+  id: '/$sportId',
+  path: '/$sportId',
+  getParentRoute: () => SportsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/bet-slip': typeof BetSlipRoute
+  '/sports': typeof SportsRouteWithChildren
+  '/events/$eventId': typeof EventsEventIdRoute
+  '/sports/$sportId': typeof SportsSportIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/bet-slip': typeof BetSlipRoute
+  '/sports': typeof SportsRouteWithChildren
+  '/events/$eventId': typeof EventsEventIdRoute
+  '/sports/$sportId': typeof SportsSportIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/bet-slip': typeof BetSlipRoute
+  '/sports': typeof SportsRouteWithChildren
+  '/events/$eventId': typeof EventsEventIdRoute
+  '/sports/$sportId': typeof SportsSportIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/account'
+    | '/bet-slip'
+    | '/sports'
+    | '/events/$eventId'
+    | '/sports/$sportId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/account'
+    | '/bet-slip'
+    | '/sports'
+    | '/events/$eventId'
+    | '/sports/$sportId'
+  id:
+    | '__root__'
+    | '/'
+    | '/account'
+    | '/bet-slip'
+    | '/sports'
+    | '/events/$eventId'
+    | '/sports/$sportId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
+  BetSlipRoute: typeof BetSlipRoute
+  SportsRoute: typeof SportsRouteWithChildren
+  EventsEventIdRoute: typeof EventsEventIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +116,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bet-slip': {
+      id: '/bet-slip'
+      path: '/bet-slip'
+      fullPath: '/bet-slip'
+      preLoaderRoute: typeof BetSlipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sports': {
+      id: '/sports'
+      path: '/sports'
+      fullPath: '/sports'
+      preLoaderRoute: typeof SportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/$eventId': {
+      id: '/events/$eventId'
+      path: '/events/$eventId'
+      fullPath: '/events/$eventId'
+      preLoaderRoute: typeof EventsEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sports/$sportId': {
+      id: '/sports/$sportId'
+      path: '/$sportId'
+      fullPath: '/sports/$sportId'
+      preLoaderRoute: typeof SportsSportIdRouteImport
+      parentRoute: typeof SportsRoute
+    }
   }
 }
 
+interface SportsRouteChildren {
+  SportsSportIdRoute: typeof SportsSportIdRoute
+}
+
+const SportsRouteChildren: SportsRouteChildren = {
+  SportsSportIdRoute: SportsSportIdRoute,
+}
+
+const SportsRouteWithChildren =
+  SportsRoute._addFileChildren(SportsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
+  BetSlipRoute: BetSlipRoute,
+  SportsRoute: SportsRouteWithChildren,
+  EventsEventIdRoute: EventsEventIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

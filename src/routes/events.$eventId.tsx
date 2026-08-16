@@ -86,7 +86,7 @@ function EventDetailPage() {
   );
 }
 
-function TeamBlock({ name, score, align = "left" }: { name: string; score?: number; align?: "left" | "right" }) {
+function TeamBlock({ name, score, align = "left" }: { name: string; score?: number | undefined; align?: "left" | "right" }) {
   return (
     <div className={align === "right" ? "text-right" : "text-left"}>
       <p className="text-lg font-bold text-foreground sm:text-2xl">{name}</p>
