@@ -160,6 +160,19 @@ export const CASINO_GAMES: CasinoGame[] = [
     tagline: "Jacks or better with wild deuces and a 4,000x royal.",
     hue: "from-betrix-amber/25 to-betrix-amber/5",
   },
+  {
+    id: "lucky-wheel",
+    name: "Lucky Wheel",
+    provider: "Kingsway Live",
+    category: "live",
+    rtp: 96.5,
+    volatility: "Medium",
+    minStake: 1,
+    maxStake: 1000,
+    tagline: "Spin the big wheel for instant multipliers.",
+    hue: "from-chart-2/25 to-chart-2/5",
+    badge: "New",
+  },
 ];
 
 export function getGameById(id: string): CasinoGame | undefined {
