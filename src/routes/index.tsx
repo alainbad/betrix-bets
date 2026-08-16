@@ -23,39 +23,8 @@ function HomePage() {
 
   return (
     <main className="min-h-screen bg-background">
-      {/* Hero */}
-      <section className="gradient-hero border-b border-border px-4 pb-12 pt-10 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-              <Flame className="h-3.5 w-3.5" />
-              Play-money sportsbook
-            </div>
-            <h1 className="text-4xl font-black leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              Bet smarter. <span className="text-primary">Win bigger.</span>
-            </h1>
-            <p className="mx-auto mt-4 max-w-xl text-base text-muted-foreground sm:text-lg">
-              Explore live odds, build your bet slip, and track your play-money bankroll across every major sport.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <Link
-                to="/sports"
-                className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition-transform hover:scale-105 active:scale-95"
-              >
-                Start betting
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link
-                to="/account"
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-6 py-3 text-sm font-bold text-foreground transition-colors hover:bg-betrix-surface-elevated"
-              >
-                <Trophy className="h-4 w-4" />
-                My bets
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroCarousel />
+
 
       {/* Sports */}
       <section className="px-4 py-8 sm:px-6 lg:px-8">
