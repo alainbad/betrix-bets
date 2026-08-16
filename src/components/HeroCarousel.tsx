@@ -48,7 +48,7 @@ export function HeroCarousel() {
   }, []);
 
   useEffect(() => {
-    const id = setInterval(() => setIndex((i) => (i + 1) % SLIDES.length), 6000);
+    const id = setInterval(() => setIndex((i) => (i + 1) % SLIDES.length), 5000);
     return () => clearInterval(id);
   }, [index]);
 
@@ -57,7 +57,13 @@ export function HeroCarousel() {
       {SLIDES.map((slide, i) => (
         <div
           key={slide.title}
-          className={`absolute inset-0 transition-opacity duration-700 ${i === index ? "opacity-100" : "pointer-events-none opacity-0"}`}
+          className={`absolute inset-0 transition-all duration-700 ease-out ${
+            i === index
+              ? "translate-x-0 opacity-100"
+              : i === (index - 1 + SLIDES.length) % SLIDES.length
+                ? "pointer-events-none -translate-x-8 opacity-0"
+                : "pointer-events-none translate-x-8 opacity-0"
+          }`}
           aria-hidden={i !== index}
         >
           <img
