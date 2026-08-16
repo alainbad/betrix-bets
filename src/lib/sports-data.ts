@@ -10,6 +10,7 @@
 
 import { supabase } from "./supabase";
 import type { Event, EventStatus, Market, MarketType, Selection, Sport } from "./betting-data";
+import { decimalToAmerican } from "./format";
 
 const STATUS_MAP: Record<string, EventStatus> = {
   scheduled: "upcoming",
@@ -23,11 +24,6 @@ const STATUS_MAP: Record<string, EventStatus> = {
 };
 
 const MARKET_ORDER: Record<string, number> = { moneyline: 0, spread: 1, total: 2 };
-
-function decimalToAmerican(decimalOdds: number): number {
-  if (decimalOdds >= 2) return Math.round((decimalOdds - 1) * 100);
-  return Math.round(-100 / (decimalOdds - 1));
-}
 
 function formatLine(line: number, marketType: string): string {
   if (marketType === "spread") return line > 0 ? `+${line}` : `${line}`;

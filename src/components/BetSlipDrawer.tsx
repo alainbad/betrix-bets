@@ -1,22 +1,34 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { Minus, Plus, Trash2, X } from "lucide-react";
 import { useBetting } from "@/lib/betting-store";
-import { formatCurrency, formatOdds } from "@/lib/format";
+import { americanToDecimal, formatCurrency, formatOdds } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export function BetSlipDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { slip, removeFromSlip, updateStake, clearSlip, placeBets, totalStake, totalPotentialReturn, balance } =
-    useBetting();
+  const {
+    slip,
+    removeFromSlip,
+    updateStake,
+    clearSlip,
+    placeBets,
+    totalStake,
+    totalPotentialReturn,
+    balance,
+    placing,
+  } = useBetting();
   const [placed, setPlaced] = useState(false);
   const insufficientFunds = totalStake > balance;
 
-  function handlePlace() {
-    if (insufficientFunds || slip.length === 0) return;
-    const ok = placeBets();
-    if (ok) {
+  async function handlePlace() {
+    if (insufficientFunds || slip.length === 0 || placing) return;
+    const result = await placeBets();
+    if (result.ok) {
       setPlaced(true);
       setTimeout(() => setPlaced(false), 2000);
+    } else if (result.error) {
+      toast.error(result.error);
     }
   }
 
@@ -122,7 +134,7 @@ export function BetSlipDrawer({ open, onClose }: { open: boolean; onClose: () =>
                       <div className="text-right">
                         <p className="text-xs text-muted-foreground">{formatOdds(item.selection.odds)}</p>
                         <p className="text-sm font-bold text-primary">
-                          {formatCurrency(item.stake * (item.selection.odds > 0 ? item.selection.odds / 100 + 1 : 1 - 100 / item.selection.odds))}
+                          {formatCurrency(item.stake * americanToDecimal(item.selection.odds))}
                         </p>
                       </div>
                     </div>
@@ -154,14 +166,14 @@ export function BetSlipDrawer({ open, onClose }: { open: boolean; onClose: () =>
                 <p className="mb-2 text-center text-xs font-medium text-destructive">Insufficient funds</p>
               )}
               <button
-                onClick={handlePlace}
-                disabled={insufficientFunds || placed}
+                onClick={() => void handlePlace()}
+                disabled={insufficientFunds || placed || placing}
                 className={cn(
-                  "w-full rounded-xl py-3 text-sm font-bold text-primary-foreground transition-all",
+                  "w-full rounded-xl py-3 text-sm font-bold text-primary-foreground transition-all disabled:opacity-60",
                   placed ? "bg-accent text-accent-foreground" : "bg-primary hover:bg-primary/90"
                 )}
               >
-                {placed ? "Bets placed!" : "Place bets"}
+                {placed ? "Bets placed!" : placing ? "Placing…" : "Place bets"}
               </button>
             </div>
           )}

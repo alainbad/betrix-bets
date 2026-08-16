@@ -1,5 +1,8 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Event, Selection } from "./betting-data";
+import { useAuth } from "./auth-context";
+import { supabase } from "./supabase";
+import { americanToDecimal, decimalToAmerican } from "./format";
 
 export interface BetSlipItem {
   id: string;
@@ -12,56 +15,104 @@ export interface BetSlipItem {
 
 export interface PlacedBet {
   id: string;
-  eventId: string;
   eventName: string;
   marketLabel: string;
   selectionLabel: string;
   odds: number;
   stake: number;
   potentialReturn: number;
-  status: "pending" | "won" | "lost";
+  status: "pending" | "won" | "lost" | "void";
   placedAt: string;
 }
 
-interface BettingState {
-  balance: number;
-  slip: BetSlipItem[];
-  bets: PlacedBet[];
+export interface PlaceBetsResult {
+  ok: boolean;
+  error?: string;
 }
 
-const STORAGE_KEY = "betrix-state-v1";
-const DEFAULT_BALANCE = 1000;
+const SLIP_STORAGE_KEY = "betrix-slip-v1";
 
-function loadState(): BettingState {
-  if (typeof window === "undefined") {
-    return { balance: DEFAULT_BALANCE, slip: [], bets: [] };
-  }
+// The bet slip is just a local draft (a shopping cart), so it stays in
+// localStorage. Balance and placed-bet history are wallet-backed (Phase 4)
+// and always come from Supabase.
+function loadSlip(): BetSlipItem[] {
+  if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as BettingState;
-      return { balance: parsed.balance ?? DEFAULT_BALANCE, slip: parsed.slip ?? [], bets: parsed.bets ?? [] };
-    }
+    const raw = localStorage.getItem(SLIP_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as BetSlipItem[]) : [];
   } catch {
-    // ignore
+    return [];
   }
-  return { balance: DEFAULT_BALANCE, slip: [], bets: [] };
 }
 
-function saveState(state: BettingState) {
+function saveSlip(slip: BetSlipItem[]) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  localStorage.setItem(SLIP_STORAGE_KEY, JSON.stringify(slip));
+}
+
+interface BetSelectionRow {
+  event_name: string;
+  market_label: string;
+  selection_label: string;
+  decimal_odds_at_placement: number;
+}
+
+interface BetRow {
+  id: string;
+  status: string;
+  total_stake: number;
+  potential_return: number;
+  placed_at: string;
+  bet_selections: BetSelectionRow[];
+}
+
+function mapBetRow(row: BetRow): PlacedBet {
+  const leg = row.bet_selections[0];
+  return {
+    id: row.id,
+    eventName: leg?.event_name ?? "",
+    marketLabel: leg?.market_label ?? "",
+    selectionLabel: leg?.selection_label ?? "",
+    odds: leg ? decimalToAmerican(leg.decimal_odds_at_placement) : 0,
+    stake: Number(row.total_stake),
+    potentialReturn: Number(row.potential_return),
+    status: (row.status as PlacedBet["status"]) ?? "pending",
+    placedAt: row.placed_at,
+  };
+}
+
+async function fetchBalance(userId: string): Promise<number> {
+  const { data, error } = await supabase
+    .from("wallets")
+    .select("available_balance")
+    .eq("user_id", userId)
+    .single();
+  if (error) throw error;
+  return Number(data.available_balance);
+}
+
+async function fetchBets(userId: string): Promise<PlacedBet[]> {
+  const { data, error } = await supabase
+    .from("bets")
+    .select(
+      "id, status, total_stake, potential_return, placed_at, bet_selections ( event_name, market_label, selection_label, decimal_odds_at_placement )"
+    )
+    .eq("user_id", userId)
+    .order("placed_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((row) => mapBetRow(row as unknown as BetRow));
 }
 
 interface BettingContextValue {
   balance: number;
   slip: BetSlipItem[];
   bets: PlacedBet[];
+  placing: boolean;
   addToSlip: (event: Event, marketLabel: string, selection: Selection) => void;
   removeFromSlip: (itemId: string) => void;
   updateStake: (itemId: string, stake: number) => void;
   clearSlip: () => void;
-  placeBets: () => boolean;
+  placeBets: () => Promise<PlaceBetsResult>;
   totalStake: number;
   totalPotentialReturn: number;
   isInSlip: (eventId: string, selectionId: string) => boolean;
@@ -70,28 +121,46 @@ interface BettingContextValue {
 const BettingContext = createContext<BettingContextValue | null>(null);
 
 export function BettingProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<BettingState>(() => loadState());
+  const { user } = useAuth();
+  const [slip, setSlip] = useState<BetSlipItem[]>(() => loadSlip());
+  const [balance, setBalance] = useState(0);
+  const [bets, setBets] = useState<PlacedBet[]>([]);
+  const [placing, setPlacing] = useState(false);
 
   useEffect(() => {
-    saveState(state);
-  }, [state]);
+    saveSlip(slip);
+  }, [slip]);
 
-  const totalStake = state.slip.reduce((sum, item) => sum + (item.stake || 0), 0);
-  const totalPotentialReturn = state.slip.reduce((sum, item) => {
+  const refresh = useCallback(async () => {
+    if (!user) {
+      setBalance(0);
+      setBets([]);
+      return;
+    }
+    const [nextBalance, nextBets] = await Promise.all([fetchBalance(user.id), fetchBets(user.id)]);
+    setBalance(nextBalance);
+    setBets(nextBets);
+  }, [user]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const totalStake = slip.reduce((sum, item) => sum + (item.stake || 0), 0);
+  const totalPotentialReturn = slip.reduce((sum, item) => {
     const stake = item.stake || 0;
-    const decimalOdds = item.selection.odds > 0 ? item.selection.odds / 100 + 1 : 1 - 100 / item.selection.odds;
-    return sum + stake * decimalOdds;
+    return sum + stake * americanToDecimal(item.selection.odds);
   }, 0);
 
   function addToSlip(event: Event, marketLabel: string, selection: Selection) {
-    setState((prev) => {
-      const existingIndex = prev.slip.findIndex(
+    setSlip((prev) => {
+      const existingIndex = prev.findIndex(
         (item) => item.eventId === event.id && item.selection.id === selection.id && item.marketLabel === marketLabel
       );
       if (existingIndex >= 0) {
-        const newSlip = [...prev.slip];
+        const newSlip = [...prev];
         newSlip.splice(existingIndex, 1);
-        return { ...prev, slip: newSlip };
+        return newSlip;
       }
       const newItem: BetSlipItem = {
         id: `${event.id}-${marketLabel}-${selection.id}`,
@@ -101,63 +170,51 @@ export function BettingProvider({ children }: { children: ReactNode }) {
         selection,
         stake: 10,
       };
-      return { ...prev, slip: [...prev.slip, newItem] };
+      return [...prev, newItem];
     });
   }
 
   function removeFromSlip(itemId: string) {
-    setState((prev) => ({ ...prev, slip: prev.slip.filter((item) => item.id !== itemId) }));
+    setSlip((prev) => prev.filter((item) => item.id !== itemId));
   }
 
   function updateStake(itemId: string, stake: number) {
-    setState((prev) => ({
-      ...prev,
-      slip: prev.slip.map((item) => (item.id === itemId ? { ...item, stake: Math.max(0, stake) } : item)),
-    }));
+    setSlip((prev) => prev.map((item) => (item.id === itemId ? { ...item, stake: Math.max(0, stake) } : item)));
   }
 
   function clearSlip() {
-    setState((prev) => ({ ...prev, slip: [] }));
+    setSlip([]);
   }
 
-  function placeBets(): boolean {
-    if (state.slip.length === 0) return false;
-    if (totalStake > state.balance) return false;
+  async function placeBets(): Promise<PlaceBetsResult> {
+    if (!user) return { ok: false, error: "Sign in to place bets." };
+    if (slip.length === 0) return { ok: false, error: "Your bet slip is empty." };
+    if (totalStake > balance) return { ok: false, error: "Insufficient balance." };
 
-    const newBets: PlacedBet[] = state.slip.map((item) => {
-      const decimalOdds = item.selection.odds > 0 ? item.selection.odds / 100 + 1 : 1 - 100 / item.selection.odds;
-      return {
-        id: crypto.randomUUID(),
-        eventId: item.eventId,
-        eventName: item.eventName,
-        marketLabel: item.marketLabel,
-        selectionLabel: item.selection.label + (item.selection.value ? ` ${item.selection.value}` : ""),
-        odds: item.selection.odds,
-        stake: item.stake,
-        potentialReturn: Math.round(item.stake * decimalOdds * 100) / 100,
-        status: "pending",
-        placedAt: new Date().toISOString(),
-      };
-    });
-
-    setState((prev) => ({
-      balance: Math.round((prev.balance - totalStake) * 100) / 100,
-      slip: [],
-      bets: [...newBets, ...prev.bets],
-    }));
-    return true;
+    setPlacing(true);
+    try {
+      const legs = slip.map((item) => ({ selection_id: item.selection.id, stake: item.stake }));
+      const { error } = await supabase.rpc("place_simulated_bet", { _legs: legs });
+      if (error) return { ok: false, error: error.message };
+      clearSlip();
+      await refresh();
+      return { ok: true };
+    } finally {
+      setPlacing(false);
+    }
   }
 
   function isInSlip(eventId: string, selectionId: string) {
-    return state.slip.some((item) => item.eventId === eventId && item.selection.id === selectionId);
+    return slip.some((item) => item.eventId === eventId && item.selection.id === selectionId);
   }
 
   return (
     <BettingContext.Provider
       value={{
-        balance: state.balance,
-        slip: state.slip,
-        bets: state.bets,
+        balance,
+        slip,
+        bets,
+        placing,
         addToSlip,
         removeFromSlip,
         updateStake,
