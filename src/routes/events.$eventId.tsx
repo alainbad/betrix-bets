@@ -34,7 +34,7 @@ function EventDetailPage() {
       <div className="mx-auto max-w-4xl">
         <div className="mb-6">
           <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <LeagueBadge league={event.league} size={22} />
+            <LeagueBadge league={event.league} size={34} />
             {event.status === "live" ? (
               <span className="flex items-center gap-1 text-accent">
                 <Radio className="h-3 w-3 animate-pulse" />

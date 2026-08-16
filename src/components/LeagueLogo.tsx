@@ -3,7 +3,7 @@ import { leagueLogoUrl } from "@/lib/league-logos";
 
 export function LeagueLogo({
   league,
-  size = 20,
+  size = 28,
   className = "",
 }: {
   league: string;
@@ -22,15 +22,15 @@ export function LeagueLogo({
       height={size}
       loading="lazy"
       onError={() => setFailed(true)}
-      className={`shrink-0 rounded-[4px] bg-white/90 object-contain p-[2px] ${className}`}
+      className={`league-logo-3d shrink-0 object-contain ${className}`}
       style={{ width: size, height: size }}
     />
   );
 }
 
-export function LeagueBadge({ league, size = 18 }: { league: string; size?: number }) {
+export function LeagueBadge({ league, size = 28 }: { league: string; size?: number }) {
   return (
-    <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md bg-secondary px-2 py-1 text-foreground">
+    <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md bg-secondary px-2 py-1 text-foreground">
       <LeagueLogo league={league} size={size} />
       {league}
     </span>
