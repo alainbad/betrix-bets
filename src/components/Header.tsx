@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Ticket, User, Wallet } from "lucide-react";
 import { useBetting } from "@/lib/betting-store";
 import { formatCurrency } from "@/lib/format";
-import betrixLogo from "@/assets/betrix-logo-alt.png";
+import betrixLogo from "@/assets/betrix-logo.png";
 
 export function Header() {
   const { balance, slip } = useBetting();
