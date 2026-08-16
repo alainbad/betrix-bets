@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Info, ShieldCheck } from "lucide-react";
+import { casinoGameImage } from "@/lib/casino-media";
 import { getGameById } from "@/lib/casino-data";
 import { formatCurrency } from "@/lib/format";
 import { useBetting } from "@/lib/betting-store";
