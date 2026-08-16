@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Minus, Plus, Trash2, Ticket } from "lucide-react";
 import { useBetting } from "@/lib/betting-store";
-import { formatCurrency, formatOdds } from "@/lib/format";
+import { useAuth } from "@/lib/auth-context";
+import { americanToDecimal, formatCurrency, formatOdds } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/bet-slip")({
@@ -20,17 +22,30 @@ export const Route = createFileRoute("/bet-slip")({
 });
 
 function BetSlipPage() {
-  const { slip, bets, removeFromSlip, updateStake, clearSlip, placeBets, totalStake, totalPotentialReturn, balance } =
-    useBetting();
+  const {
+    slip,
+    bets,
+    removeFromSlip,
+    updateStake,
+    clearSlip,
+    placeBets,
+    totalStake,
+    totalPotentialReturn,
+    balance,
+    placing,
+  } = useBetting();
+  const { user } = useAuth();
   const [placed, setPlaced] = useState(false);
   const insufficientFunds = totalStake > balance;
 
-  function handlePlace() {
-    if (insufficientFunds || slip.length === 0) return;
-    const ok = placeBets();
-    if (ok) {
+  async function handlePlace() {
+    if (insufficientFunds || slip.length === 0 || placing) return;
+    const result = await placeBets();
+    if (result.ok) {
       setPlaced(true);
       setTimeout(() => setPlaced(false), 2000);
+    } else if (result.error) {
+      toast.error(result.error);
     }
   }
 
@@ -106,10 +121,7 @@ function BetSlipPage() {
                   <div className="text-right">
                     <p className="text-xs text-muted-foreground">{formatOdds(item.selection.odds)}</p>
                     <p className="font-bold text-primary">
-                      {formatCurrency(
-                        item.stake *
-                          (item.selection.odds > 0 ? item.selection.odds / 100 + 1 : 1 - 100 / item.selection.odds)
-                      )}
+                      {formatCurrency(item.stake * americanToDecimal(item.selection.odds))}
                     </p>
                   </div>
                 </div>
@@ -136,16 +148,25 @@ function BetSlipPage() {
               {insufficientFunds && (
                 <p className="mt-3 text-center text-sm font-medium text-destructive">Insufficient funds</p>
               )}
-              <button
-                onClick={handlePlace}
-                disabled={insufficientFunds || placed}
-                className={cn(
-                  "mt-4 w-full rounded-xl py-3.5 text-sm font-bold text-primary-foreground transition-all",
-                  placed ? "bg-accent text-accent-foreground" : "bg-primary hover:bg-primary/90"
-                )}
-              >
-                {placed ? "Bets placed!" : "Place bets"}
-              </button>
+              {user ? (
+                <button
+                  onClick={() => void handlePlace()}
+                  disabled={insufficientFunds || placed || placing}
+                  className={cn(
+                    "mt-4 w-full rounded-xl py-3.5 text-sm font-bold text-primary-foreground transition-all disabled:opacity-60",
+                    placed ? "bg-accent text-accent-foreground" : "bg-primary hover:bg-primary/90"
+                  )}
+                >
+                  {placed ? "Bets placed!" : placing ? "Placing…" : "Place bets"}
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  className="mt-4 block w-full rounded-xl bg-primary py-3.5 text-center text-sm font-bold text-primary-foreground transition-all hover:bg-primary/90"
+                >
+                  Log in to place bets
+                </Link>
+              )}
             </div>
           </div>
         )}

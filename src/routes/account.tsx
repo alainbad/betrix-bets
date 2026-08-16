@@ -1,9 +1,7 @@
-import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { LogOut, TrendingUp, UserCog, Wallet } from "lucide-react";
 import { useBetting } from "@/lib/betting-store";
 import { useAuth } from "@/lib/auth-context";
-import { supabase } from "@/lib/supabase";
 import { formatCurrency, formatOdds } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -31,28 +29,8 @@ export const Route = createFileRoute("/account")({
 function AccountPage() {
   const { balance, bets } = useBetting();
   const { user, loading, signOut } = useAuth();
-  const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const totalStaked = bets.reduce((sum, b) => sum + b.stake, 0);
   const totalPotential = bets.reduce((sum, b) => sum + b.potentialReturn, 0);
-
-  useEffect(() => {
-    if (!user) {
-      setWalletBalance(null);
-      return;
-    }
-    let cancelled = false;
-    supabase
-      .from("wallets")
-      .select("available_balance")
-      .eq("user_id", user.id)
-      .single()
-      .then(({ data }) => {
-        if (!cancelled && data) setWalletBalance(Number(data["available_balance"]));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
 
   if (!loading && !user) {
     return (
@@ -116,14 +94,6 @@ function AccountPage() {
             icon={<TrendingUp className="h-5 w-5" />}
           />
         </div>
-
-        {walletBalance !== null && (
-          <p className="mt-3 text-xs text-muted-foreground">
-            Server wallet balance:{" "}
-            <span className="font-semibold text-foreground">{formatCurrency(walletBalance)}</span> —
-            not yet connected to bet placement above.
-          </p>
-        )}
 
         <h2 className="mb-4 mt-10 text-xl font-bold text-foreground">Betting history</h2>
         {bets.length === 0 ? (

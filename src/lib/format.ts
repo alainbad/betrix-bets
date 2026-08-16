@@ -12,6 +12,15 @@ export function formatOdds(odds: number): string {
   return `${odds}`;
 }
 
+export function americanToDecimal(americanOdds: number): number {
+  return americanOdds > 0 ? americanOdds / 100 + 1 : 1 - 100 / americanOdds;
+}
+
+export function decimalToAmerican(decimalOdds: number): number {
+  if (decimalOdds >= 2) return Math.round((decimalOdds - 1) * 100);
+  return Math.round(-100 / (decimalOdds - 1));
+}
+
 export function formatTime(iso: string): string {
   const date = new Date(iso);
   return date.toLocaleTimeString("en-US", {
