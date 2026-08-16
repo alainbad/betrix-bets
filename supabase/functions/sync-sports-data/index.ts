@@ -12,7 +12,7 @@
 // .../functions/v1/sync-sports-data`); polling/scheduling per spec section 88
 // is Phase 7 (realtime) work.
 
-import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { MockSportsProvider } from "../_shared/mock-provider.ts";
 import { TheOddsApiProvider } from "../_shared/the-odds-api-provider.ts";
 import type { ProviderFixture, ProviderParticipant, SportsDataProvider } from "../_shared/sports-types.ts";
