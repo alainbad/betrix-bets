@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Dices, Search, Sparkles } from "lucide-react";
 import { CASINO_CATEGORIES, CASINO_GAMES, type CasinoCategory } from "@/lib/casino-data";
+import { casinoGameImage } from "@/lib/casino-media";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/casino")({
