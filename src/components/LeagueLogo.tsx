@@ -22,7 +22,7 @@ export function LeagueLogo({
       height={size}
       loading="lazy"
       onError={() => setFailed(true)}
-      className={`league-logo-3d shrink-0 object-contain ${className}`}
+      className={`league-logo-3d shrink-0 object-contain brightness-0 invert drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] ${className}`}
       style={{ width: size, height: size }}
     />
   );
