@@ -4,6 +4,9 @@ import { Dices, Search, Sparkles } from "lucide-react";
 import { CASINO_CATEGORIES, CASINO_GAMES, type CasinoCategory } from "@/lib/casino-data";
 import { casinoGameImage } from "@/lib/casino-media";
 import { cn } from "@/lib/utils";
+import ogAsset from "@/assets/betrix-og.jpg.asset.json";
+
+const CASINO_OG_IMAGE = `https://project--6a0e946c-c85b-4a07-8f34-3b6259233927.lovable.app${ogAsset.url}`;
 
 export const Route = createFileRoute("/casino")({
   head: () => ({
