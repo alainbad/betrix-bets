@@ -4,6 +4,7 @@ import { useBetting } from "@/lib/betting-store";
 import { formatDateTime, formatOdds } from "@/lib/format";
 import { OddsButton } from "./OddsButton";
 import { LeagueBadge } from "./LeagueLogo";
+import { TeamLogo } from "./TeamLogo";
 import type { Event } from "@/lib/betting-data";
 
 export function EventCard({ event }: { event: Event }) {
@@ -80,7 +81,10 @@ export function EventCard({ event }: { event: Event }) {
 
 function TeamColumn({ name, align = "left" }: { name: string; align?: "left" | "right" }) {
   return (
-    <div className={align === "right" ? "text-right" : "text-left"}>
+    <div
+      className={`flex items-center gap-2 ${align === "right" ? "flex-row-reverse text-right" : "text-left"}`}
+    >
+      <TeamLogo team={name} size={32} />
       <p className="text-sm font-bold text-foreground">{name}</p>
     </div>
   );
