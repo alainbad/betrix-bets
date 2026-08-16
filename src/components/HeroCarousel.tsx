@@ -72,20 +72,20 @@ export function HeroCarousel() {
             width={1920}
             height={1088}
             loading={i === 0 ? "eager" : "lazy"}
-            className="h-full w-full scale-105 object-cover"
+            className="h-full w-full scale-105 object-cover brightness-[1.15] saturate-[1.05]"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/20" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-background/25 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent" />
 
           <div className="absolute inset-0 flex items-center px-5 sm:px-10 lg:px-16">
             <div className="max-w-xl">
               <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-primary">
                 {slide.kicker}
               </span>
-              <h1 className="mt-4 text-3xl font-black leading-[1.05] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+              <h1 className="mt-4 text-3xl font-black leading-[1.05] tracking-tight text-foreground drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)] sm:text-5xl lg:text-6xl">
                 {slide.title}
               </h1>
-              <p className="mt-3 max-w-md text-sm text-muted-foreground sm:text-base">{slide.copy}</p>
+              <p className="mt-3 max-w-md text-sm text-foreground/90 drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] sm:text-base">{slide.copy}</p>
               <Link
                 to={slide.to}
                 className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.03] active:scale-95"
