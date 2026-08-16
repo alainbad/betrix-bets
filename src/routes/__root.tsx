@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { BettingProvider } from "@/lib/betting-store";
 import { Toaster } from "@/components/ui/sonner";
@@ -126,6 +127,7 @@ function RootComponent() {
         <Header />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
+        <Footer />
         <Toaster />
       </BettingProvider>
     </QueryClientProvider>

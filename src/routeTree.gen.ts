@@ -11,8 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as BetSlipRouteImport } from './routes/bet-slip'
+import { Route as CasinoRouteImport } from './routes/casino'
+import { Route as LiveRouteImport } from './routes/live'
 import { Route as SportsRouteImport } from './routes/sports'
+import { Route as CasinoGameIdRouteImport } from './routes/casino.$gameId'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as SportsSportIdRouteImport } from './routes/sports.$sportId'
 
@@ -26,15 +30,35 @@ const AccountRoute = AccountRouteImport.update({
   path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BetSlipRoute = BetSlipRouteImport.update({
   id: '/bet-slip',
   path: '/bet-slip',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CasinoRoute = CasinoRouteImport.update({
+  id: '/casino',
+  path: '/casino',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LiveRoute = LiveRouteImport.update({
+  id: '/live',
+  path: '/live',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SportsRoute = SportsRouteImport.update({
   id: '/sports',
   path: '/sports',
   getParentRoute: () => rootRouteImport,
+} as any)
+const CasinoGameIdRoute = CasinoGameIdRouteImport.update({
+  id: '/$gameId',
+  path: '/$gameId',
+  getParentRoute: () => CasinoRoute,
 } as any)
 const EventsEventIdRoute = EventsEventIdRouteImport.update({
   id: '/events/$eventId',
@@ -50,16 +74,24 @@ const SportsSportIdRoute = SportsSportIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/admin': typeof AdminRoute
   '/bet-slip': typeof BetSlipRoute
+  '/casino': typeof CasinoRouteWithChildren
+  '/live': typeof LiveRoute
   '/sports': typeof SportsRouteWithChildren
+  '/casino/$gameId': typeof CasinoGameIdRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/sports/$sportId': typeof SportsSportIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/admin': typeof AdminRoute
   '/bet-slip': typeof BetSlipRoute
+  '/casino': typeof CasinoRouteWithChildren
+  '/live': typeof LiveRoute
   '/sports': typeof SportsRouteWithChildren
+  '/casino/$gameId': typeof CasinoGameIdRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/sports/$sportId': typeof SportsSportIdRoute
 }
@@ -67,8 +99,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/admin': typeof AdminRoute
   '/bet-slip': typeof BetSlipRoute
+  '/casino': typeof CasinoRouteWithChildren
+  '/live': typeof LiveRoute
   '/sports': typeof SportsRouteWithChildren
+  '/casino/$gameId': typeof CasinoGameIdRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/sports/$sportId': typeof SportsSportIdRoute
 }
@@ -77,24 +113,36 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/account'
+    | '/admin'
     | '/bet-slip'
+    | '/casino'
+    | '/live'
     | '/sports'
+    | '/casino/$gameId'
     | '/events/$eventId'
     | '/sports/$sportId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/account'
+    | '/admin'
     | '/bet-slip'
+    | '/casino'
+    | '/live'
     | '/sports'
+    | '/casino/$gameId'
     | '/events/$eventId'
     | '/sports/$sportId'
   id:
     | '__root__'
     | '/'
     | '/account'
+    | '/admin'
     | '/bet-slip'
+    | '/casino'
+    | '/live'
     | '/sports'
+    | '/casino/$gameId'
     | '/events/$eventId'
     | '/sports/$sportId'
   fileRoutesById: FileRoutesById
@@ -102,7 +150,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
+  AdminRoute: typeof AdminRoute
   BetSlipRoute: typeof BetSlipRoute
+  CasinoRoute: typeof CasinoRouteWithChildren
+  LiveRoute: typeof LiveRoute
   SportsRoute: typeof SportsRouteWithChildren
   EventsEventIdRoute: typeof EventsEventIdRoute
 }
@@ -123,11 +174,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/bet-slip': {
       id: '/bet-slip'
       path: '/bet-slip'
       fullPath: '/bet-slip'
       preLoaderRoute: typeof BetSlipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/casino': {
+      id: '/casino'
+      path: '/casino'
+      fullPath: '/casino'
+      preLoaderRoute: typeof CasinoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/live': {
+      id: '/live'
+      path: '/live'
+      fullPath: '/live'
+      preLoaderRoute: typeof LiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sports': {
@@ -136,6 +208,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/sports'
       preLoaderRoute: typeof SportsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/casino/$gameId': {
+      id: '/casino/$gameId'
+      path: '/$gameId'
+      fullPath: '/casino/$gameId'
+      preLoaderRoute: typeof CasinoGameIdRouteImport
+      parentRoute: typeof CasinoRoute
     }
     '/events/$eventId': {
       id: '/events/$eventId'
@@ -154,6 +233,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface CasinoRouteChildren {
+  CasinoGameIdRoute: typeof CasinoGameIdRoute
+}
+
+const CasinoRouteChildren: CasinoRouteChildren = {
+  CasinoGameIdRoute: CasinoGameIdRoute,
+}
+
+const CasinoRouteWithChildren =
+  CasinoRoute._addFileChildren(CasinoRouteChildren)
+
 interface SportsRouteChildren {
   SportsSportIdRoute: typeof SportsSportIdRoute
 }
@@ -168,7 +258,10 @@ const SportsRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
+  AdminRoute: AdminRoute,
   BetSlipRoute: BetSlipRoute,
+  CasinoRoute: CasinoRouteWithChildren,
+  LiveRoute: LiveRoute,
   SportsRoute: SportsRouteWithChildren,
   EventsEventIdRoute: EventsEventIdRoute,
 }

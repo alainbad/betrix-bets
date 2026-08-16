@@ -16,9 +16,11 @@ export function Header() {
             Betrix
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
-            <NavLink to="/">Home</NavLink>
             <NavLink to="/sports">Sports</NavLink>
+            <NavLink to="/live">Live</NavLink>
+            <NavLink to="/casino">Casino</NavLink>
             <NavLink to="/account">My Bets</NavLink>
+            <NavLink to="/admin">Admin</NavLink>
           </nav>
         </div>
 
