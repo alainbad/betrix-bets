@@ -1,3 +1,8 @@
+import lakersLogo from "@/assets/team-logos/lakers.svg.asset.json";
+import celticsLogo from "@/assets/team-logos/celtics.svg.asset.json";
+import nuggetsLogo from "@/assets/team-logos/nuggets.svg.asset.json";
+import sunsLogo from "@/assets/team-logos/suns.svg.asset.json";
+
 /**
  * Real club/franchise crests are served by Logo.dev from each team's official
  * domain, so we never ship hand-drawn imitations of trademarks.
@@ -73,8 +78,18 @@ export const ESPN_TEAM_LOGOS: Record<string, string> = {
   "los angeles dodgers": "mlb/500/lad",
 };
 
+/** Official NBA crests hosted with the app so browser anti-tracking cannot block them. */
+const HOSTED_TEAM_LOGOS: Record<string, string> = {
+  "los angeles lakers": lakersLogo.url,
+  "boston celtics": celticsLogo.url,
+  "denver nuggets": nuggetsLogo.url,
+  "phoenix suns": sunsLogo.url,
+};
+
 export function teamLogoUrl(team: string, size = 64): string | null {
   const key = team.trim().toLowerCase();
+  const hosted = HOSTED_TEAM_LOGOS[key];
+  if (hosted) return hosted;
   const espn = ESPN_TEAM_LOGOS[key];
   if (espn) return `https://a.espncdn.com/i/teamlogos/${espn}.png`;
   const domain = TEAM_DOMAINS[key];
