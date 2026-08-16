@@ -2,15 +2,19 @@ import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { Trophy } from "lucide-react";
 import { EventCard } from "@/components/EventCard";
 import { SportPill } from "@/components/SportPill";
-import { SPORT_IMAGES } from "@/lib/sport-media";
-import { SPORTS, getEventsBySport, getSportById, type SportId } from "@/lib/betting-data";
+import { getSportImage } from "@/lib/sport-media";
+import { getEventsBySport, getSportByCode, getSports } from "@/lib/sports-data";
 
 
 export const Route = createFileRoute("/sports/$sportId")({
-  loader: ({ params }) => {
-    const sport = getSportById(params.sportId as SportId);
+  loader: async ({ params }) => {
+    const [sport, events, sports] = await Promise.all([
+      getSportByCode(params.sportId),
+      getEventsBySport(params.sportId),
+      getSports(),
+    ]);
     if (!sport) throw notFound();
-    return { sport, events: getEventsBySport(params.sportId as SportId) };
+    return { sport, events, sports };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -26,13 +30,13 @@ export const Route = createFileRoute("/sports/$sportId")({
 });
 
 function SportPage() {
-  const { sport, events } = Route.useLoaderData();
+  const { sport, events, sports } = Route.useLoaderData();
 
   return (
     <main className="min-h-screen bg-background pb-16">
       <section className="relative h-52 overflow-hidden border-b border-border sm:h-64">
         <img
-          src={SPORT_IMAGES[sport.id]}
+          src={getSportImage(sport.id)}
           alt={`${sport.name} action`}
           width={640}
           height={640}
@@ -56,7 +60,7 @@ function SportPage() {
             <Trophy className="h-5 w-5" />
             <span className="text-sm font-semibold">All sports</span>
           </Link>
-          {SPORTS.map((s) => (
+          {sports.map((s) => (
             <SportPill key={s.id} sport={s} />
           ))}
         </div>

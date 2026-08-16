@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { EventCard } from "@/components/EventCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { SportPill } from "@/components/SportPill";
-import { SPORTS, getFeaturedEvents } from "@/lib/betting-data";
+import { getFeaturedEvents, getSports } from "@/lib/sports-data";
 import ogAsset from "@/assets/betrix-og.jpg.asset.json";
 
 const OG_IMAGE = `https://project--6a0e946c-c85b-4a07-8f34-3b6259233927.lovable.app${ogAsset.url}`;
@@ -10,6 +10,10 @@ const OG_IMAGE = `https://project--6a0e946c-c85b-4a07-8f34-3b6259233927.lovable.
 
 
 export const Route = createFileRoute("/")({
+  loader: async () => {
+    const [sports, featured] = await Promise.all([getSports(), getFeaturedEvents(4)]);
+    return { sports, featured };
+  },
   head: () => ({
     meta: [
       { title: "Betrix — Play-Money Sports Betting" },
@@ -26,7 +30,7 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const featured = getFeaturedEvents(4);
+  const { sports, featured } = Route.useLoaderData();
 
   return (
     <main className="min-h-screen bg-background">
@@ -38,7 +42,7 @@ function HomePage() {
         <div className="mx-auto max-w-7xl">
           <h2 className="mb-4 text-lg font-bold text-foreground">Sports</h2>
           <div className="flex gap-3 overflow-x-auto pb-2">
-            {SPORTS.map((sport) => (
+            {sports.map((sport) => (
               <SportPill key={sport.id} sport={sport} />
             ))}
           </div>

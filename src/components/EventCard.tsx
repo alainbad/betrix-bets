@@ -57,9 +57,9 @@ export function EventCard({ event }: { event: Event }) {
         {moneyline?.selections.map((selection) => {
           const active = isInSlip(event.id, selection.id);
           const caption =
-            selection.id === "draw"
+            selection.label === "Draw"
               ? "Draw"
-              : selection.id === "home"
+              : selection.label === "Home"
                 ? event.homeTeam
                 : event.awayTeam;
           return (
