@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { BettingProvider } from "@/lib/betting-store";
+import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -82,10 +83,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Betrix — Play-Money Sports Betting" },
-      { name: "description", content: "Betrix is a play-money sportsbook for tracking picks, exploring odds, and competing with friends." },
+      {
+        name: "description",
+        content:
+          "Betrix is a play-money sportsbook for tracking picks, exploring odds, and competing with friends.",
+      },
       { name: "author", content: "Betrix" },
       { property: "og:title", content: "Betrix — Play-Money Sports Betting" },
-      { property: "og:description", content: "Betrix is a play-money sportsbook for tracking picks, exploring odds, and competing with friends." },
+      {
+        property: "og:description",
+        content:
+          "Betrix is a play-money sportsbook for tracking picks, exploring odds, and competing with friends.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@betrix" },
@@ -123,13 +132,15 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <BettingProvider>
-        <Header />
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
-        <Footer />
-        <Toaster />
-      </BettingProvider>
+      <AuthProvider>
+        <BettingProvider>
+          <Header />
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+          <Footer />
+          <Toaster />
+        </BettingProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
