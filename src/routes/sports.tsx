@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Trophy } from "lucide-react";
 import { EventCard } from "@/components/EventCard";
 import { SportPill } from "@/components/SportPill";
+import { LeagueLogo } from "@/components/LeagueLogo";
+import { LEAGUE_BRANDS } from "@/lib/league-logos";
 import { EVENTS, SPORTS } from "@/lib/betting-data";
 
 
@@ -32,6 +34,25 @@ function SportsPage() {
             <SportPill key={sport.id} sport={sport} />
           ))}
         </div>
+
+        <section className="mt-8">
+          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
+            Top competitions
+          </h2>
+          <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">
+            {LEAGUE_BRANDS.map((brand) => (
+              <Link
+                key={brand.name}
+                to="/sports/$sportId"
+                params={{ sportId: brand.sportId }}
+                className="flex shrink-0 items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-betrix-surface-elevated"
+              >
+                <LeagueLogo league={brand.name} size={24} />
+                {brand.name}
+              </Link>
+            ))}
+          </div>
+        </section>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {EVENTS.map((event) => (
