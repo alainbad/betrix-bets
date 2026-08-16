@@ -30,7 +30,7 @@ export function LeagueLogo({
 
 export function LeagueBadge({ league, size = 18 }: { league: string; size?: number }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-md bg-secondary px-2 py-1 text-foreground">
+    <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md bg-secondary px-2 py-1 text-foreground">
       <LeagueLogo league={league} size={size} />
       {league}
     </span>
