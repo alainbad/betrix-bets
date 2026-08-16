@@ -24,7 +24,7 @@ export function Header() {
               height={40}
               className="h-9 w-9 rounded-lg object-contain shadow-lg shadow-black/30 ring-1 ring-white/10 sm:h-10 sm:w-10"
             />
-            <span className="hidden bg-gradient-to-r from-primary to-betrix-green-dim bg-clip-text text-transparent drop-shadow-sm sm:inline">
+            <span className="inline bg-gradient-to-r from-primary to-betrix-green-dim bg-clip-text text-transparent drop-shadow-sm">
               Betrix
             </span>
           </Link>
