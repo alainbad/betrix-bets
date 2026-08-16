@@ -37,7 +37,7 @@ export function EventCard({ event }: { event: Event }) {
         </Link>
       </div>
 
-      <div className="mb-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+      <div className="mb-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
         <TeamColumn name={event.awayTeam} />
         <span className="text-lg font-black text-muted-foreground">@</span>
         <TeamColumn name={event.homeTeam} align="right" />
@@ -82,10 +82,10 @@ export function EventCard({ event }: { event: Event }) {
 function TeamColumn({ name, align = "left" }: { name: string; align?: "left" | "right" }) {
   return (
     <div
-      className={`flex items-center gap-2 ${align === "right" ? "flex-row-reverse text-right" : "text-left"}`}
+      className={`flex min-w-0 items-center gap-3 ${align === "right" ? "flex-row-reverse text-right" : "text-left"}`}
     >
-      <TeamLogo team={name} size={32} />
-      <p className="text-sm font-bold text-foreground">{name}</p>
+      <TeamLogo team={name} size={44} />
+      <p className="min-w-0 text-sm font-bold leading-tight text-foreground">{name}</p>
     </div>
   );
 }

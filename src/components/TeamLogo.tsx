@@ -30,16 +30,20 @@ export function TeamLogo({
   }
 
   return (
-    <img
-      src={url}
-      alt={`${team} crest`}
-      width={size}
-      height={size}
-      loading="lazy"
-      onError={() => setFailed(true)}
-      className={`league-logo-3d shrink-0 object-contain ${className}`}
+    <span
+      className={`flex shrink-0 items-center justify-center ${className}`}
       style={{ width: size, height: size }}
-    />
+    >
+      <img
+        src={url}
+        alt={`${team} crest`}
+        width={size}
+        height={size}
+        loading="eager"
+        onError={() => setFailed(true)}
+        className="league-logo-3d h-full w-full object-contain"
+      />
+    </span>
   );
 }
 
