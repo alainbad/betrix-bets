@@ -49,13 +49,22 @@ export function EventCard({ event }: { event: Event }) {
         </div>
       )}
 
-      <div className="mt-auto grid grid-cols-2 gap-2">
+      <div
+        className={`mt-auto grid gap-2 ${moneyline && moneyline.selections.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}
+      >
         {moneyline?.selections.map((selection) => {
           const active = isInSlip(event.id, selection.id);
+          const caption =
+            selection.id === "draw"
+              ? "Draw"
+              : selection.id === "home"
+                ? event.homeTeam
+                : event.awayTeam;
           return (
             <OddsButton
               key={selection.id}
               selection={selection}
+              caption={caption}
               active={active}
               onClick={() => addToSlip(event, moneyline.label, selection)}
               size="sm"
@@ -63,6 +72,7 @@ export function EventCard({ event }: { event: Event }) {
           );
         })}
       </div>
+
     </article>
   );
 }
