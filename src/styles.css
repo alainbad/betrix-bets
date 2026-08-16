@@ -204,3 +204,19 @@
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
 }
+
+@layer utilities {
+  .league-logo-3d {
+    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.28))
+      drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6))
+      drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
+    transform: perspective(320px) rotateX(6deg);
+    transform-origin: 50% 85%;
+    transition: transform 220ms ease, filter 220ms ease;
+  }
+  .league-logo-3d:hover {
+    transform: perspective(320px) rotateX(0deg) scale(1.06);
+    filter: drop-shadow(0 2px 0 rgba(255, 255, 255, 0.35))
+      drop-shadow(0 8px 12px rgba(0, 0, 0, 0.65));
+  }
+}

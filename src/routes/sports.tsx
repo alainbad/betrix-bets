@@ -47,7 +47,7 @@ function SportsPage() {
                 params={{ sportId: brand.sportId }}
                 className="flex shrink-0 items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-betrix-surface-elevated"
               >
-                <LeagueLogo league={brand.name} size={24} />
+                <LeagueLogo league={brand.name} size={44} />
                 {brand.name}
               </Link>
             ))}
