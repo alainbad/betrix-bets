@@ -37,12 +37,13 @@ export interface Event {
 }
 
 export const SPORTS: Sport[] = [
-  { id: "football", name: "Football", icon: "🏈" },
+  { id: "football", name: "Football", icon: "⚽" },
   { id: "basketball", name: "Basketball", icon: "🏀" },
   { id: "tennis", name: "Tennis", icon: "🎾" },
   { id: "esports", name: "Esports", icon: "🎮" },
   { id: "baseball", name: "Baseball", icon: "⚾" },
 ];
+
 
 function moneyline(homeOdds: number, awayOdds: number): Market {
   return {
@@ -77,29 +78,63 @@ function total(line: number, overOdds: number, underOdds: number): Market {
   };
 }
 
+function threeWay(homeOdds: number, drawOdds: number, awayOdds: number): Market {
+  return {
+    type: "moneyline",
+    label: "Match result",
+    selections: [
+      { id: "home", label: "Home", odds: homeOdds },
+      { id: "draw", label: "Draw", odds: drawOdds },
+      { id: "away", label: "Away", odds: awayOdds },
+    ],
+  };
+}
+
+
 export const EVENTS: Event[] = [
   {
-    id: "nfl-1",
+    id: "epl-1",
     sportId: "football",
-    league: "NFL",
+    league: "Premier League",
     status: "upcoming",
-    startTime: "2026-08-17T21:06:40.000Z",
-    homeTeam: "Kansas City Chiefs",
-    awayTeam: "San Francisco 49ers",
-    markets: [moneyline(-145, 125), spread(-2.5, -110, -110), total(47.5, -110, -110)],
+    startTime: "2026-08-17T14:00:00.000Z",
+    homeTeam: "Arsenal",
+    awayTeam: "Manchester City",
+    markets: [threeWay(155, 240, 180), spread(-0.5, -110, -110), total(2.5, -125, 105)],
   },
   {
-    id: "nfl-2",
+    id: "epl-2",
     sportId: "football",
-    league: "NFL",
+    league: "Premier League",
     status: "live",
     startTime: "2026-08-17T02:21:40.000Z",
-    homeTeam: "Buffalo Bills",
-    awayTeam: "Miami Dolphins",
-    homeScore: 14,
-    awayScore: 10,
-    markets: [moneyline(-185, 155), spread(-3.5, -110, -110), total(44.5, -105, -115)],
+    homeTeam: "Liverpool",
+    awayTeam: "Chelsea",
+    homeScore: 2,
+    awayScore: 1,
+    markets: [threeWay(-115, 320, 290), spread(-1, 135, -165), total(3.5, 120, -145)],
   },
+  {
+    id: "laliga-1",
+    sportId: "football",
+    league: "LaLiga",
+    status: "upcoming",
+    startTime: "2026-08-17T19:00:00.000Z",
+    homeTeam: "Real Madrid",
+    awayTeam: "Sevilla",
+    markets: [threeWay(-190, 330, 480), spread(-1.5, 110, -135), total(2.5, -140, 115)],
+  },
+  {
+    id: "ucl-1",
+    sportId: "football",
+    league: "Champions League",
+    status: "upcoming",
+    startTime: "2026-08-18T19:00:00.000Z",
+    homeTeam: "Bayern Munich",
+    awayTeam: "Inter Milan",
+    markets: [threeWay(-135, 270, 340), spread(-0.5, -105, -115), total(2.5, -130, 110)],
+  },
+
   {
     id: "nba-1",
     sportId: "basketball",
