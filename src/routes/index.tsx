@@ -3,6 +3,10 @@ import { EventCard } from "@/components/EventCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { SportPill } from "@/components/SportPill";
 import { SPORTS, getFeaturedEvents } from "@/lib/betting-data";
+import ogAsset from "@/assets/betrix-og.jpg.asset.json";
+
+const OG_IMAGE = `https://project--6a0e946c-c85b-4a07-8f34-3b6259233927.lovable.app${ogAsset.url}`;
+
 
 
 export const Route = createFileRoute("/")({
