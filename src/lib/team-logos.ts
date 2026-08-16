@@ -11,7 +11,7 @@ export const TEAM_DOMAINS: Record<string, string> = {
   chelsea: "chelseafc.com",
   "real madrid": "realmadrid.com",
   sevilla: "sevillafc.com",
-  "bayern munich": "fcbayern.com",
+  "bayern munich": "fcbayern.de",
   "inter milan": "inter.it",
   barcelona: "fcbarcelona.com",
   "atletico madrid": "atleticodemadrid.com",
