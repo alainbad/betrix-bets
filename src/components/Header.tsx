@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Ticket, User, Wallet } from "lucide-react";
 import { useBetting } from "@/lib/betting-store";
 import { formatCurrency } from "@/lib/format";
+import betrixLogo from "@/assets/betrix-logo.png";
 
 export function Header() {
   const { balance, slip } = useBetting();
@@ -11,9 +12,7 @@ export function Header() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2 text-2xl font-black tracking-tight text-foreground">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              B
-            </span>
+            <img src={betrixLogo} alt="Betrix logo" width={36} height={36} className="h-9 w-9 object-contain" />
             Betrix
           </Link>
           <nav className="hidden items-center gap-1 md:flex">

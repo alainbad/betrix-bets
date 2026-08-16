@@ -18,6 +18,7 @@ export function formatTime(iso: string): string {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
+    timeZone: "UTC",
   });
 }
 
@@ -27,6 +28,7 @@ export function formatDate(iso: string): string {
     weekday: "short",
     month: "short",
     day: "numeric",
+    timeZone: "UTC",
   });
 }
 
