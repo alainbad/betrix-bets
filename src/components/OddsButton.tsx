@@ -7,9 +7,10 @@ interface OddsButtonProps {
   active?: boolean;
   onClick?: () => void;
   size?: "sm" | "md";
+  caption?: string;
 }
 
-export function OddsButton({ selection, active, onClick, size = "md" }: OddsButtonProps) {
+export function OddsButton({ selection, active, onClick, size = "md", caption }: OddsButtonProps) {
   return (
     <button
       type="button"
@@ -22,12 +23,13 @@ export function OddsButton({ selection, active, onClick, size = "md" }: OddsButt
           : "border-border bg-secondary text-foreground hover:border-primary/60 hover:bg-betrix-surface-elevated"
       )}
     >
-      {selection.value && (
-        <span className={cn("font-medium text-muted-foreground", size === "sm" ? "text-[10px]" : "text-xs")}>
-          {selection.value}
+      {(caption ?? selection.value) && (
+        <span className={cn("max-w-full truncate font-medium text-muted-foreground", size === "sm" ? "text-[10px]" : "text-xs")}>
+          {caption ?? selection.value}
         </span>
       )}
       <span className={cn("font-bold", size === "sm" ? "text-sm" : "text-base")}>{formatOdds(selection.odds)}</span>
     </button>
   );
 }
+

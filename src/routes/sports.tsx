@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Trophy } from "lucide-react";
 import { EventCard } from "@/components/EventCard";
 import { SportPill } from "@/components/SportPill";
 import { EVENTS, SPORTS } from "@/lib/betting-data";
+
 
 export const Route = createFileRoute("/sports")({
   head: () => ({
@@ -45,13 +47,11 @@ function AllSportsPill({ active }: { active?: boolean }) {
   return (
     <Link
       to="/sports"
-      activeProps={{ className: "border-primary text-primary" }}
-      className="flex min-w-[6rem] flex-col items-center gap-2 rounded-2xl border border-border bg-secondary p-4 text-center transition-all hover:border-primary/50 hover:bg-betrix-surface-elevated"
+      className={`flex h-24 w-28 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border bg-secondary text-center transition-colors hover:bg-betrix-surface-elevated ${active ? "border-primary text-primary" : "border-border text-foreground"}`}
     >
-      <span className="text-2xl" aria-hidden="true">
-        🏆
-      </span>
-      <span className="text-sm font-semibold text-foreground">All</span>
+      <Trophy className="h-5 w-5" />
+      <span className="text-sm font-semibold">All sports</span>
     </Link>
   );
 }
+

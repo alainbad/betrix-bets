@@ -1,18 +1,27 @@
 import { Link } from "@tanstack/react-router";
 import type { Sport } from "@/lib/betting-data";
+import { SPORT_IMAGES } from "@/lib/sport-media";
 
 export function SportPill({ sport }: { sport: Sport }) {
   return (
     <Link
       to="/sports/$sportId"
       params={{ sportId: sport.id }}
-      activeProps={{ className: "border-primary text-primary" }}
-      className="flex min-w-[6rem] flex-col items-center gap-2 rounded-2xl border border-border bg-secondary p-4 text-center transition-all hover:border-primary/50 hover:bg-betrix-surface-elevated"
+      activeProps={{ className: "ring-2 ring-primary" }}
+      className="group relative h-24 w-40 shrink-0 overflow-hidden rounded-xl border border-border bg-card"
     >
-      <span className="text-2xl" aria-hidden="true">
-        {sport.icon}
+      <img
+        src={SPORT_IMAGES[sport.id]}
+        alt={`${sport.name} betting`}
+        loading="lazy"
+        width={640}
+        height={640}
+        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+      />
+      <span className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+      <span className="absolute bottom-2 left-3 text-sm font-bold tracking-tight text-foreground">
+        {sport.name}
       </span>
-      <span className="text-sm font-semibold text-foreground">{sport.name}</span>
     </Link>
   );
 }
