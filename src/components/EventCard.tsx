@@ -3,6 +3,7 @@ import { Clock, Radio } from "lucide-react";
 import { useBetting } from "@/lib/betting-store";
 import { formatDateTime, formatOdds } from "@/lib/format";
 import { OddsButton } from "./OddsButton";
+import { LeagueBadge } from "./LeagueLogo";
 import type { Event } from "@/lib/betting-data";
 
 export function EventCard({ event }: { event: Event }) {
@@ -13,7 +14,7 @@ export function EventCard({ event }: { event: Event }) {
     <article className="group flex flex-col rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          <span className="rounded-md bg-secondary px-2 py-1 text-foreground">{event.league}</span>
+          <LeagueBadge league={event.league} />
           {event.status === "live" ? (
             <span className="flex items-center gap-1 text-accent">
               <Radio className="h-3 w-3 animate-pulse" />

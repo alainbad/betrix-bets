@@ -32,7 +32,7 @@ export function getLeagueBrand(league: string): LeagueBrand | undefined {
 /** Logo.dev image URL for a league, or null when we have no verified domain. */
 export function leagueLogoUrl(league: string, size = 64): string | null {
   const brand = getLeagueBrand(league);
-  const token = import.meta.env.VITE_LOVABLE_CONNECTOR_LOGO_DEV_API_KEY;
+  const token = import.meta.env["VITE_LOVABLE_CONNECTOR_LOGO_DEV_API_KEY"];
   if (!brand || !token) return null;
   return `https://img.logo.dev/${brand.domain}?token=${token}&size=${size}&format=png&retina=true`;
 }
