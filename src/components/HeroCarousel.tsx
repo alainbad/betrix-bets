@@ -102,7 +102,7 @@ export function HeroCarousel() {
         type="button"
         onClick={() => go(index - 1)}
         aria-label="Previous slide"
-        className="absolute left-3 top-1/2 hidden -translate-y-1/2 rounded-full border border-border bg-card/70 p-2 text-foreground backdrop-blur transition-colors hover:bg-card sm:block"
+        className="absolute left-3 top-1/2 block -translate-y-1/2 rounded-full border border-border bg-card/70 p-2 text-foreground backdrop-blur transition-colors hover:bg-card"
       >
         <ChevronLeft className="h-5 w-5" />
       </button>
@@ -110,20 +110,27 @@ export function HeroCarousel() {
         type="button"
         onClick={() => go(index + 1)}
         aria-label="Next slide"
-        className="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-full border border-border bg-card/70 p-2 text-foreground backdrop-blur transition-colors hover:bg-card sm:block"
+        className="absolute right-3 top-1/2 block -translate-y-1/2 rounded-full border border-border bg-card/70 p-2 text-foreground backdrop-blur transition-colors hover:bg-card"
       >
         <ChevronRight className="h-5 w-5" />
       </button>
 
-      <div className="absolute bottom-5 left-5 flex gap-2 sm:left-10 lg:left-16">
+      <div className="absolute bottom-5 left-5 flex items-center gap-2 sm:left-10 lg:left-16">
         {SLIDES.map((slide, i) => (
           <button
             key={slide.title}
             type="button"
             onClick={() => go(i)}
             aria-label={`Show slide ${i + 1}`}
-            className={`h-1.5 rounded-full transition-all ${i === index ? "w-8 bg-primary" : "w-3 bg-muted-foreground/40 hover:bg-muted-foreground"}`}
-          />
+            className={`h-1.5 overflow-hidden rounded-full transition-all ${i === index ? "w-12 bg-primary/25" : "w-3 bg-muted-foreground/40 hover:bg-muted-foreground"}`}
+          >
+            {i === index ? (
+              <span
+                key={`p-${index}`}
+                className="block h-full w-full origin-left animate-[hero-progress_5s_linear_forwards] bg-primary"
+              />
+            ) : null}
+          </button>
         ))}
       </div>
     </section>
