@@ -1,6 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Clock, Radio } from "lucide-react";
 import { OddsButton } from "@/components/OddsButton";
+import { TeamLogo } from "@/components/TeamLogo";
 import { LeagueBadge } from "@/components/LeagueLogo";
 import { useBetting } from "@/lib/betting-store";
 import { EVENTS, getEventById } from "@/lib/betting-data";
@@ -89,7 +90,8 @@ function EventDetailPage() {
 
 function TeamBlock({ name, score, align = "left" }: { name: string; score?: number | undefined; align?: "left" | "right" }) {
   return (
-    <div className={align === "right" ? "text-right" : "text-left"}>
+    <div className={`flex flex-col gap-3 ${align === "right" ? "items-end text-right" : "items-start text-left"}`}>
+      <TeamLogo team={name} size={64} />
       <p className="text-lg font-bold text-foreground sm:text-2xl">{name}</p>
       {score !== undefined && <p className="mt-1 text-3xl font-black text-primary">{score}</p>}
     </div>
