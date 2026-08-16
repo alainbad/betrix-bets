@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Info, ShieldCheck } from "lucide-react";
+import { casinoGameImage } from "@/lib/casino-media";
 import { getGameById } from "@/lib/casino-data";
 import { formatCurrency } from "@/lib/format";
 import { useBetting } from "@/lib/betting-store";
@@ -43,15 +44,23 @@ function GamePage() {
         </Link>
 
         <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
-          <section className={`rounded-2xl border border-border bg-gradient-to-br ${game.hue} p-8`}>
-            <div className="flex flex-col items-center justify-center rounded-xl border border-border/60 bg-background/60 py-20 text-center backdrop-blur">
-              <p className="text-4xl font-black tracking-tighter text-foreground">{game.name}</p>
+          <section className="relative overflow-hidden rounded-2xl border border-border">
+            <img
+              src={casinoGameImage(game.id)}
+              alt={`${game.name} by ${game.provider}`}
+              width={800}
+              height={600}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px]" />
+            <div className="relative flex flex-col items-center justify-center py-24 text-center">
+              <p className="text-4xl font-black tracking-tighter text-foreground drop-shadow">{game.name}</p>
               <p className="mt-2 text-sm text-muted-foreground">{game.tagline}</p>
               <p className="mt-8 max-w-sm text-xs text-muted-foreground">
                 The game client connects to the server-side round engine. Outcomes are generated and settled server-side —
                 nothing is decided in this browser.
               </p>
-              <span className="mt-6 rounded-full border border-border bg-secondary px-4 py-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              <span className="mt-6 rounded-full border border-border bg-secondary/90 px-4 py-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
                 Engine pending
               </span>
             </div>
