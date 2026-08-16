@@ -11,9 +11,11 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-3 sm:px-4 lg:px-8">
         <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-4 lg:gap-8">
-          <Link to="/" className="flex shrink-0 items-center gap-2 text-xl font-black tracking-tight text-foreground sm:text-2xl">
+          <Link to="/" className="flex shrink-0 items-center gap-2 text-xl font-black tracking-tight sm:text-2xl">
             <img src={betrixLogo} alt="Betrix logo" width={32} height={32} className="h-8 w-8 object-contain" />
-            <span className="hidden sm:inline">Betrix</span>
+            <span className="hidden bg-gradient-to-r from-primary to-betrix-green-dim bg-clip-text text-transparent drop-shadow-sm sm:inline">
+              Betrix
+            </span>
           </Link>
           <nav className="flex flex-1 items-center overflow-x-auto no-scrollbar sm:flex-none">
             <TopTab to="/sports" label="Sports" />
