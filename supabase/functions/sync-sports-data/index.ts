@@ -57,6 +57,70 @@ async function upsertProvider(supabase: SupabaseClient, code: string): Promise<s
   return data.id as string;
 }
 
+// A live provider can produce thousands of rows (real leagues run far
+// bigger than the mock dataset), and a single upsert/insert/select-in call
+// with that many rows can fail at the network layer sending the request
+// rather than at Postgres - splitting into fixed-size batches keeps every
+// individual request small regardless of how much the sync scales up.
+const BATCH_SIZE = 200;
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
+async function chunkedUpsert(
+  supabase: SupabaseClient,
+  table: string,
+  rows: Record<string, unknown>[],
+  onConflict: string,
+): Promise<void> {
+  for (const batch of chunk(rows, BATCH_SIZE)) {
+    const { error } = await supabase.from(table).upsert(batch, { onConflict });
+    if (error) throw error;
+  }
+}
+
+async function chunkedUpsertReturning(
+  supabase: SupabaseClient,
+  table: string,
+  rows: Record<string, unknown>[],
+  onConflict: string,
+  select: string,
+): Promise<Record<string, unknown>[]> {
+  const out: Record<string, unknown>[] = [];
+  for (const batch of chunk(rows, BATCH_SIZE)) {
+    const { data, error } = await supabase.from(table).upsert(batch, { onConflict }).select(select);
+    if (error) throw error;
+    out.push(...(data ?? []));
+  }
+  return out;
+}
+
+async function chunkedInsert(supabase: SupabaseClient, table: string, rows: Record<string, unknown>[]): Promise<void> {
+  for (const batch of chunk(rows, BATCH_SIZE)) {
+    const { error } = await supabase.from(table).insert(batch);
+    if (error) throw error;
+  }
+}
+
+async function chunkedSelectIn(
+  supabase: SupabaseClient,
+  table: string,
+  columns: string,
+  inColumn: string,
+  ids: string[],
+): Promise<Record<string, unknown>[]> {
+  const out: Record<string, unknown>[] = [];
+  for (const batch of chunk(ids, BATCH_SIZE)) {
+    const { data, error } = await supabase.from(table).select(columns).in(inColumn, batch);
+    if (error) throw error;
+    out.push(...(data ?? []));
+  }
+  return out;
+}
+
 interface SyncCounts {
   sports: number;
   competitions: number;
@@ -96,30 +160,25 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
 
   console.log("step: countries");
   const countries = await provider.getCountries();
-  const countryIdByCode = new Map<string, string>();
-  if (countries.length > 0) {
-    const { data, error } = await supabase
-      .from("countries")
-      .upsert(
-        countries.map((c) => ({ code: c.code, name: c.name })),
-        { onConflict: "code" },
-      )
-      .select("id, code");
-    if (error) throw error;
-    for (const row of data ?? []) countryIdByCode.set(row.code as string, row.id as string);
-  }
+  const countryRows = await chunkedUpsertReturning(
+    supabase,
+    "countries",
+    countries.map((c) => ({ code: c.code, name: c.name })),
+    "code",
+    "id, code",
+  );
+  const countryIdByCode = new Map<string, string>(countryRows.map((r) => [r.code as string, r.id as string]));
 
   console.log("step: sports");
   const sports = await provider.getSports();
-  const { data: sportRows, error: sportsError } = await supabase
-    .from("sports")
-    .upsert(
-      sports.map((s) => ({ code: s.code, name: s.name, icon: s.icon ?? null })),
-      { onConflict: "code" },
-    )
-    .select("id, code");
-  if (sportsError) throw sportsError;
-  const sportIdByCode = new Map<string, string>((sportRows ?? []).map((r) => [r.code as string, r.id as string]));
+  const sportRows = await chunkedUpsertReturning(
+    supabase,
+    "sports",
+    sports.map((s) => ({ code: s.code, name: s.name, icon: s.icon ?? null })),
+    "code",
+    "id, code",
+  );
+  const sportIdByCode = new Map<string, string>(sportRows.map((r) => [r.code as string, r.id as string]));
   counts.sports = sports.length;
 
   console.log("step: competitions");
@@ -128,23 +187,21 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
     const comps = await provider.getCompetitions(sport.code);
     for (const comp of comps) competitionEntries.push({ sportCode: sport.code, comp });
   }
-  let competitionIdBySportSlug = new Map<string, string>();
-  if (competitionEntries.length > 0) {
-    const { data, error } = await supabase
-      .from("competitions")
-      .upsert(
-        competitionEntries.map(({ sportCode, comp }) => ({
-          sport_id: sportIdByCode.get(sportCode)!,
-          country_id: comp.countryCode ? (countryIdByCode.get(comp.countryCode) ?? null) : null,
-          name: comp.name,
-          slug: comp.slug,
-        })),
-        { onConflict: "sport_id,slug" },
-      )
-      .select("id, sport_id, slug");
-    if (error) throw error;
-    competitionIdBySportSlug = new Map((data ?? []).map((r) => [`${r.sport_id}:${r.slug}`, r.id as string]));
-  }
+  const competitionRows = await chunkedUpsertReturning(
+    supabase,
+    "competitions",
+    competitionEntries.map(({ sportCode, comp }) => ({
+      sport_id: sportIdByCode.get(sportCode)!,
+      country_id: comp.countryCode ? (countryIdByCode.get(comp.countryCode) ?? null) : null,
+      name: comp.name,
+      slug: comp.slug,
+    })),
+    "sport_id,slug",
+    "id, sport_id, slug",
+  );
+  const competitionIdBySportSlug = new Map<string, string>(
+    competitionRows.map((r) => [`${r.sport_id}:${r.slug}`, r.id as string]),
+  );
   counts.competitions = competitionEntries.length;
   for (const { sportCode, comp } of competitionEntries) {
     const sportId = sportIdByCode.get(sportCode)!;
@@ -187,23 +244,21 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
       participantByKey.set(`${sportId}:${p.name}`, entry);
     }
   }
-  let participantIdBySportName = new Map<string, string>();
-  if (participantByKey.size > 0) {
-    const { data, error } = await supabase
-      .from("participants")
-      .upsert(
-        [...participantByKey.values()].map((p) => ({
-          sport_id: p.sportId,
-          name: p.name,
-          short_name: p.shortName ?? null,
-          kind: p.kind,
-        })),
-        { onConflict: "sport_id,name" },
-      )
-      .select("id, sport_id, name");
-    if (error) throw error;
-    participantIdBySportName = new Map((data ?? []).map((r) => [`${r.sport_id}:${r.name}`, r.id as string]));
-  }
+  const participantRows = await chunkedUpsertReturning(
+    supabase,
+    "participants",
+    [...participantByKey.values()].map((p) => ({
+      sport_id: p.sportId,
+      name: p.name,
+      short_name: p.shortName ?? null,
+      kind: p.kind,
+    })),
+    "sport_id,name",
+    "id, sport_id, name",
+  );
+  const participantIdBySportName = new Map<string, string>(
+    participantRows.map((r) => [`${r.sport_id}:${r.name}`, r.id as string]),
+  );
 
   console.log("step: events");
   const eventIdByFixtureId = new Map<string, string>();
@@ -226,10 +281,7 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
       last_verified_at: new Date().toISOString(),
     });
   }
-  if (eventUpsertRows.length > 0) {
-    const { error } = await supabase.from("events").upsert(eventUpsertRows, { onConflict: "id" });
-    if (error) throw error;
-  }
+  await chunkedUpsert(supabase, "events", eventUpsertRows, "id");
   counts.events = eventUpsertRows.length;
 
   console.log("step: event_participants");
@@ -248,12 +300,7 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
       participant_id: participantIdBySportName.get(`${sportId}:${fixture.awayParticipant.name}`)!,
     });
   }
-  if (eventParticipantRows.length > 0) {
-    const { error } = await supabase
-      .from("event_participants")
-      .upsert(eventParticipantRows, { onConflict: "event_id,side" });
-    if (error) throw error;
-  }
+  await chunkedUpsert(supabase, "event_participants", eventParticipantRows, "event_id,side");
 
   console.log("step: markets");
   const marketIdByRef = new Map<string, string>();
@@ -272,10 +319,7 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
       });
     }
   }
-  if (marketUpsertRows.length > 0) {
-    const { error } = await supabase.from("markets").upsert(marketUpsertRows, { onConflict: "id" });
-    if (error) throw error;
-  }
+  await chunkedUpsert(supabase, "markets", marketUpsertRows, "id");
   counts.markets = marketUpsertRows.length;
 
   console.log("step: selections");
@@ -305,17 +349,10 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
   }
 
   const existingSelectionIds = selectionMeta.filter((s) => !s.isNew).map((s) => s.id);
-  const oldOddsById = new Map<string, number>();
-  if (existingSelectionIds.length > 0) {
-    const { data, error } = await supabase.from("selections").select("id, decimal_odds").in("id", existingSelectionIds);
-    if (error) throw error;
-    for (const row of data ?? []) oldOddsById.set(row.id as string, row.decimal_odds as number);
-  }
+  const oldOddsRows = await chunkedSelectIn(supabase, "selections", "id, decimal_odds", "id", existingSelectionIds);
+  const oldOddsById = new Map<string, number>(oldOddsRows.map((r) => [r.id as string, r.decimal_odds as number]));
 
-  if (selectionUpsertRows.length > 0) {
-    const { error } = await supabase.from("selections").upsert(selectionUpsertRows, { onConflict: "id" });
-    if (error) throw error;
-  }
+  await chunkedUpsert(supabase, "selections", selectionUpsertRows, "id");
   counts.selections = selectionUpsertRows.length;
 
   console.log("step: odds_history");
@@ -327,18 +364,10 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
       new_odds: s.newOdds,
       provider_timestamp: s.providerUpdatedAt,
     }));
-  if (oddsHistoryRows.length > 0) {
-    const { error } = await supabase.from("odds_history").insert(oddsHistoryRows);
-    if (error) throw error;
-  }
+  await chunkedInsert(supabase, "odds_history", oddsHistoryRows);
 
   console.log("step: flush mappings", newMappingRows.length, "new");
-  if (newMappingRows.length > 0) {
-    const { error } = await supabase
-      .from("provider_mappings")
-      .upsert(newMappingRows, { onConflict: "provider_id,entity_type,provider_ref" });
-    if (error) throw error;
-  }
+  await chunkedUpsert(supabase, "provider_mappings", newMappingRows, "provider_id,entity_type,provider_ref");
 
   return counts;
 }

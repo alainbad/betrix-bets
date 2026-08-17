@@ -20,11 +20,14 @@ import type {
 //    fetches the live /v4/sports list and filters by the `group` field
 //    ("Soccer" / "Basketball" / "Tennis") to bridge that to our sportCode.
 //  - Every league returned by /v4/sports for a group gets its own /odds call
-//    (one full API request each), and The Odds API's free tier is a few
-//    hundred requests/month total. Syncing every active soccer league alone
-//    would burn that in one run, so getCompetitions() caps itself to
-//    SPORTS_COMPETITION_ALLOWLIST_CAP leagues per sport (5 by default) unless
-//    SPORTS_COMPETITION_ALLOWLIST names specific sport_keys to use instead.
+//    (one full API request each - credits are per request, scaled by markets
+//    x regions, not by how many matches come back), and The Odds API's free
+//    tier is a few hundred credits/month total. Syncing every active soccer
+//    league alone would burn that in one run, so getCompetitions() caps
+//    itself to SPORTS_COMPETITION_CAP leagues per sport (5 by default, env
+//    var on the ingestion job) unless SPORTS_COMPETITION_ALLOWLIST names
+//    specific sport_keys to use instead. Remaining/used credits are logged
+//    per request (see logQuota()) so consumption is visible in the Logs tab.
 //  - The /odds endpoint doesn't return scores or a reliable finished flag, so
 //    status here only ever resolves to "scheduled" or "live" - never
 //    "finished". A real match ending is only ever recorded through an admin
@@ -85,6 +88,18 @@ interface TheOddsApiEvent {
 
 function slugify(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
+// The Odds API returns its plan's remaining/used credit counts on every
+// response - logging them means quota consumption is visible in the
+// Supabase Logs tab per sync run without building a separate tracker.
+function logQuota(context: string, res: Response): void {
+  const remaining = res.headers.get("x-requests-remaining");
+  const used = res.headers.get("x-requests-used");
+  const lastCost = res.headers.get("x-requests-last");
+  if (remaining !== null || used !== null) {
+    console.log(`the-odds-api quota [${context}]: remaining=${remaining} used=${used} lastCost=${lastCost}`);
+  }
 }
 
 // Selection `name` must be the generic "Home"/"Away"/"Draw"/"Over"/"Under"
@@ -176,6 +191,7 @@ export class TheOddsApiProvider implements SportsDataProvider {
   private async fetchOdds(competitionId: string, markets: string): Promise<ProviderFixture[]> {
     const url = `${BASE_URL}/sports/${competitionId}/odds?apiKey=${this.apiKey}&regions=us&markets=${markets}&oddsFormat=decimal&dateFormat=iso`;
     const res = await fetch(url);
+    logQuota(competitionId, res);
     if (!res.ok) throw new Error(`The Odds API /odds failed: ${res.status} ${await res.text()}`);
     const events = (await res.json()) as TheOddsApiEvent[];
 
