@@ -19,10 +19,18 @@ import type {
 //    "soccer_epl"); there's no single "football" key. getCompetitions()
 //    fetches the live /v4/sports list and filters by the `group` field
 //    ("Soccer" / "Basketball" / "Tennis") to bridge that to our sportCode.
-//  - The /odds endpoint doesn't return a reliable live/finished flag — status
-//    here is a heuristic (started but not obviously long over => "live").
-//    Cross-referencing the separate /scores endpoint would be more accurate;
-//    left as a follow-up rather than guessed at without a way to test it.
+//  - Every league returned by /v4/sports for a group gets its own /odds call
+//    (one full API request each), and The Odds API's free tier is a few
+//    hundred requests/month total. Syncing every active soccer league alone
+//    would burn that in one run, so getCompetitions() caps itself to
+//    SPORTS_COMPETITION_ALLOWLIST_CAP leagues per sport (5 by default) unless
+//    SPORTS_COMPETITION_ALLOWLIST names specific sport_keys to use instead.
+//  - The /odds endpoint doesn't return scores or a reliable finished flag, so
+//    status here only ever resolves to "scheduled" or "live" - never
+//    "finished". A real match ending is only ever recorded through an admin
+//    calling settle_event() (see the Settlement tab in /admin), same as the
+//    mock provider's fixtures. Cross-referencing the separate /scores
+//    endpoint to auto-detect finished games would be a reasonable follow-up.
 //  - Only the first bookmaker present in the response is used per market, to
 //    keep one canonical selection per market (spec doesn't ask for multi-book
 //    comparison at this phase).
@@ -32,6 +40,7 @@ import type {
 //    whatever's currently active rather than hardcoding keys.
 
 const BASE_URL = "https://api.the-odds-api.com/v4";
+const DEFAULT_COMPETITION_CAP = 5;
 
 const SPORT_GROUP_MAP: Record<string, string> = {
   football: "Soccer",
@@ -78,6 +87,13 @@ function slugify(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
+// Selection `name` must be the generic "Home"/"Away"/"Draw"/"Over"/"Under"
+// label, not the raw team name The Odds API returns in outcome.name - the
+// betting engine's settle_event() and the frontend's EventCard both key off
+// that exact convention (matching what MockSportsProvider already produces)
+// to know which side a selection is. Using the literal team name here would
+// silently void every moneyline/spread bet at settlement instead of grading
+// it, since evaluate_selection_result() would never recognize the name.
 function mapMarket(
   marketId: string,
   marketType: string,
@@ -89,13 +105,14 @@ function mapMarket(
   const selections: ProviderSelection[] = [];
   for (const outcome of outcomes) {
     let id: string;
-    if (outcome.name === homeTeam) id = "home";
-    else if (outcome.name === awayTeam) id = "away";
-    else if (outcome.name === "Draw") id = "draw";
-    else if (outcome.name === "Over") id = "over";
-    else if (outcome.name === "Under") id = "under";
+    let name: string;
+    if (outcome.name === homeTeam) { id = "home"; name = "Home"; }
+    else if (outcome.name === awayTeam) { id = "away"; name = "Away"; }
+    else if (outcome.name === "Draw") { id = "draw"; name = "Draw"; }
+    else if (outcome.name === "Over") { id = "over"; name = "Over"; }
+    else if (outcome.name === "Under") { id = "under"; name = "Under"; }
     else continue;
-    const selection: ProviderSelection = { id, name: outcome.name, decimalOdds: outcome.price };
+    const selection: ProviderSelection = { id, name, decimalOdds: outcome.price };
     if (outcome.point !== undefined) selection.line = outcome.point;
     selections.push(selection);
   }
@@ -106,9 +123,13 @@ function mapMarket(
 export class TheOddsApiProvider implements SportsDataProvider {
   readonly code = "the_odds_api";
   private readonly apiKey: string;
+  private readonly allowlist: string[];
+  private readonly cap: number;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, allowlist: string[] = [], cap: number = DEFAULT_COMPETITION_CAP) {
     this.apiKey = apiKey;
+    this.allowlist = allowlist;
+    this.cap = cap;
   }
 
   private async fetchSports(): Promise<TheOddsApiSport[]> {
@@ -131,9 +152,10 @@ export class TheOddsApiProvider implements SportsDataProvider {
     const group = SPORT_GROUP_MAP[sportCode];
     if (!group) return [];
     const sports = await this.fetchSports();
-    return sports
-      .filter((s) => s.active && s.group.toLowerCase() === group.toLowerCase())
-      .map((s) => ({ id: s.key, sportCode, name: s.title, slug: slugify(s.key) }));
+    const inGroup = sports.filter((s) => s.active && s.group.toLowerCase() === group.toLowerCase());
+    const selected =
+      this.allowlist.length > 0 ? inGroup.filter((s) => this.allowlist.includes(s.key)) : inGroup.slice(0, this.cap);
+    return selected.map((s) => ({ id: s.key, sportCode, name: s.title, slug: slugify(s.key) }));
   }
 
   async getFixtures(competitionId: string): Promise<ProviderFixture[]> {
@@ -172,8 +194,10 @@ export class TheOddsApiProvider implements SportsDataProvider {
       if (mapped) markets.push(mapped);
     }
 
+    // Never "finished" here - see the file header note. Settlement only
+    // happens through an admin declaring a final score in /admin.
     const startMs = new Date(event.commence_time).getTime();
-    const status = startMs > Date.now() ? "scheduled" : startMs > Date.now() - 3 * 3_600_000 ? "live" : "finished";
+    const status = startMs > Date.now() ? "scheduled" : "live";
 
     return {
       id: event.id,
