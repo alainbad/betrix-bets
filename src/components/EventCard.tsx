@@ -45,10 +45,11 @@ export function EventCard({ event }: { event: Event }) {
 
 
       {event.status === "live" && (
-        <div className="mb-4 flex items-center justify-center gap-4 rounded-xl bg-betrix-surface-elevated py-2">
+        <div className="mb-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-xl bg-betrix-surface-elevated px-3 py-2">
           <Score value={event.awayScore ?? 0} label={event.awayTeam} />
-          <span className="text-xs font-bold uppercase text-muted-foreground">Score</span>
+          <span className="shrink-0 text-xs font-bold uppercase text-muted-foreground">Score</span>
           <Score value={event.homeScore ?? 0} label={event.homeTeam} />
+
         </div>
       )}
 
