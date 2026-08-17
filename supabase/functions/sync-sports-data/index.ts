@@ -365,10 +365,30 @@ Deno.serve(async () => {
     });
   } catch (err) {
     console.error("sync-sports-data failed", err);
-    const message = err instanceof Error ? (err.stack ?? err.message) : String(err);
-    return new Response(JSON.stringify({ ok: false, error: message }), {
+    return new Response(JSON.stringify({ ok: false, error: describeError(err) }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
   }
 });
+
+// Supabase/Postgrest errors (thrown as `if (error) throw error` all over
+// runSync) aren't Error instances, so `String(err)` on them collapses to the
+// useless "[object Object]" instead of their actual message/details/hint.
+// This pulls out whatever fields are present, in order of what's useful.
+function describeError(err: unknown): string {
+  if (err instanceof Error) return err.stack ?? err.message;
+  if (err && typeof err === "object") {
+    const record = err as Record<string, unknown>;
+    const parts = [record.message, record.details, record.hint, record.code].filter(
+      (v): v is string => typeof v === "string" && v.length > 0,
+    );
+    if (parts.length > 0) return parts.join(" | ");
+    try {
+      return JSON.stringify(err);
+    } catch {
+      // falls through to String(err) below
+    }
+  }
+  return String(err);
+}
