@@ -16,7 +16,7 @@ export function OddsButton({ selection, active, onClick, size = "md", caption }:
       type="button"
       onClick={onClick}
       className={cn(
-        "flex flex-col items-center justify-center rounded-xl border transition-all",
+        "flex min-w-0 flex-col items-center justify-center rounded-xl border transition-all",
         size === "sm" ? "px-2 py-1.5" : "px-3 py-2.5",
         active
           ? "border-primary bg-primary/10 text-primary ring-1 ring-primary"
