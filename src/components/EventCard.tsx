@@ -83,19 +83,20 @@ export function EventCard({ event }: { event: Event }) {
 function TeamColumn({ name, align = "left" }: { name: string; align?: "left" | "right" }) {
   return (
     <div
-      className={`flex min-w-0 items-center gap-3 ${align === "right" ? "flex-row-reverse text-right" : "text-left"}`}
+      className={`flex min-w-0 items-center gap-2 sm:gap-3 ${align === "right" ? "flex-row-reverse text-right" : "text-left"}`}
     >
       <TeamLogo team={name} size={44} />
-      <p className="min-w-0 text-sm font-bold leading-tight text-foreground">{name}</p>
+      <p className="min-w-0 break-words text-sm font-bold leading-tight text-foreground line-clamp-2">{name}</p>
     </div>
   );
 }
 
 function Score({ value, label }: { value: number; label: string }) {
   return (
-    <div className="text-center">
+    <div className="min-w-0 text-center">
       <p className="text-2xl font-black text-foreground">{value}</p>
-      <p className="max-w-[80px] truncate text-[10px] text-muted-foreground">{label}</p>
+      <p className="truncate text-[10px] text-muted-foreground">{label}</p>
     </div>
   );
 }
+
