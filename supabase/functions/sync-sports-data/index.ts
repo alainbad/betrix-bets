@@ -159,7 +159,15 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
   for (const { sportCode, comp } of competitionEntries) {
     const sportId = sportIdByCode.get(sportCode)!;
     const competitionId = competitionIdBySportSlug.get(`${sportId}:${comp.slug}`)!;
-    const fixtures = await provider.getFixtures(comp.id);
+    let fixtures: ProviderFixture[];
+    try {
+      fixtures = await provider.getFixtures(comp.id);
+    } catch (err) {
+      // One league's quirks (unsupported markets, a transient error) shouldn't
+      // abort the whole sync - log and keep going with the rest.
+      console.error(`getFixtures failed for competition ${comp.id}, skipping`, err);
+      continue;
+    }
     for (const fixture of fixtures) fixtureEntries.push({ sportCode, competitionId, fixture });
   }
 

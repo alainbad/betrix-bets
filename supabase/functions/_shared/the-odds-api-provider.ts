@@ -158,8 +158,23 @@ export class TheOddsApiProvider implements SportsDataProvider {
     return selected.map((s) => ({ id: s.key, sportCode, name: s.title, slug: slugify(s.key) }));
   }
 
+  // Not every league supports spreads/totals in every region (The Odds API
+  // returns 422 INVALID_MARKET_COMBO for those) - retry with moneyline only
+  // rather than failing the whole sync over one league's market mix.
   async getFixtures(competitionId: string): Promise<ProviderFixture[]> {
-    const url = `${BASE_URL}/sports/${competitionId}/odds?apiKey=${this.apiKey}&regions=us&markets=h2h,spreads,totals&oddsFormat=decimal&dateFormat=iso`;
+    try {
+      return await this.fetchOdds(competitionId, "h2h,spreads,totals");
+    } catch (err) {
+      if (err instanceof Error && err.message.includes("INVALID_MARKET_COMBO")) {
+        console.warn(`${competitionId}: spreads/totals unsupported here, retrying with h2h only`);
+        return await this.fetchOdds(competitionId, "h2h");
+      }
+      throw err;
+    }
+  }
+
+  private async fetchOdds(competitionId: string, markets: string): Promise<ProviderFixture[]> {
+    const url = `${BASE_URL}/sports/${competitionId}/odds?apiKey=${this.apiKey}&regions=us&markets=${markets}&oddsFormat=decimal&dateFormat=iso`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`The Odds API /odds failed: ${res.status} ${await res.text()}`);
     const events = (await res.json()) as TheOddsApiEvent[];
