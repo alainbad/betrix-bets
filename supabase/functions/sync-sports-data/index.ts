@@ -23,14 +23,16 @@ function getProvider(): SportsDataProvider {
     const apiKey = Deno.env.get("SPORTS_API_KEY");
     if (!apiKey) throw new Error("SPORTS_PROVIDER=the_odds_api requires the SPORTS_API_KEY secret to be set.");
     // Optional: SPORTS_COMPETITION_ALLOWLIST="soccer_epl,basketball_nba" to
-    // sync only specific leagues. Unset uses the provider's default cap
-    // (5 leagues per sport) instead of every active league, since each one
-    // costs a full /odds request against the API quota.
+    // sync only specific leagues. Unset caps at SPORTS_COMPETITION_CAP
+    // leagues per sport (default 5) instead of every active league, since
+    // each one costs a full /odds request against the API quota.
     const allowlist = (Deno.env.get("SPORTS_COMPETITION_ALLOWLIST") ?? "")
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
-    return new TheOddsApiProvider(apiKey, allowlist);
+    const capEnv = Deno.env.get("SPORTS_COMPETITION_CAP");
+    const cap = capEnv ? Number.parseInt(capEnv, 10) : undefined;
+    return new TheOddsApiProvider(apiKey, allowlist, cap && Number.isFinite(cap) && cap > 0 ? cap : undefined);
   }
   return new MockSportsProvider();
 }
