@@ -4,8 +4,7 @@ export type CasinoCategory = "slots" | "table" | "instant" | "live";
 // win/lose/payout first (play_casino_round) - these are cosmetic reveals
 // that land on that pre-decided outcome, not independent game logic, so the
 // mandated 15% win rate is unaffected by which mechanic a game uses.
-export type CasinoMechanic =
-  "slot" | "wheel" | "roulette" | "cards" | "tiles" | "vault" | "coinflip";
+export type CasinoMechanic = "slot" | "wheel" | "roulette" | "cards" | "coinflip";
 
 export interface CasinoGame {
   id: string;
@@ -38,25 +37,6 @@ export const CASINO_CATEGORIES: { id: CasinoCategory | "all"; label: string }[] 
 ];
 
 export const CASINO_GAMES: CasinoGame[] = [
-  {
-    id: "vault-rush",
-    name: "Vault Rush",
-    provider: "Betrix Originals",
-    category: "instant",
-    mechanic: "vault",
-    rtp: 96.5,
-    volatility: "Medium",
-    minStake: 1,
-    maxStake: 250,
-    tagline: "Cash out before the vault slams shut.",
-    hue: "from-primary/25 to-primary/5",
-    badge: "Exclusive",
-    howToPlay: [
-      "Set your stake and press Play to send the vault door into motion.",
-      "The door either swings open, paying out your win, or slams shut on a loss.",
-      "Every round is independent - there's no pattern to read or timing to learn.",
-    ],
-  },
   {
     id: "neon-reels",
     name: "Neon Reels",
@@ -132,62 +112,6 @@ export const CASINO_GAMES: CasinoGame[] = [
     ],
   },
   {
-    id: "mine-field",
-    name: "Minefield",
-    provider: "Betrix Originals",
-    category: "instant",
-    mechanic: "tiles",
-    rtp: 96.9,
-    volatility: "High",
-    minStake: 1,
-    maxStake: 300,
-    tagline: "Pick tiles, dodge mines, ride the multiplier.",
-    hue: "from-accent/20 to-primary/5",
-    badge: "New",
-    howToPlay: [
-      "A grid hides gems and mines beneath its tiles - the more gems you clear, the bigger the multiplier.",
-      "Set your stake and press Play - the grid reveals itself; an all-clear is a win, hitting a mine is a loss.",
-      "Higher stakes ride the same odds every round; there's no safer tile to pick.",
-    ],
-  },
-  {
-    id: "gold-frontier",
-    name: "Gold Frontier",
-    provider: "Northgate Studio",
-    category: "slots",
-    mechanic: "slot",
-    rtp: 96.1,
-    volatility: "Medium",
-    minStake: 0.2,
-    maxStake: 120,
-    tagline: "Hold & win reels with progressive pots.",
-    hue: "from-betrix-amber/25 to-betrix-amber/5",
-    howToPlay: [
-      "A hold-and-win style slot: land enough matching symbols and the reels pay out.",
-      "Set your stake and press Play - the reels spin and settle on this round's result.",
-      "A full match across the reels wins; a mixed result means the round is a loss.",
-    ],
-  },
-  {
-    id: "studio-baccarat",
-    name: "Studio Baccarat",
-    provider: "Kingsway Live",
-    category: "live",
-    mechanic: "cards",
-    cardStyle: "baccarat",
-    rtp: 98.9,
-    volatility: "Low",
-    minStake: 5,
-    maxStake: 2000,
-    tagline: "Hosted table, 24/7, squeeze mode enabled.",
-    hue: "from-chart-4/25 to-chart-4/5",
-    howToPlay: [
-      "In baccarat, two hands - Player and Banker - are dealt and compared; the hand closest to 9 wins.",
-      "You bet on which hand will win, or on a tie, before the cards are revealed.",
-      "Here, set your stake and press Play - both hands are dealt and revealed together, settling the round.",
-    ],
-  },
-  {
     id: "texas-holdem",
     name: "Texas Hold'em Poker",
     provider: "Kingsway Tables",
@@ -205,45 +129,6 @@ export const CASINO_GAMES: CasinoGame[] = [
       "In Texas Hold'em, each player gets two private cards and shares five community cards to build the best five-card hand.",
       "Higher-ranked hands (pairs, straights, flushes, and up) beat lower ones at showdown.",
       "Here, set your stake and press Play - your hand against the house is dealt and revealed together, settling the round.",
-    ],
-  },
-  {
-    id: "live-poker-room",
-    name: "Live Poker Room",
-    provider: "Kingsway Live",
-    category: "live",
-    mechanic: "cards",
-    cardStyle: "versus",
-    rtp: 98.4,
-    volatility: "Medium",
-    minStake: 5,
-    maxStake: 5000,
-    tagline: "Real dealers, six-seat tables, side bets open.",
-    hue: "from-chart-3/25 to-chart-3/5",
-    badge: "New",
-    howToPlay: [
-      "A poker-room style table: you play heads-up against the house instead of a full ring of opponents.",
-      "The better five-card hand at showdown wins the round.",
-      "Here, set your stake and press Play - hands are dealt and revealed together, settling the round instantly.",
-    ],
-  },
-  {
-    id: "video-poker-deuces",
-    name: "Deuces Wild Poker",
-    provider: "Northgate Studio",
-    category: "instant",
-    mechanic: "cards",
-    cardStyle: "versus",
-    rtp: 99.4,
-    volatility: "Low",
-    minStake: 0.25,
-    maxStake: 200,
-    tagline: "Jacks or better with wild deuces and a 4,000x royal.",
-    hue: "from-betrix-amber/25 to-betrix-amber/5",
-    howToPlay: [
-      "Classic video poker deals a five-card hand where all 2s are wild and can complete any winning combination.",
-      "Jacks-or-better and stronger hands pay out, up to a top prize for a royal flush.",
-      "Here, set your stake and press Play - your hand is dealt and revealed in one motion, settling the round.",
     ],
   },
   {
