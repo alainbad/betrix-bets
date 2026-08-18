@@ -9,6 +9,7 @@ import { useBetting } from "@/lib/betting-store";
 import { useAuth } from "@/lib/auth-context";
 import { getRecentRounds, playCasinoRound, type CasinoRound } from "@/lib/casino-engine";
 import { GameStage } from "@/components/casino/GameStage";
+import { BlackjackTable } from "@/components/casino/BlackjackTable";
 import { ROULETTE_TABLE_NUMBERS, rouletteColor } from "@/lib/roulette";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +78,29 @@ function GamePage() {
   }, [user, game.id]);
 
   const insufficientFunds = stake > balance;
+
+  if (game.mechanic === "blackjack") {
+    return (
+      <main
+        data-testid="casino-game-page"
+        className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8"
+      >
+        <div className="mx-auto max-w-5xl">
+          <Link
+            to="/casino"
+            className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to casino
+          </Link>
+          <div className="mb-6">
+            <p className="text-3xl font-black tracking-tight text-foreground">{game.name}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{game.tagline}</p>
+          </div>
+          <BlackjackTable game={game} rounds={rounds} />
+        </div>
+      </main>
+    );
+  }
 
   async function handlePlay() {
     if (!user || playing) return;
@@ -155,7 +179,11 @@ function GamePage() {
                   mechanic={game.mechanic}
                   cardStyle={game.cardStyle}
                   phase={phase}
-                  outcome={lastResult?.outcome ?? null}
+                  outcome={
+                    lastResult?.outcome === "win" || lastResult?.outcome === "lose"
+                      ? lastResult.outcome
+                      : null
+                  }
                   pick={pick}
                 />
                 {phase === "revealed" && lastResult && (
