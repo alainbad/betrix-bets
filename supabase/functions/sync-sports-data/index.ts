@@ -15,6 +15,7 @@
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { MockSportsProvider } from "../_shared/mock-provider.ts";
 import { TheOddsApiProvider } from "../_shared/the-odds-api-provider.ts";
+import { OpticOddsProvider } from "../_shared/opticodds-provider.ts";
 import type {
   ProviderCompetition,
   ProviderFixture,
@@ -23,26 +24,47 @@ import type {
 
 function getProvider(): SportsDataProvider {
   const kind = Deno.env.get("SPORTS_PROVIDER") ?? "mock";
+
+  // Shared across the_odds_api and opticodds: which leagues/competitions to
+  // sync. SPORTS_COMPETITION_ALLOWLIST="soccer_epl,basketball_nba" (or
+  // OpticOdds league ids like "nba,england_-_premier_league") to sync only
+  // specific ones. Unset caps at SPORTS_COMPETITION_CAP leagues per sport
+  // (default 5) instead of every active league, since each one costs API
+  // requests against the provider's quota.
+  const allowlist = (Deno.env.get("SPORTS_COMPETITION_ALLOWLIST") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const capEnv = Deno.env.get("SPORTS_COMPETITION_CAP");
+  const cap = capEnv ? Number.parseInt(capEnv, 10) : undefined;
+  const competitionCap = cap && Number.isFinite(cap) && cap > 0 ? cap : undefined;
+
   if (kind === "the_odds_api") {
     const apiKey = Deno.env.get("SPORTS_API_KEY");
     if (!apiKey)
       throw new Error("SPORTS_PROVIDER=the_odds_api requires the SPORTS_API_KEY secret to be set.");
-    // Optional: SPORTS_COMPETITION_ALLOWLIST="soccer_epl,basketball_nba" to
-    // sync only specific leagues. Unset caps at SPORTS_COMPETITION_CAP
-    // leagues per sport (default 5) instead of every active league, since
-    // each one costs a full /odds request against the API quota.
-    const allowlist = (Deno.env.get("SPORTS_COMPETITION_ALLOWLIST") ?? "")
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const capEnv = Deno.env.get("SPORTS_COMPETITION_CAP");
-    const cap = capEnv ? Number.parseInt(capEnv, 10) : undefined;
-    return new TheOddsApiProvider(
+    return new TheOddsApiProvider(apiKey, allowlist, competitionCap);
+  }
+
+  if (kind === "opticodds") {
+    const apiKey = Deno.env.get("SPORTS_API_KEY");
+    if (!apiKey)
+      throw new Error("SPORTS_PROVIDER=opticodds requires the SPORTS_API_KEY secret to be set.");
+    // Optional: SPORTS_SPORTSBOOK="DraftKings" (default) picks which single
+    // sportsbook's odds to sync. Optional: SPORTS_FIXTURE_CAP caps how many
+    // fixtures per league are synced per run (default 20).
+    const sportsbook = Deno.env.get("SPORTS_SPORTSBOOK") ?? "DraftKings";
+    const fixtureCapEnv = Deno.env.get("SPORTS_FIXTURE_CAP");
+    const fixtureCap = fixtureCapEnv ? Number.parseInt(fixtureCapEnv, 10) : undefined;
+    return new OpticOddsProvider(
       apiKey,
+      sportsbook,
       allowlist,
-      cap && Number.isFinite(cap) && cap > 0 ? cap : undefined,
+      competitionCap,
+      fixtureCap && Number.isFinite(fixtureCap) && fixtureCap > 0 ? fixtureCap : undefined,
     );
   }
+
   return new MockSportsProvider();
 }
 
