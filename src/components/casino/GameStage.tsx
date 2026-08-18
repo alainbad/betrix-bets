@@ -24,5 +24,9 @@ export function GameStage({
       return <CardReveal phase={phase} outcome={outcome} cardStyle={cardStyle} />;
     case "coinflip":
       return <CoinFlip phase={phase} outcome={outcome} pick={pick} />;
+    case "blackjack":
+      // Blackjack has its own dedicated multi-step table (BlackjackTable)
+      // and never renders through this single-shot stage.
+      return null;
   }
 }

@@ -11,7 +11,7 @@ export interface CasinoRound {
   id: string;
   gameId: string;
   stake: number;
-  outcome: "win" | "lose";
+  outcome: "win" | "lose" | "push";
   multiplier: number;
   payout: number;
   createdAt: string;
@@ -38,7 +38,7 @@ function mapRound(row: CasinoRoundRow): CasinoRound {
     id: row.id,
     gameId: row.game_id,
     stake: Number(row.stake),
-    outcome: row.outcome === "win" ? "win" : "lose",
+    outcome: row.outcome === "win" || row.outcome === "push" ? row.outcome : "lose",
     multiplier: Number(row.multiplier),
     payout: Number(row.payout),
     createdAt: row.created_at,
@@ -46,12 +46,18 @@ function mapRound(row: CasinoRoundRow): CasinoRound {
 }
 
 export async function playCasinoRound(gameId: string, stake: number): Promise<PlayRoundResult> {
-  const { data, error } = await supabase.rpc("play_casino_round", { _game_id: gameId, _stake: stake }).single();
+  const { data, error } = await supabase
+    .rpc("play_casino_round", { _game_id: gameId, _stake: stake })
+    .single();
   if (error) return { ok: false, error: error.message };
   return { ok: true, round: mapRound(data as CasinoRoundRow) };
 }
 
-export async function getRecentRounds(userId: string, gameId?: string, limit = 10): Promise<CasinoRound[]> {
+export async function getRecentRounds(
+  userId: string,
+  gameId?: string,
+  limit = 10,
+): Promise<CasinoRound[]> {
   let query = supabase
     .from("casino_rounds")
     .select("id, game_id, stake, outcome, multiplier, payout, created_at")

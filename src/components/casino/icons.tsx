@@ -21,6 +21,13 @@ export function SuitIcon({ suit, className }: { suit: SuitName; className?: stri
   );
 }
 
+export function suitFromSymbol(symbol: string): SuitName {
+  if (symbol === "♥") return "heart";
+  if (symbol === "♦") return "diamond";
+  if (symbol === "♣") return "club";
+  return "spade";
+}
+
 export type SlotSymbolName = "cherry" | "lemon" | "bell" | "star" | "gem" | "seven";
 
 export function SlotSymbol({ name, className }: { name: SlotSymbolName; className?: string }) {

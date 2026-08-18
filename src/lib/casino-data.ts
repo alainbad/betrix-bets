@@ -4,7 +4,7 @@ export type CasinoCategory = "slots" | "table" | "instant" | "live";
 // win/lose/payout first (play_casino_round) - these are cosmetic reveals
 // that land on that pre-decided outcome, not independent game logic, so the
 // mandated 15% win rate is unaffected by which mechanic a game uses.
-export type CasinoMechanic = "slot" | "wheel" | "roulette" | "cards" | "coinflip";
+export type CasinoMechanic = "slot" | "wheel" | "roulette" | "cards" | "coinflip" | "blackjack";
 
 export interface CasinoGame {
   id: string;
@@ -80,18 +80,18 @@ export const CASINO_GAMES: CasinoGame[] = [
     name: "Blackjack Classic",
     provider: "Kingsway Tables",
     category: "table",
-    mechanic: "cards",
-    cardStyle: "versus",
+    mechanic: "blackjack",
     rtp: 99.1,
     volatility: "Low",
     minStake: 2,
     maxStake: 1000,
-    tagline: "Eight decks, dealer stands on soft 17.",
+    tagline: "Single deck, dealer stands on soft 17.",
     hue: "from-chart-3/25 to-chart-3/5",
     howToPlay: [
-      "In classic blackjack, you and the dealer are each dealt cards and try to get closer to 21 than the other without going over.",
-      "Number cards count at face value, face cards count as 10, and an Ace counts as 1 or 11.",
-      "Here, set your stake and press Play - your hand and the dealer's are dealt and revealed together, settling the round.",
+      "You and the dealer are each dealt two cards; the dealer keeps one face down.",
+      "Get closer to 21 than the dealer without going over. Number cards count at face value, face cards count as 10, and an Ace counts as 1 or 11.",
+      "Hit to take another card, Stand to hold your total, or Double to take exactly one more card on double the stake.",
+      "A two-card 21 is a natural Blackjack, paying 3:2. A normal win pays 1:1, and a tied total returns your stake as a push.",
     ],
   },
   {
