@@ -116,6 +116,10 @@ interface BettingContextValue {
   totalStake: number;
   totalPotentialReturn: number;
   isInSlip: (eventId: string, selectionId: string) => boolean;
+  // Refetches balance + bet history from Supabase. Exposed so other
+  // wallet-backed features (the casino engine) can refresh the shared
+  // balance after their own RPC calls without duplicating this fetch.
+  refresh: () => Promise<void>;
 }
 
 const BettingContext = createContext<BettingContextValue | null>(null);
@@ -222,6 +226,7 @@ export function BettingProvider({ children }: { children: ReactNode }) {
         placeBets,
         totalStake,
         totalPotentialReturn,
+        refresh,
         isInSlip,
       }}
     >
