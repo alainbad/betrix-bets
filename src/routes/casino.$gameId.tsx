@@ -9,6 +9,7 @@ import { useBetting } from "@/lib/betting-store";
 import { useAuth } from "@/lib/auth-context";
 import { getRecentRounds, playCasinoRound, type CasinoRound } from "@/lib/casino-engine";
 import { GameStage } from "@/components/casino/GameStage";
+import { ROULETTE_TABLE_NUMBERS, rouletteColor } from "@/lib/roulette";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/casino/$gameId")({
@@ -55,7 +56,9 @@ function GamePage() {
   const [roundKey, setRoundKey] = useState(0);
   const [lastResult, setLastResult] = useState<CasinoRound | null>(null);
   const [rounds, setRounds] = useState<CasinoRound[]>([]);
+  const [pick, setPick] = useState<string | number | null>(null);
   const playing = phase === "spinning";
+  const needsPick = game.mechanic === "coinflip" || game.mechanic === "roulette";
 
   useEffect(() => {
     if (!user) {
@@ -85,6 +88,12 @@ function GamePage() {
     }
     if (insufficientFunds) {
       toast.error("Insufficient balance.");
+      return;
+    }
+    if (needsPick && pick === null) {
+      toast.error(
+        game.mechanic === "roulette" ? "Pick a number first." : "Call heads or tails first.",
+      );
       return;
     }
     setRoundKey((k) => k + 1);
@@ -144,8 +153,10 @@ function GamePage() {
                 <GameStage
                   key={roundKey}
                   mechanic={game.mechanic}
+                  cardStyle={game.cardStyle}
                   phase={phase}
                   outcome={lastResult?.outcome ?? null}
+                  pick={pick}
                 />
                 {phase === "revealed" && lastResult && (
                   <p
@@ -163,6 +174,56 @@ function GamePage() {
 
               {user ? (
                 <div className="mt-8 flex flex-col items-center gap-3">
+                  {game.mechanic === "coinflip" && (
+                    <div className="flex gap-2">
+                      {(["H", "T"] as const).map((side) => (
+                        <button
+                          key={side}
+                          type="button"
+                          disabled={playing}
+                          onClick={() => setPick(side)}
+                          className={cn(
+                            "rounded-full border px-4 py-1.5 text-xs font-bold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-60",
+                            pick === side
+                              ? "border-primary bg-primary/15 text-primary"
+                              : "border-border bg-background/90 text-muted-foreground hover:text-foreground",
+                          )}
+                        >
+                          {side === "H" ? "Heads" : "Tails"}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {game.mechanic === "roulette" && (
+                    <div className="flex max-w-xs flex-wrap justify-center gap-1 rounded-xl border border-border bg-background/90 p-2">
+                      {ROULETTE_TABLE_NUMBERS.map((n) => {
+                        const color = rouletteColor(n);
+                        return (
+                          <button
+                            key={n}
+                            type="button"
+                            disabled={playing}
+                            onClick={() => setPick(n)}
+                            className={cn(
+                              "flex h-7 w-7 items-center justify-center rounded text-[10px] font-bold text-white transition-transform disabled:cursor-not-allowed",
+                              color === "red"
+                                ? "bg-red-700"
+                                : color === "black"
+                                  ? "bg-neutral-800"
+                                  : "bg-emerald-700",
+                              pick === n
+                                ? "ring-2 ring-primary ring-offset-1 ring-offset-background scale-110"
+                                : "opacity-90 hover:opacity-100",
+                            )}
+                          >
+                            {n}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
                   <div className="flex items-center rounded-xl border border-border bg-background/90">
                     <button
                       type="button"
@@ -187,13 +248,20 @@ function GamePage() {
                   <button
                     type="button"
                     onClick={() => void handlePlay()}
-                    disabled={playing || insufficientFunds}
+                    disabled={playing || insufficientFunds || (needsPick && pick === null)}
                     className="rounded-full bg-primary px-8 py-3 text-sm font-bold text-primary-foreground transition-transform hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
                   >
                     {playing ? "Rolling…" : `Play for ${formatCurrency(stake)}`}
                   </button>
                   {insufficientFunds && (
                     <p className="text-xs font-medium text-destructive">Insufficient balance</p>
+                  )}
+                  {!insufficientFunds && needsPick && pick === null && (
+                    <p className="text-xs font-medium text-muted-foreground">
+                      {game.mechanic === "roulette"
+                        ? "Pick a number to play"
+                        : "Call a side to play"}
+                    </p>
                   )}
                 </div>
               ) : (

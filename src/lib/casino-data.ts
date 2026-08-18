@@ -4,7 +4,8 @@ export type CasinoCategory = "slots" | "table" | "instant" | "live";
 // win/lose/payout first (play_casino_round) - these are cosmetic reveals
 // that land on that pre-decided outcome, not independent game logic, so the
 // mandated 15% win rate is unaffected by which mechanic a game uses.
-export type CasinoMechanic = "slot" | "wheel" | "cards" | "tiles" | "vault" | "coinflip";
+export type CasinoMechanic =
+  "slot" | "wheel" | "roulette" | "cards" | "tiles" | "vault" | "coinflip";
 
 export interface CasinoGame {
   id: string;
@@ -22,6 +23,10 @@ export interface CasinoGame {
   // Plain-language rules for the classic game this page is styled after,
   // shown in a "How to play" panel on the game page.
   howToPlay: string[];
+  // Only for mechanic "cards" - which two-hand comparison labels/scoring to
+  // use. "versus" = generic "Dealer"/"You" with blackjack-style totals.
+  // "baccarat" = "Banker"/"Player" with a mod-10 point total.
+  cardStyle?: "versus" | "baccarat";
 }
 
 export const CASINO_CATEGORIES: { id: CasinoCategory | "all"; label: string }[] = [
@@ -84,9 +89,9 @@ export const CASINO_GAMES: CasinoGame[] = [
     tagline: "One call. One flip. Instant settlement.",
     hue: "from-chart-2/25 to-chart-2/5",
     howToPlay: [
-      "The simplest game in the lobby: one coin, one flip, one outcome.",
-      "Set your stake and press Play - a win doubles your stake many times over, a loss returns nothing.",
-      "No decisions during the round; the whole game is the flip itself.",
+      "The simplest game in the lobby: call heads or tails, then flip.",
+      "Pick a side, set your stake, and press Play - the coin flips and lands on one face.",
+      "If it lands on the side you called, the round is a win; the other face is a loss.",
     ],
   },
   {
@@ -95,6 +100,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     provider: "Kingsway Tables",
     category: "table",
     mechanic: "cards",
+    cardStyle: "versus",
     rtp: 99.1,
     volatility: "Low",
     minStake: 2,
@@ -112,7 +118,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     name: "European Roulette",
     provider: "Kingsway Tables",
     category: "table",
-    mechanic: "wheel",
+    mechanic: "roulette",
     rtp: 97.3,
     volatility: "Medium",
     minStake: 1,
@@ -121,8 +127,8 @@ export const CASINO_GAMES: CasinoGame[] = [
     hue: "from-destructive/20 to-destructive/5",
     howToPlay: [
       "European roulette uses a single-zero wheel numbered 0-36; players bet on where the ball will land.",
-      "Bets can cover a single number, a color, odd/even, or larger groups - payouts scale with how precise the bet is.",
-      "Here, set your stake and press Play - the wheel spins and the round settles wherever the marker lands.",
+      "Pick a number on the board, set your stake, and press Play - this simulation supports a straight-up single-number bet.",
+      "If the ball lands on your number the round is a win; any other number is a loss.",
     ],
   },
   {
@@ -168,6 +174,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     provider: "Kingsway Live",
     category: "live",
     mechanic: "cards",
+    cardStyle: "baccarat",
     rtp: 98.9,
     volatility: "Low",
     minStake: 5,
@@ -186,6 +193,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     provider: "Kingsway Tables",
     category: "table",
     mechanic: "cards",
+    cardStyle: "versus",
     rtp: 97.8,
     volatility: "Medium",
     minStake: 2,
@@ -205,6 +213,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     provider: "Kingsway Live",
     category: "live",
     mechanic: "cards",
+    cardStyle: "versus",
     rtp: 98.4,
     volatility: "Medium",
     minStake: 5,
@@ -224,6 +233,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     provider: "Northgate Studio",
     category: "instant",
     mechanic: "cards",
+    cardStyle: "versus",
     rtp: 99.4,
     volatility: "Low",
     minStake: 0.25,
