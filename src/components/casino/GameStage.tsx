@@ -1,18 +1,16 @@
-import type { CasinoGame, CasinoMechanic } from "@/lib/casino-data";
+import type { CasinoMechanic } from "@/lib/casino-data";
 import { SlotReels } from "./SlotReels";
 import { WheelSpin } from "./WheelSpin";
 import { RouletteWheel } from "./RouletteWheel";
-import { CardReveal } from "./CardReveal";
 import { CoinFlip } from "./CoinFlip";
 import type { CasinoStageProps } from "./types";
 
 export function GameStage({
   mechanic,
-  cardStyle,
   phase,
   outcome,
   pick,
-}: { mechanic: CasinoMechanic; cardStyle?: CasinoGame["cardStyle"] } & CasinoStageProps) {
+}: { mechanic: CasinoMechanic } & CasinoStageProps) {
   switch (mechanic) {
     case "slot":
       return <SlotReels phase={phase} outcome={outcome} />;
@@ -20,13 +18,13 @@ export function GameStage({
       return <WheelSpin phase={phase} outcome={outcome} />;
     case "roulette":
       return <RouletteWheel phase={phase} outcome={outcome} pick={pick} />;
-    case "cards":
-      return <CardReveal phase={phase} outcome={outcome} cardStyle={cardStyle} />;
     case "coinflip":
       return <CoinFlip phase={phase} outcome={outcome} pick={pick} />;
     case "blackjack":
-      // Blackjack has its own dedicated multi-step table (BlackjackTable)
-      // and never renders through this single-shot stage.
+    case "holdem":
+      // Blackjack and Texas Hold'em have their own dedicated multi-step
+      // tables (BlackjackTable, HoldemTable) and never render through this
+      // single-shot stage.
       return null;
   }
 }

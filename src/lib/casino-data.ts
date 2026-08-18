@@ -4,7 +4,7 @@ export type CasinoCategory = "slots" | "table" | "instant" | "live";
 // win/lose/payout first (play_casino_round) - these are cosmetic reveals
 // that land on that pre-decided outcome, not independent game logic, so the
 // mandated 15% win rate is unaffected by which mechanic a game uses.
-export type CasinoMechanic = "slot" | "wheel" | "roulette" | "cards" | "coinflip" | "blackjack";
+export type CasinoMechanic = "slot" | "wheel" | "roulette" | "coinflip" | "blackjack" | "holdem";
 
 export interface CasinoGame {
   id: string;
@@ -22,11 +22,6 @@ export interface CasinoGame {
   // Plain-language rules for the classic game this page is styled after,
   // shown in a "How to play" panel on the game page.
   howToPlay: string[];
-  // Only for mechanic "cards" - which layout/scoring to use. "versus" =
-  // generic "Dealer"/"You" with blackjack-style totals. "baccarat" =
-  // "Banker"/"Player" with a mod-10 point total. "poker" = adds a shared
-  // 5-card community board between the two hands.
-  cardStyle?: "versus" | "baccarat" | "poker";
 }
 
 export const CASINO_CATEGORIES: { id: CasinoCategory | "all"; label: string }[] = [
@@ -117,19 +112,19 @@ export const CASINO_GAMES: CasinoGame[] = [
     name: "Texas Hold'em Poker",
     provider: "Kingsway Tables",
     category: "table",
-    mechanic: "cards",
-    cardStyle: "poker",
+    mechanic: "holdem",
     rtp: 97.8,
     volatility: "Medium",
     minStake: 2,
-    maxStake: 1500,
-    tagline: "Heads-up against the house, ante and play.",
+    maxStake: 500,
+    tagline: "Casino Hold'em: post an ante, see the flop, call or fold.",
     hue: "from-primary/25 to-primary/5",
     badge: "Hot",
     howToPlay: [
-      "In Texas Hold'em, each player gets two private cards and shares five community cards to build the best five-card hand.",
-      "Higher-ranked hands (pairs, straights, flushes, and up) beat lower ones at showdown.",
-      "Here, set your stake and press Play - your hand against the house is dealt and revealed together, settling the round.",
+      "Post an Ante. You get two hole cards, the dealer gets two hidden cards, and the flop (three community cards) is dealt face up.",
+      "Decide: Fold and lose the ante, or Call for 2x the ante to stay in.",
+      "The turn and river complete the board and the dealer reveals. The dealer must qualify with a pair or better.",
+      "If the dealer doesn't qualify, the ante pays even money and the call pushes. If they qualify, the best five-card hands are compared - the call pays 1:1 on a win, and the ante pays a bonus up to 100:1 for a Royal Flush.",
     ],
   },
   {

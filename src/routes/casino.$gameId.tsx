@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth-context";
 import { getRecentRounds, playCasinoRound, type CasinoRound } from "@/lib/casino-engine";
 import { GameStage } from "@/components/casino/GameStage";
 import { BlackjackTable } from "@/components/casino/BlackjackTable";
+import { HoldemTable } from "@/components/casino/HoldemTable";
 import { ROULETTE_TABLE_NUMBERS, rouletteColor } from "@/lib/roulette";
 import { cn } from "@/lib/utils";
 
@@ -79,7 +80,7 @@ function GamePage() {
 
   const insufficientFunds = stake > balance;
 
-  if (game.mechanic === "blackjack") {
+  if (game.mechanic === "blackjack" || game.mechanic === "holdem") {
     return (
       <main
         data-testid="casino-game-page"
@@ -96,7 +97,11 @@ function GamePage() {
             <p className="text-3xl font-black tracking-tight text-foreground">{game.name}</p>
             <p className="mt-1 text-sm text-muted-foreground">{game.tagline}</p>
           </div>
-          <BlackjackTable game={game} rounds={rounds} />
+          {game.mechanic === "blackjack" ? (
+            <BlackjackTable game={game} rounds={rounds} />
+          ) : (
+            <HoldemTable game={game} rounds={rounds} />
+          )}
         </div>
       </main>
     );
@@ -177,7 +182,6 @@ function GamePage() {
                 <GameStage
                   key={roundKey}
                   mechanic={game.mechanic}
-                  cardStyle={game.cardStyle}
                   phase={phase}
                   outcome={
                     lastResult?.outcome === "win" || lastResult?.outcome === "lose"
