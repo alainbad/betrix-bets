@@ -80,26 +80,6 @@ async function fetchBets(userId: string): Promise<PlacedBet[]> {
   return (data ?? []).map((row) => mapBetRow(row as unknown as BetRow));
 }
 
-interface BettingContextValue {
-  balance: number;
-  slip: BetSlipItem[];
-  bets: PlacedBet[];
-  placing: boolean;
-  addToSlip: (event: Event, marketLabel: string, selection: Selection) => void;
-  removeFromSlip: (itemId: string) => void;
-  updateStake: (itemId: string, stake: number) => void;
-  clearSlip: () => void;
-  placeBets: () => Promise<PlaceBetsResult>;
-  totalStake: number;
-  totalPotentialReturn: number;
-  isInSlip: (eventId: string, selectionId: string) => boolean;
-  // Refetches balance + bet history from Supabase. Exposed so other
-  // wallet-backed features (the casino engine) can refresh the shared
-  // balance after their own RPC calls without duplicating this fetch.
-  refresh: () => Promise<void>;
-}
-
-const BettingContext = createContext<BettingContextValue | null>(null);
 
 export function BettingProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
