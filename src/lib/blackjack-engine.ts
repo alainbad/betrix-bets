@@ -29,7 +29,11 @@ export interface BlackjackState {
 
 async function callRpc(fn: string, args: Record<string, unknown>): Promise<BlackjackState> {
   const { data, error } = await supabase.rpc(fn, args);
-  if (error) throw error;
+  // Supabase/PostgREST errors are plain objects, not `instanceof Error` -
+  // wrap in a real Error so callers that check `err instanceof Error` (to
+  // safely read `.message`) actually see the real database message instead
+  // of falling through to a generic fallback string.
+  if (error) throw new Error(error.message);
   return data as BlackjackState;
 }
 
