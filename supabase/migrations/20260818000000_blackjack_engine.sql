@@ -25,6 +25,12 @@
 -- Blackjack has no rule under which a natural could plausibly lose - so the
 -- realised win/push/lose split will be close to but not exactly 15/8/77.
 
+-- Supabase installs pgcrypto (needed below for gen_random_bytes, the
+-- crypto-secure shuffle source) into the "extensions" schema by convention,
+-- not "public". IF NOT EXISTS makes this a no-op if it's already installed
+-- anywhere.
+create extension if not exists pgcrypto with schema extensions;
+
 do $$
 declare
   _constraint_name text;
@@ -118,7 +124,7 @@ create function public.blackjack_start(_bet numeric)
 returns jsonb
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   _user_id uuid := auth.uid();
@@ -252,7 +258,7 @@ create function public.blackjack_hit(_round_id uuid)
 returns jsonb
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   _user_id uuid := auth.uid();
@@ -317,7 +323,7 @@ create function public.blackjack_stand(_round_id uuid)
 returns jsonb
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   _user_id uuid := auth.uid();
@@ -438,7 +444,7 @@ create function public.blackjack_double(_round_id uuid)
 returns jsonb
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   _user_id uuid := auth.uid();
