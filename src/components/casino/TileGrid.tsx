@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { SlotSymbol } from "./icons";
 import type { CasinoStageProps } from "./types";
 
 const GRID_SIZE = 9;
@@ -50,7 +51,12 @@ export function TileGrid({ phase, outcome }: CasinoStageProps) {
               )}
               style={{ transitionDelay: revealed ? `${i * 55}ms` : "0ms" }}
             >
-              {revealed ? (isBomb ? "💣" : "💎") : ""}
+              {revealed &&
+                (isBomb ? (
+                  <span className="text-xl">💣</span>
+                ) : (
+                  <SlotSymbol name="gem" className="h-6 w-6" />
+                ))}
             </span>
           </div>
         );
