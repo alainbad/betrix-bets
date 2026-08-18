@@ -1,25 +1,26 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { SuitIcon, type SuitName } from "./icons";
 import type { CasinoStageProps } from "./types";
 
 const RANKS = ["A", "K", "Q", "J", "10", "9", "8", "7", "6", "5", "4", "3", "2"];
-const SUITS = [
-  { symbol: "♠", red: false },
-  { symbol: "♥", red: true },
-  { symbol: "♦", red: true },
-  { symbol: "♣", red: false },
+const SUITS: { name: SuitName; red: boolean }[] = [
+  { name: "spade", red: false },
+  { name: "heart", red: true },
+  { name: "diamond", red: true },
+  { name: "club", red: false },
 ];
 
 interface Card {
   rank: string;
-  suit: string;
+  suit: SuitName;
   red: boolean;
 }
 
 function randomCard(): Card {
   const rank = RANKS[Math.floor(Math.random() * RANKS.length)] ?? RANKS[0]!;
   const suit = SUITS[Math.floor(Math.random() * SUITS.length)] ?? SUITS[0]!;
-  return { rank, suit: suit.symbol, red: suit.red };
+  return { rank, suit: suit.name, red: suit.red };
 }
 
 function drawHand(): [Card, Card] {
@@ -81,23 +82,28 @@ function CardFace({ card, revealed, delayMs }: { card: Card; revealed: boolean; 
       >
         <span
           className={cn(
-            "text-xs font-black leading-none",
+            "flex flex-col items-center text-xs font-black leading-none",
             card.red ? "text-red-600" : "text-neutral-900",
           )}
         >
           {card.rank}
-          <br />
-          {card.suit}
+          <SuitIcon suit={card.suit} className="mt-0.5 h-2.5 w-2.5" />
         </span>
+        <SuitIcon
+          suit={card.suit}
+          className={cn(
+            "pointer-events-none absolute left-1/2 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2",
+            card.red ? "text-red-600" : "text-neutral-900",
+          )}
+        />
         <span
           className={cn(
-            "self-end rotate-180 text-xs font-black leading-none",
+            "flex flex-col items-center self-end rotate-180 text-xs font-black leading-none",
             card.red ? "text-red-600" : "text-neutral-900",
           )}
         >
           {card.rank}
-          <br />
-          {card.suit}
+          <SuitIcon suit={card.suit} className="mt-0.5 h-2.5 w-2.5" />
         </span>
       </div>
     </div>

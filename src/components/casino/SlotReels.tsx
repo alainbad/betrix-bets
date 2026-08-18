@@ -1,23 +1,24 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { SlotSymbol, type SlotSymbolName } from "./icons";
 import type { CasinoStageProps } from "./types";
 
-const SYMBOLS = ["🍒", "🍋", "🔔", "⭐", "💎", "7️⃣"];
+const SYMBOLS: SlotSymbolName[] = ["cherry", "lemon", "bell", "star", "gem", "seven"];
 const SYMBOL_HEIGHT = 80;
 const SPIN_LENGTH = 22;
 
-function randomSymbol(): string {
+function randomSymbol(): SlotSymbolName {
   return SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)] ?? SYMBOLS[0]!;
 }
 
-function losingSymbols(): [string, string, string] {
+function losingSymbols(): [SlotSymbolName, SlotSymbolName, SlotSymbolName] {
   const a = randomSymbol();
   let b = randomSymbol();
   while (b === a) b = randomSymbol();
   return [a, b, randomSymbol()];
 }
 
-function buildStrip(finalSymbol: string): string[] {
+function buildStrip(finalSymbol: SlotSymbolName): SlotSymbolName[] {
   const strip = Array.from({ length: SPIN_LENGTH }, randomSymbol);
   strip.push(finalSymbol);
   return strip;
@@ -30,11 +31,13 @@ function Reel({
   delayMs,
 }: {
   phase: CasinoStageProps["phase"];
-  finalSymbol: string | null;
+  finalSymbol: SlotSymbolName | null;
   win: boolean;
   delayMs: number;
 }) {
-  const [strip, setStrip] = useState<string[]>(() => Array.from({ length: 6 }, randomSymbol));
+  const [strip, setStrip] = useState<SlotSymbolName[]>(() =>
+    Array.from({ length: 6 }, randomSymbol),
+  );
   const landed = phase === "revealed" && !!finalSymbol;
 
   useEffect(() => {
@@ -67,8 +70,8 @@ function Reel({
         }
       >
         {strip.map((s, i) => (
-          <span key={i} className="flex h-20 w-16 shrink-0 items-center justify-center text-4xl">
-            {s}
+          <span key={i} className="flex h-20 w-16 shrink-0 items-center justify-center">
+            <SlotSymbol name={s} className="h-10 w-10 drop-shadow" />
           </span>
         ))}
       </div>
@@ -85,7 +88,9 @@ function Reel({
 }
 
 export function SlotReels({ phase, outcome }: CasinoStageProps) {
-  const [finals, setFinals] = useState<[string, string, string] | null>(null);
+  const [finals, setFinals] = useState<[SlotSymbolName, SlotSymbolName, SlotSymbolName] | null>(
+    null,
+  );
 
   useEffect(() => {
     if (phase === "spinning") {
