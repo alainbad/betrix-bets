@@ -1,4 +1,4 @@
-import type { CasinoMechanic } from "@/lib/casino-data";
+import type { CasinoGame, CasinoMechanic } from "@/lib/casino-data";
 import { SlotReels } from "./SlotReels";
 import { WheelSpin } from "./WheelSpin";
 import { RouletteWheel } from "./RouletteWheel";
@@ -12,7 +12,7 @@ export function GameStage({
   phase,
   outcome,
   pick,
-}: { mechanic: CasinoMechanic; cardStyle?: "versus" | "baccarat" | undefined } & CasinoStageProps) {
+}: { mechanic: CasinoMechanic; cardStyle?: CasinoGame["cardStyle"] } & CasinoStageProps) {
   switch (mechanic) {
     case "slot":
       return <SlotReels phase={phase} outcome={outcome} />;

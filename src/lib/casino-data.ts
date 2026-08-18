@@ -22,10 +22,11 @@ export interface CasinoGame {
   // Plain-language rules for the classic game this page is styled after,
   // shown in a "How to play" panel on the game page.
   howToPlay: string[];
-  // Only for mechanic "cards" - which two-hand comparison labels/scoring to
-  // use. "versus" = generic "Dealer"/"You" with blackjack-style totals.
-  // "baccarat" = "Banker"/"Player" with a mod-10 point total.
-  cardStyle?: "versus" | "baccarat";
+  // Only for mechanic "cards" - which layout/scoring to use. "versus" =
+  // generic "Dealer"/"You" with blackjack-style totals. "baccarat" =
+  // "Banker"/"Player" with a mod-10 point total. "poker" = adds a shared
+  // 5-card community board between the two hands.
+  cardStyle?: "versus" | "baccarat" | "poker";
 }
 
 export const CASINO_CATEGORIES: { id: CasinoCategory | "all"; label: string }[] = [
@@ -117,7 +118,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     provider: "Kingsway Tables",
     category: "table",
     mechanic: "cards",
-    cardStyle: "versus",
+    cardStyle: "poker",
     rtp: 97.8,
     volatility: "Medium",
     minStake: 2,
