@@ -1,10 +1,17 @@
 export type CasinoCategory = "slots" | "table" | "instant" | "live";
 
+// Which animated stage renders on the game page. The server always decides
+// win/lose/payout first (play_casino_round) - these are cosmetic reveals
+// that land on that pre-decided outcome, not independent game logic, so the
+// mandated 15% win rate is unaffected by which mechanic a game uses.
+export type CasinoMechanic = "slot" | "wheel" | "cards" | "tiles" | "vault" | "coinflip";
+
 export interface CasinoGame {
   id: string;
   name: string;
   provider: string;
   category: CasinoCategory;
+  mechanic: CasinoMechanic;
   rtp: number;
   volatility: "Low" | "Medium" | "High";
   minStake: number;
@@ -28,6 +35,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     name: "Vault Rush",
     provider: "Betrix Originals",
     category: "instant",
+    mechanic: "vault",
     rtp: 96.5,
     volatility: "Medium",
     minStake: 1,
@@ -41,6 +49,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     name: "Neon Reels",
     provider: "Northgate Studio",
     category: "slots",
+    mechanic: "slot",
     rtp: 95.8,
     volatility: "High",
     minStake: 0.5,
@@ -54,6 +63,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     name: "Double or Nothing",
     provider: "Betrix Originals",
     category: "instant",
+    mechanic: "coinflip",
     rtp: 97.2,
     volatility: "Low",
     minStake: 1,
@@ -66,6 +76,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     name: "Blackjack Classic",
     provider: "Kingsway Tables",
     category: "table",
+    mechanic: "cards",
     rtp: 99.1,
     volatility: "Low",
     minStake: 2,
@@ -78,6 +89,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     name: "European Roulette",
     provider: "Kingsway Tables",
     category: "table",
+    mechanic: "wheel",
     rtp: 97.3,
     volatility: "Medium",
     minStake: 1,
@@ -90,6 +102,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     name: "Minefield",
     provider: "Betrix Originals",
     category: "instant",
+    mechanic: "tiles",
     rtp: 96.9,
     volatility: "High",
     minStake: 1,
@@ -103,6 +116,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     name: "Gold Frontier",
     provider: "Northgate Studio",
     category: "slots",
+    mechanic: "slot",
     rtp: 96.1,
     volatility: "Medium",
     minStake: 0.2,
@@ -115,6 +129,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     name: "Studio Baccarat",
     provider: "Kingsway Live",
     category: "live",
+    mechanic: "cards",
     rtp: 98.9,
     volatility: "Low",
     minStake: 5,
@@ -127,6 +142,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     name: "Texas Hold'em Poker",
     provider: "Kingsway Tables",
     category: "table",
+    mechanic: "cards",
     rtp: 97.8,
     volatility: "Medium",
     minStake: 2,
@@ -140,6 +156,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     name: "Live Poker Room",
     provider: "Kingsway Live",
     category: "live",
+    mechanic: "cards",
     rtp: 98.4,
     volatility: "Medium",
     minStake: 5,
@@ -153,6 +170,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     name: "Deuces Wild Poker",
     provider: "Northgate Studio",
     category: "instant",
+    mechanic: "cards",
     rtp: 99.4,
     volatility: "Low",
     minStake: 0.25,
@@ -165,6 +183,7 @@ export const CASINO_GAMES: CasinoGame[] = [
     name: "Lucky Wheel",
     provider: "Kingsway Live",
     category: "live",
+    mechanic: "wheel",
     rtp: 96.5,
     volatility: "Medium",
     minStake: 1,

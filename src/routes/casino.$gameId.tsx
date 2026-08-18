@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { ArrowLeft, Dices, Info, Loader2, Minus, Plus, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Info, Minus, Plus, ShieldCheck } from "lucide-react";
 import { casinoGameImage } from "@/lib/casino-media";
 import { getGameById } from "@/lib/casino-data";
 import { formatCurrency } from "@/lib/format";
 import { useBetting } from "@/lib/betting-store";
 import { useAuth } from "@/lib/auth-context";
 import { getRecentRounds, playCasinoRound, type CasinoRound } from "@/lib/casino-engine";
+import { GameStage } from "@/components/casino/GameStage";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/casino/$gameId")({
@@ -18,13 +19,18 @@ export const Route = createFileRoute("/casino/$gameId")({
   },
   head: ({ loaderData }) => {
     if (!loaderData) {
-      return { meta: [{ title: "Game unavailable — Betrix" }, { name: "robots", content: "noindex" }] };
+      return {
+        meta: [{ title: "Game unavailable — Betrix" }, { name: "robots", content: "noindex" }],
+      };
     }
     const { game } = loaderData;
     return {
       meta: [
         { title: `${game.name} — Betrix Casino Simulation` },
-        { name: "description", content: `${game.tagline} ${game.name} by ${game.provider}, RTP ${game.rtp}%, played with Betrix virtual credits.` },
+        {
+          name: "description",
+          content: `${game.tagline} ${game.name} by ${game.provider}, RTP ${game.rtp}%, played with Betrix virtual credits.`,
+        },
         { property: "og:title", content: `${game.name} on Betrix` },
         { property: "og:description", content: game.tagline },
         { property: "og:type", content: "website" },
@@ -38,15 +44,18 @@ export const Route = createFileRoute("/casino/$gameId")({
 });
 
 const STAKE_STEP = 5;
+const REVEAL_DELAY_MS = 1600;
 
 function GamePage() {
   const { game } = Route.useLoaderData();
   const { balance, refresh } = useBetting();
   const { user } = useAuth();
   const [stake, setStake] = useState(() => Math.max(game.minStake, Math.min(game.maxStake, 10)));
-  const [playing, setPlaying] = useState(false);
+  const [phase, setPhase] = useState<"idle" | "spinning" | "revealed">("idle");
+  const [roundKey, setRoundKey] = useState(0);
   const [lastResult, setLastResult] = useState<CasinoRound | null>(null);
   const [rounds, setRounds] = useState<CasinoRound[]>([]);
+  const playing = phase === "spinning";
 
   useEffect(() => {
     if (!user) {
@@ -69,36 +78,49 @@ function GamePage() {
   async function handlePlay() {
     if (!user || playing) return;
     if (stake < game.minStake || stake > game.maxStake) {
-      toast.error(`Stake must be between ${formatCurrency(game.minStake)} and ${formatCurrency(game.maxStake)}.`);
+      toast.error(
+        `Stake must be between ${formatCurrency(game.minStake)} and ${formatCurrency(game.maxStake)}.`,
+      );
       return;
     }
     if (insufficientFunds) {
       toast.error("Insufficient balance.");
       return;
     }
-    setPlaying(true);
+    setRoundKey((k) => k + 1);
+    setPhase("spinning");
     setLastResult(null);
     try {
       const result = await playCasinoRound(game.id, stake);
       if (!result.ok || !result.round) {
         toast.error(result.error ?? "Round failed. Try again.");
+        setPhase("idle");
         return;
       }
-      // Purely presentational pause so the reveal doesn't feel instantaneous -
-      // the outcome itself was already decided server-side before this.
-      await new Promise((resolve) => setTimeout(resolve, 650));
+      // The outcome is already decided server-side by this point - this
+      // delay just gives the game stage animation room to play out before
+      // the reveal, it never affects what the reveal shows.
+      await new Promise((resolve) => setTimeout(resolve, REVEAL_DELAY_MS));
       setLastResult(result.round);
+      setPhase("revealed");
       setRounds((prev) => [result.round!, ...prev].slice(0, 8));
       await refresh();
-    } finally {
-      setPlaying(false);
+    } catch {
+      toast.error("Round failed. Try again.");
+      setPhase("idle");
     }
   }
 
   return (
-    <main data-testid="casino-game-page" className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
+    <main
+      data-testid="casino-game-page"
+      className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8"
+    >
       <div className="mx-auto max-w-5xl">
-        <Link to="/casino" className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground">
+        <Link
+          to="/casino"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="h-4 w-4" /> Back to casino
         </Link>
 
@@ -113,31 +135,29 @@ function GamePage() {
             />
             <div className="absolute inset-0 bg-background/75 backdrop-blur-[2px]" />
             <div className="relative flex flex-col items-center justify-center px-4 py-14 text-center">
-              <p className="text-4xl font-black tracking-tighter text-foreground drop-shadow">{game.name}</p>
+              <p className="text-4xl font-black tracking-tighter text-foreground drop-shadow">
+                {game.name}
+              </p>
               <p className="mt-2 text-sm text-muted-foreground">{game.tagline}</p>
 
-              <div
-                className={cn(
-                  "mt-8 flex h-28 w-28 items-center justify-center rounded-full border-4 text-lg font-black transition-colors",
-                  playing
-                    ? "border-border text-muted-foreground"
-                    : lastResult?.outcome === "win"
-                      ? "border-primary text-primary"
-                      : lastResult?.outcome === "lose"
-                        ? "border-destructive/60 text-destructive"
-                        : "border-border text-muted-foreground"
-                )}
-              >
-                {playing ? (
-                  <Loader2 className="h-8 w-8 animate-spin" />
-                ) : lastResult ? (
-                  lastResult.outcome === "win" ? (
-                    `+${formatCurrency(lastResult.payout)}`
-                  ) : (
-                    "Lost"
-                  )
-                ) : (
-                  <Dices className="h-8 w-8" />
+              <div className="mt-8 flex flex-col items-center gap-3">
+                <GameStage
+                  key={roundKey}
+                  mechanic={game.mechanic}
+                  phase={phase}
+                  outcome={lastResult?.outcome ?? null}
+                />
+                {phase === "revealed" && lastResult && (
+                  <p
+                    className={cn(
+                      "text-lg font-black",
+                      lastResult.outcome === "win" ? "text-primary" : "text-destructive",
+                    )}
+                  >
+                    {lastResult.outcome === "win"
+                      ? `+${formatCurrency(lastResult.payout)}`
+                      : "Lost"}
+                  </p>
                 )}
               </div>
 
@@ -172,7 +192,9 @@ function GamePage() {
                   >
                     {playing ? "Rolling…" : `Play for ${formatCurrency(stake)}`}
                   </button>
-                  {insufficientFunds && <p className="text-xs font-medium text-destructive">Insufficient balance</p>}
+                  {insufficientFunds && (
+                    <p className="text-xs font-medium text-destructive">Insufficient balance</p>
+                  )}
                 </div>
               ) : (
                 <Link
@@ -187,7 +209,9 @@ function GamePage() {
 
           <aside className="space-y-4">
             <div className="rounded-2xl border border-border bg-card p-4">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">Virtual balance</p>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                Virtual balance
+              </p>
               <p className="text-2xl font-black text-foreground">{formatCurrency(balance)}</p>
             </div>
 
@@ -196,17 +220,29 @@ function GamePage() {
               <Row label="Category" value={game.category} />
               <Row label="Theoretical RTP" value={`${game.rtp}%`} />
               <Row label="Volatility" value={game.volatility} />
-              <Row label="Stake range" value={`${formatCurrency(game.minStake)} – ${formatCurrency(game.maxStake)}`} />
+              <Row
+                label="Stake range"
+                value={`${formatCurrency(game.minStake)} – ${formatCurrency(game.maxStake)}`}
+              />
             </dl>
 
             {user && rounds.length > 0 && (
               <div className="rounded-2xl border border-border bg-card p-4">
-                <p className="mb-3 text-xs uppercase tracking-wider text-muted-foreground">Recent rounds</p>
+                <p className="mb-3 text-xs uppercase tracking-wider text-muted-foreground">
+                  Recent rounds
+                </p>
                 <ul className="space-y-2">
                   {rounds.map((round) => (
                     <li key={round.id} className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{formatCurrency(round.stake)} stake</span>
-                      <span className={cn("font-semibold", round.outcome === "win" ? "text-primary" : "text-destructive")}>
+                      <span className="text-muted-foreground">
+                        {formatCurrency(round.stake)} stake
+                      </span>
+                      <span
+                        className={cn(
+                          "font-semibold",
+                          round.outcome === "win" ? "text-primary" : "text-destructive",
+                        )}
+                      >
                         {round.outcome === "win" ? `+${formatCurrency(round.payout)}` : "Lost"}
                       </span>
                     </li>
@@ -243,8 +279,13 @@ function GameNotFound() {
   return (
     <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4 bg-background px-4 text-center">
       <h1 className="text-2xl font-black text-foreground">Game not found</h1>
-      <p className="text-sm text-muted-foreground">This title may have been retired from the lobby.</p>
-      <Link to="/casino" className="rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">
+      <p className="text-sm text-muted-foreground">
+        This title may have been retired from the lobby.
+      </p>
+      <Link
+        to="/casino"
+        className="rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground"
+      >
         Back to casino
       </Link>
     </main>
