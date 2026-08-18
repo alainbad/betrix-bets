@@ -6,16 +6,18 @@ import type { CasinoStageProps } from "./types";
 const SYMBOLS: SlotSymbolName[] = ["cherry", "lemon", "bell", "star", "gem", "seven"];
 const SYMBOL_HEIGHT = 80;
 const SPIN_LENGTH = 22;
+const REEL_COUNT = 5;
 
 function randomSymbol(): SlotSymbolName {
   return SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)] ?? SYMBOLS[0]!;
 }
 
-function losingSymbols(): [SlotSymbolName, SlotSymbolName, SlotSymbolName] {
+function losingSymbols(count: number): SlotSymbolName[] {
   const a = randomSymbol();
   let b = randomSymbol();
   while (b === a) b = randomSymbol();
-  return [a, b, randomSymbol()];
+  const rest = Array.from({ length: count - 2 }, randomSymbol);
+  return [a, b, ...rest];
 }
 
 function buildStrip(finalSymbol: SlotSymbolName): SlotSymbolName[] {
@@ -47,7 +49,7 @@ function Reel({
   return (
     <div
       className={cn(
-        "relative h-20 w-16 overflow-hidden rounded-xl border-2 bg-background/90 shadow-inner transition-colors duration-300",
+        "relative h-20 w-14 overflow-hidden rounded-xl border-2 bg-background/90 shadow-inner transition-colors duration-300",
         landed && win
           ? "border-primary shadow-[0_0_20px_theme(colors.primary.DEFAULT/0.55)]"
           : "border-border",
@@ -70,8 +72,8 @@ function Reel({
         }
       >
         {strip.map((s, i) => (
-          <span key={i} className="flex h-20 w-16 shrink-0 items-center justify-center">
-            <SlotSymbol name={s} className="h-10 w-10 drop-shadow" />
+          <span key={i} className="flex h-20 w-14 shrink-0 items-center justify-center">
+            <SlotSymbol name={s} className="h-9 w-9 drop-shadow" />
           </span>
         ))}
       </div>
@@ -88,9 +90,7 @@ function Reel({
 }
 
 export function SlotReels({ phase, outcome }: CasinoStageProps) {
-  const [finals, setFinals] = useState<[SlotSymbolName, SlotSymbolName, SlotSymbolName] | null>(
-    null,
-  );
+  const [finals, setFinals] = useState<SlotSymbolName[] | null>(null);
 
   useEffect(() => {
     if (phase === "spinning") {
@@ -99,19 +99,23 @@ export function SlotReels({ phase, outcome }: CasinoStageProps) {
     }
     if (phase === "revealed" && outcome) {
       const symbol = randomSymbol();
-      setFinals(outcome === "win" ? [symbol, symbol, symbol] : losingSymbols());
+      setFinals(
+        outcome === "win"
+          ? Array.from({ length: REEL_COUNT }, () => symbol)
+          : losingSymbols(REEL_COUNT),
+      );
     }
   }, [phase, outcome]);
 
   return (
-    <div className="flex items-center justify-center gap-3">
-      {[0, 1, 2].map((i) => (
+    <div className="flex items-center justify-center gap-2">
+      {Array.from({ length: REEL_COUNT }, (_, i) => (
         <Reel
           key={i}
           phase={phase}
           finalSymbol={finals?.[i] ?? null}
           win={outcome === "win"}
-          delayMs={i * 180}
+          delayMs={i * 140}
         />
       ))}
     </div>

@@ -11,6 +11,8 @@ const SUITS: { name: SuitName; red: boolean }[] = [
   { name: "club", red: false },
 ];
 
+type CardStyle = "versus" | "baccarat" | "poker";
+
 interface Card {
   rank: string;
   suit: SuitName;
@@ -25,6 +27,10 @@ function randomCard(): Card {
 
 function drawHand(): [Card, Card] {
   return [randomCard(), randomCard()];
+}
+
+function drawCommunity(): Card[] {
+  return Array.from({ length: 5 }, randomCard);
 }
 
 function versusTotal(hand: Card[]): number {
@@ -44,22 +50,36 @@ function baccaratTotal(hand: Card[]): number {
   return sum % 10;
 }
 
-function buildHands(style: "versus" | "baccarat", outcome: "win" | "lose") {
+function buildRound(style: CardStyle, outcome: "win" | "lose") {
   const total = style === "baccarat" ? baccaratTotal : versusTotal;
   const you = drawHand();
+  const community = style === "poker" ? drawCommunity() : [];
   let house = drawHand();
   for (let i = 0; i < 50; i++) {
-    const youWins = total(you) > total(house);
+    const youWins = total([...you, ...community]) > total([...house, ...community]);
     if ((outcome === "win") === youWins) break;
     house = drawHand();
   }
-  return { you, house };
+  return { you, house, community };
 }
 
-function CardFace({ card, revealed, delayMs }: { card: Card; revealed: boolean; delayMs: number }) {
+function CardFace({
+  card,
+  revealed,
+  delayMs,
+  size = "md",
+}: {
+  card: Card;
+  revealed: boolean;
+  delayMs: number;
+  size?: "md" | "sm";
+}) {
   return (
     <div
-      className="relative h-20 w-14 transition-transform duration-500 ease-out"
+      className={cn(
+        "relative transition-transform duration-500 ease-out",
+        size === "sm" ? "h-16 w-11" : "h-20 w-14",
+      )}
       style={{
         transformStyle: "preserve-3d",
         transform: revealed ? "rotateY(180deg)" : "rotateY(0deg)",
@@ -92,7 +112,7 @@ function CardFace({ card, revealed, delayMs }: { card: Card; revealed: boolean; 
         <SuitIcon
           suit={card.suit}
           className={cn(
-            "pointer-events-none absolute left-1/2 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2",
+            "pointer-events-none absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2",
             card.red ? "text-red-600" : "text-neutral-900",
           )}
         />
@@ -155,33 +175,76 @@ export function CardReveal({
   phase,
   outcome,
   cardStyle = "versus",
-}: CasinoStageProps & { cardStyle?: "versus" | "baccarat" | undefined }) {
+}: CasinoStageProps & { cardStyle?: CardStyle | undefined }) {
   const style = cardStyle;
-  const [hands, setHands] = useState(() => ({ you: drawHand(), house: drawHand() }));
+  const [round, setRound] = useState(() => ({
+    you: drawHand(),
+    house: drawHand(),
+    community: style === "poker" ? drawCommunity() : [],
+  }));
 
   useEffect(() => {
-    if (phase === "spinning") setHands({ you: drawHand(), house: drawHand() });
+    if (phase === "spinning")
+      setRound({
+        you: drawHand(),
+        house: drawHand(),
+        community: style === "poker" ? drawCommunity() : [],
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
   useEffect(() => {
-    if (phase === "revealed" && outcome) setHands(buildHands(style, outcome));
+    if (phase === "revealed" && outcome) setRound(buildRound(style, outcome));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, outcome]);
 
   const revealed = phase === "revealed";
   const totalFn = style === "baccarat" ? baccaratTotal : versusTotal;
-  const youTotal = totalFn(hands.you);
-  const houseTotal = totalFn(hands.house);
+  const youTotal = totalFn([...round.you, ...round.community]);
+  const houseTotal = totalFn([...round.house, ...round.community]);
   const youWin = revealed && outcome === "win";
 
   const houseLabel = style === "baccarat" ? "Banker" : "Dealer";
   const youLabel = style === "baccarat" ? "Player" : "You";
 
+  if (style === "poker") {
+    return (
+      <div className="flex flex-col items-center gap-3">
+        <Hand
+          label={houseLabel}
+          cards={round.house}
+          total={houseTotal}
+          revealed={revealed}
+          winner={!youWin}
+          delayOffset={0}
+        />
+        <div className="flex flex-col items-center gap-1">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            Community
+          </p>
+          <div className="flex gap-1">
+            {round.community.map((card, i) => (
+              <CardFace key={i} card={card} revealed={revealed} delayMs={120 + i * 90} size="sm" />
+            ))}
+          </div>
+        </div>
+        <Hand
+          label={youLabel}
+          cards={round.you}
+          total={youTotal}
+          revealed={revealed}
+          winner={youWin}
+          delayOffset={600}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center justify-center gap-4">
       <Hand
         label={houseLabel}
-        cards={hands.house}
+        cards={round.house}
         total={houseTotal}
         revealed={revealed}
         winner={!youWin}
@@ -190,7 +253,7 @@ export function CardReveal({
       <span className="text-xs font-black uppercase text-muted-foreground">vs</span>
       <Hand
         label={youLabel}
-        cards={hands.you}
+        cards={round.you}
         total={youTotal}
         revealed={revealed}
         winner={youWin}
