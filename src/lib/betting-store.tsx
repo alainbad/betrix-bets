@@ -95,7 +95,7 @@ async function fetchBets(userId: string): Promise<PlacedBet[]> {
   const { data, error } = await supabase
     .from("bets")
     .select(
-      "id, status, total_stake, potential_return, placed_at, bet_selections ( event_name, market_label, selection_label, decimal_odds_at_placement )"
+      "id, status, total_stake, potential_return, placed_at, bet_selections ( event_name, market_label, selection_label, decimal_odds_at_placement )",
     )
     .eq("user_id", userId)
     .order("placed_at", { ascending: false });
@@ -159,7 +159,10 @@ export function BettingProvider({ children }: { children: ReactNode }) {
   function addToSlip(event: Event, marketLabel: string, selection: Selection) {
     setSlip((prev) => {
       const existingIndex = prev.findIndex(
-        (item) => item.eventId === event.id && item.selection.id === selection.id && item.marketLabel === marketLabel
+        (item) =>
+          item.eventId === event.id &&
+          item.selection.id === selection.id &&
+          item.marketLabel === marketLabel,
       );
       if (existingIndex >= 0) {
         const newSlip = [...prev];
@@ -183,7 +186,9 @@ export function BettingProvider({ children }: { children: ReactNode }) {
   }
 
   function updateStake(itemId: string, stake: number) {
-    setSlip((prev) => prev.map((item) => (item.id === itemId ? { ...item, stake: Math.max(0, stake) } : item)));
+    setSlip((prev) =>
+      prev.map((item) => (item.id === itemId ? { ...item, stake: Math.max(0, stake) } : item)),
+    );
   }
 
   function clearSlip() {

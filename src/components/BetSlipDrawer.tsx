@@ -37,14 +37,14 @@ export function BetSlipDrawer({ open, onClose }: { open: boolean; onClose: () =>
       <div
         className={cn(
           "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity",
-          open ? "opacity-100" : "pointer-events-none opacity-0"
+          open ? "opacity-100" : "pointer-events-none opacity-0",
         )}
         onClick={onClose}
       />
       <aside
         className={cn(
           "fixed right-0 top-0 z-50 h-full w-full max-w-md transform border-l border-border bg-card shadow-2xl transition-transform duration-300 ease-out",
-          open ? "translate-x-0" : "translate-x-full"
+          open ? "translate-x-0" : "translate-x-full",
         )}
       >
         <div className="flex h-full flex-col">
@@ -80,7 +80,11 @@ export function BetSlipDrawer({ open, onClose }: { open: boolean; onClose: () =>
                     stroke="currentColor"
                     strokeWidth={1.5}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                    />
                   </svg>
                 </div>
                 <p className="text-sm text-muted-foreground">Your bet slip is empty.</p>
@@ -95,7 +99,10 @@ export function BetSlipDrawer({ open, onClose }: { open: boolean; onClose: () =>
             ) : (
               <div className="space-y-3">
                 {slip.map((item) => (
-                  <div key={item.id} className="rounded-xl border border-border bg-betrix-surface p-3">
+                  <div
+                    key={item.id}
+                    className="rounded-xl border border-border bg-betrix-surface p-3"
+                  >
                     <div className="mb-2 flex items-start justify-between">
                       <div>
                         <p className="text-sm font-bold text-foreground">{item.eventName}</p>
@@ -132,7 +139,9 @@ export function BetSlipDrawer({ open, onClose }: { open: boolean; onClose: () =>
                         </button>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-muted-foreground">{formatOdds(item.selection.odds)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatOdds(item.selection.odds)}
+                        </p>
                         <p className="text-sm font-bold text-primary">
                           {formatCurrency(item.stake * americanToDecimal(item.selection.odds))}
                         </p>
@@ -149,28 +158,39 @@ export function BetSlipDrawer({ open, onClose }: { open: boolean; onClose: () =>
               <div className="mb-3 space-y-1">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Total stake</span>
-                  <span className="font-semibold text-foreground">{formatCurrency(totalStake)}</span>
+                  <span className="font-semibold text-foreground">
+                    {formatCurrency(totalStake)}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Potential return</span>
-                  <span className="font-bold text-primary">{formatCurrency(totalPotentialReturn)}</span>
+                  <span className="font-bold text-primary">
+                    {formatCurrency(totalPotentialReturn)}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Balance</span>
-                  <span className={cn("font-semibold", insufficientFunds ? "text-destructive" : "text-foreground")}>
+                  <span
+                    className={cn(
+                      "font-semibold",
+                      insufficientFunds ? "text-destructive" : "text-foreground",
+                    )}
+                  >
                     {formatCurrency(balance)}
                   </span>
                 </div>
               </div>
               {insufficientFunds && (
-                <p className="mb-2 text-center text-xs font-medium text-destructive">Insufficient funds</p>
+                <p className="mb-2 text-center text-xs font-medium text-destructive">
+                  Insufficient funds
+                </p>
               )}
               <button
                 onClick={() => void handlePlace()}
                 disabled={insufficientFunds || placed || placing}
                 className={cn(
                   "w-full rounded-xl py-3 text-sm font-bold text-primary-foreground transition-all disabled:opacity-60",
-                  placed ? "bg-accent text-accent-foreground" : "bg-primary hover:bg-primary/90"
+                  placed ? "bg-accent text-accent-foreground" : "bg-primary hover:bg-primary/90",
                 )}
               >
                 {placed ? "Bets placed!" : placing ? "Placing…" : "Place bets"}

@@ -5,7 +5,6 @@ import { SportPill } from "@/components/SportPill";
 import { getSportImage } from "@/lib/sport-media";
 import { getEventsBySport, getSportByCode, getSports } from "@/lib/sports-data";
 
-
 export const Route = createFileRoute("/sports/$sportId")({
   loader: async ({ params }) => {
     const [sport, events, sports] = await Promise.all([
@@ -19,9 +18,15 @@ export const Route = createFileRoute("/sports/$sportId")({
   head: ({ loaderData }) => ({
     meta: [
       { title: `${loaderData?.sport?.name ?? "Sport"} — Betrix` },
-      { name: "description", content: `Browse ${loaderData?.sport?.name ?? ""} events and odds on Betrix.` },
+      {
+        name: "description",
+        content: `Browse ${loaderData?.sport?.name ?? ""} events and odds on Betrix.`,
+      },
       { property: "og:title", content: `${loaderData?.sport?.name ?? "Sport"} — Betrix` },
-      { property: "og:description", content: `Browse ${loaderData?.sport?.name ?? ""} events and odds on Betrix.` },
+      {
+        property: "og:description",
+        content: `Browse ${loaderData?.sport?.name ?? ""} events and odds on Betrix.`,
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -45,8 +50,12 @@ function SportPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/75 to-background/20" />
         <div className="absolute inset-0 flex items-end px-4 pb-6 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-7xl">
-            <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">{sport.name}</h1>
-            <p className="text-sm text-muted-foreground">{events.length} events with open markets</p>
+            <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+              {sport.name}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {events.length} events with open markets
+            </p>
           </div>
         </div>
       </section>
@@ -74,4 +83,3 @@ function SportPage() {
     </main>
   );
 }
-

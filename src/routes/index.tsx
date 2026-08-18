@@ -7,8 +7,6 @@ import ogAsset from "@/assets/betrix-og.jpg.asset.json";
 
 const OG_IMAGE = `https://project--6a0e946c-c85b-4a07-8f34-3b6259233927.lovable.app${ogAsset.url}`;
 
-
-
 export const Route = createFileRoute("/")({
   loader: async () => {
     const [sports, featured] = await Promise.all([getSports(), getFeaturedEvents(4)]);
@@ -17,9 +15,16 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Betrix — Play-Money Sports Betting" },
-      { name: "description", content: "Betrix is a play-money sportsbook for tracking picks, exploring odds, and competing with friends." },
+      {
+        name: "description",
+        content:
+          "Betrix is a play-money sportsbook for tracking picks, exploring odds, and competing with friends.",
+      },
       { property: "og:title", content: "Betrix — Play-Money Sports Betting" },
-      { property: "og:description", content: "Track picks, explore live odds, and compete with friends on Betrix." },
+      {
+        property: "og:description",
+        content: "Track picks, explore live odds, and compete with friends on Betrix.",
+      },
       { property: "og:type", content: "website" },
       { property: "og:image", content: OG_IMAGE },
       { name: "twitter:card", content: "summary_large_image" },
@@ -35,7 +40,6 @@ function HomePage() {
   return (
     <main className="min-h-screen bg-background">
       <HeroCarousel />
-
 
       {/* Sports */}
       <section className="px-4 py-8 sm:px-6 lg:px-8">

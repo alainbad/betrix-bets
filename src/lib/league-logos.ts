@@ -17,7 +17,12 @@ export type LeagueBrand = {
 export const LEAGUE_BRANDS: LeagueBrand[] = [
   { name: "Premier League", domain: "premierleague.com", sportId: "football" },
   { name: "LaLiga", domain: "laliga.com", sportId: "football" },
-  { name: "Champions League", domain: "uefa.com", sportId: "football", assetUrl: championsLeagueAsset.url },
+  {
+    name: "Champions League",
+    domain: "uefa.com",
+    sportId: "football",
+    assetUrl: championsLeagueAsset.url,
+  },
   { name: "Serie A", domain: "legaseriea.it", sportId: "football" },
   { name: "Bundesliga", domain: "bundesliga.com", sportId: "football" },
   { name: "NBA", domain: "nba.com", sportId: "basketball" },

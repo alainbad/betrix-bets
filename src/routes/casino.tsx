@@ -12,9 +12,16 @@ export const Route = createFileRoute("/casino")({
   head: () => ({
     meta: [
       { title: "Casino Simulation — Slots & Tables on Betrix" },
-      { name: "description", content: "Play Betrix casino simulations: slots, instant-win originals, blackjack, roulette and live-studio tables using virtual credits." },
+      {
+        name: "description",
+        content:
+          "Play Betrix casino simulations: slots, instant-win originals, blackjack, roulette and live-studio tables using virtual credits.",
+      },
       { property: "og:title", content: "Betrix Casino Simulation" },
-      { property: "og:description", content: "Slots, instant-win originals and table games — all played with virtual credits." },
+      {
+        property: "og:description",
+        content: "Slots, instant-win originals and table games — all played with virtual credits.",
+      },
       { property: "og:type", content: "website" },
       { property: "og:image", content: CASINO_OG_IMAGE },
       { name: "twitter:card", content: "summary_large_image" },
@@ -39,7 +46,8 @@ function CasinoPage() {
   const games = CASINO_GAMES.filter(
     (g) =>
       (category === "all" || g.category === category) &&
-      (query.trim() === "" || `${g.name} ${g.provider}`.toLowerCase().includes(query.toLowerCase()))
+      (query.trim() === "" ||
+        `${g.name} ${g.provider}`.toLowerCase().includes(query.toLowerCase())),
   );
 
   return (
@@ -51,8 +59,8 @@ function CasinoPage() {
           </p>
           <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">Casino</h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Every round is settled by the server-side engine and logged to your history. Published RTP figures are theoretical
-            over millions of rounds.
+            Every round is settled by the server-side engine and logged to your history. Published
+            RTP figures are theoretical over millions of rounds.
           </p>
         </header>
 
@@ -67,7 +75,7 @@ function CasinoPage() {
                   "rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors",
                   category === c.id
                     ? "border-primary bg-primary/10 text-primary"
-                    : "border-border bg-secondary text-muted-foreground hover:text-foreground"
+                    : "border-border bg-secondary text-muted-foreground hover:text-foreground",
                 )}
               >
                 {c.label}
@@ -121,7 +129,9 @@ function CasinoPage() {
                 </span>
 
                 <div className="absolute inset-x-0 bottom-0 p-3">
-                  <p className="truncate text-sm font-black leading-tight text-foreground">{game.name}</p>
+                  <p className="truncate text-sm font-black leading-tight text-foreground">
+                    {game.name}
+                  </p>
                   <p className="mt-0.5 truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                     {game.provider} · {game.volatility} vol.
                   </p>

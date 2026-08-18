@@ -7,7 +7,6 @@ import { LeagueLogo } from "@/components/LeagueLogo";
 import { LEAGUE_BRANDS } from "@/lib/league-logos";
 import { getAllEvents, getSports } from "@/lib/sports-data";
 
-
 export const Route = createFileRoute("/sports")({
   loader: async () => {
     const [sports, events] = await Promise.all([getSports(), getAllEvents(200)]);
@@ -36,7 +35,7 @@ function SportsPage() {
         (event) =>
           event.homeTeam.toLowerCase().includes(q) ||
           event.awayTeam.toLowerCase().includes(q) ||
-          event.league.toLowerCase().includes(q)
+          event.league.toLowerCase().includes(q),
       )
     : events;
 
@@ -109,4 +108,3 @@ function AllSportsPill({ active }: { active?: boolean }) {
     </Link>
   );
 }
-

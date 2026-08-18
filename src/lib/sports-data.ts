@@ -110,7 +110,9 @@ function mapEvent(row: EventRow): Event {
   return event;
 }
 
-async function queryEvents(opts: { sportCode?: string; statuses?: string[]; limit?: number } = {}): Promise<Event[]> {
+async function queryEvents(
+  opts: { sportCode?: string; statuses?: string[]; limit?: number } = {},
+): Promise<Event[]> {
   let query = supabase
     .from("events")
     .select(EVENT_SELECT)
@@ -126,13 +128,20 @@ async function queryEvents(opts: { sportCode?: string; statuses?: string[]; limi
 }
 
 export async function getSports(): Promise<Sport[]> {
-  const { data, error } = await supabase.from("sports").select("code, name, icon").order("display_order");
+  const { data, error } = await supabase
+    .from("sports")
+    .select("code, name, icon")
+    .order("display_order");
   if (error) throw error;
   return (data ?? []).map((s) => ({ id: s.code, name: s.name, icon: s.icon ?? "🏆" }));
 }
 
 export async function getSportByCode(code: string): Promise<Sport | undefined> {
-  const { data, error } = await supabase.from("sports").select("code, name, icon").eq("code", code).maybeSingle();
+  const { data, error } = await supabase
+    .from("sports")
+    .select("code, name, icon")
+    .eq("code", code)
+    .maybeSingle();
   if (error) throw error;
   return data ? { id: data.code, name: data.name, icon: data.icon ?? "🏆" } : undefined;
 }
@@ -160,7 +169,11 @@ export function getUpcomingEvents(limit?: number): Promise<Event[]> {
 }
 
 export async function getEventById(id: string): Promise<Event | undefined> {
-  const { data, error } = await supabase.from("events").select(EVENT_SELECT).eq("id", id).maybeSingle();
+  const { data, error } = await supabase
+    .from("events")
+    .select(EVENT_SELECT)
+    .eq("id", id)
+    .maybeSingle();
   if (error) throw error;
   return data ? mapEvent(data as unknown as EventRow) : undefined;
 }

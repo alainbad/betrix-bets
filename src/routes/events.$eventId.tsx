@@ -15,10 +15,21 @@ export const Route = createFileRoute("/events/$eventId")({
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: `${loaderData?.event?.awayTeam ?? ""} @ ${loaderData?.event?.homeTeam ?? ""} — Betrix` },
-      { name: "description", content: `View odds and markets for ${loaderData?.event?.awayTeam ?? ""} @ ${loaderData?.event?.homeTeam ?? ""} on Betrix.` },
-      { property: "og:title", content: `${loaderData?.event?.awayTeam ?? ""} @ ${loaderData?.event?.homeTeam ?? ""} — Betrix` },
-      { property: "og:description", content: `View odds and markets for ${loaderData?.event?.awayTeam ?? ""} @ ${loaderData?.event?.homeTeam ?? ""} on Betrix.` },
+      {
+        title: `${loaderData?.event?.awayTeam ?? ""} @ ${loaderData?.event?.homeTeam ?? ""} — Betrix`,
+      },
+      {
+        name: "description",
+        content: `View odds and markets for ${loaderData?.event?.awayTeam ?? ""} @ ${loaderData?.event?.homeTeam ?? ""} on Betrix.`,
+      },
+      {
+        property: "og:title",
+        content: `${loaderData?.event?.awayTeam ?? ""} @ ${loaderData?.event?.homeTeam ?? ""} — Betrix`,
+      },
+      {
+        property: "og:description",
+        content: `View odds and markets for ${loaderData?.event?.awayTeam ?? ""} @ ${loaderData?.event?.homeTeam ?? ""} on Betrix.`,
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -88,9 +99,19 @@ function EventDetailPage() {
   );
 }
 
-function TeamBlock({ name, score, align = "left" }: { name: string; score?: number | undefined; align?: "left" | "right" }) {
+function TeamBlock({
+  name,
+  score,
+  align = "left",
+}: {
+  name: string;
+  score?: number | undefined;
+  align?: "left" | "right";
+}) {
   return (
-    <div className={`flex flex-col gap-3 ${align === "right" ? "items-end text-right" : "items-start text-left"}`}>
+    <div
+      className={`flex flex-col gap-3 ${align === "right" ? "items-end text-right" : "items-start text-left"}`}
+    >
       <TeamLogo team={name} size={64} />
       <p className="text-lg font-bold text-foreground sm:text-2xl">{name}</p>
       {score !== undefined && <p className="mt-1 text-3xl font-black text-primary">{score}</p>}
