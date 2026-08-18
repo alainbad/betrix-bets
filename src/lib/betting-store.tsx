@@ -1,34 +1,11 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Event, Selection } from "./betting-data";
 import { useAuth } from "./auth-context";
 import { supabase } from "./supabase";
 import { americanToDecimal, decimalToAmerican } from "./format";
+import { BettingContext, type BetSlipItem, type PlacedBet, type PlaceBetsResult } from "./betting-context";
 
-export interface BetSlipItem {
-  id: string;
-  eventId: string;
-  eventName: string;
-  marketLabel: string;
-  selection: Selection;
-  stake: number;
-}
-
-export interface PlacedBet {
-  id: string;
-  eventName: string;
-  marketLabel: string;
-  selectionLabel: string;
-  odds: number;
-  stake: number;
-  potentialReturn: number;
-  status: "pending" | "won" | "lost" | "void";
-  placedAt: string;
-}
-
-export interface PlaceBetsResult {
-  ok: boolean;
-  error?: string;
-}
+export type { BetSlipItem, PlacedBet, PlaceBetsResult };
 
 const SLIP_STORAGE_KEY = "betrix-slip-v1";
 
@@ -103,26 +80,6 @@ async function fetchBets(userId: string): Promise<PlacedBet[]> {
   return (data ?? []).map((row) => mapBetRow(row as unknown as BetRow));
 }
 
-interface BettingContextValue {
-  balance: number;
-  slip: BetSlipItem[];
-  bets: PlacedBet[];
-  placing: boolean;
-  addToSlip: (event: Event, marketLabel: string, selection: Selection) => void;
-  removeFromSlip: (itemId: string) => void;
-  updateStake: (itemId: string, stake: number) => void;
-  clearSlip: () => void;
-  placeBets: () => Promise<PlaceBetsResult>;
-  totalStake: number;
-  totalPotentialReturn: number;
-  isInSlip: (eventId: string, selectionId: string) => boolean;
-  // Refetches balance + bet history from Supabase. Exposed so other
-  // wallet-backed features (the casino engine) can refresh the shared
-  // balance after their own RPC calls without duplicating this fetch.
-  refresh: () => Promise<void>;
-}
-
-const BettingContext = createContext<BettingContextValue | null>(null);
 
 export function BettingProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
