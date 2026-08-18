@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useMatches } from "@tanstack/react-router";
 import { Dices, Search, Sparkles } from "lucide-react";
 import { CASINO_CATEGORIES, CASINO_GAMES, type CasinoCategory } from "@/lib/casino-data";
 import { casinoGameImage } from "@/lib/casino-media";
@@ -25,8 +25,16 @@ export const Route = createFileRoute("/casino")({
 });
 
 function CasinoPage() {
+  const matches = useMatches();
   const [category, setCategory] = useState<CasinoCategory | "all">("all");
   const [query, setQuery] = useState("");
+
+  // /casino is the parent route for /casino/$gameId (shared file prefix), so
+  // when a specific game is matched, render its page through the outlet
+  // instead of this lobby grid.
+  if (matches.some((m) => m.routeId === "/casino/$gameId")) {
+    return <Outlet />;
+  }
 
   const games = CASINO_GAMES.filter(
     (g) =>
