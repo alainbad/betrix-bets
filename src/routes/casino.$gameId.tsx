@@ -1,9 +1,14 @@
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, Info, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
+import { ArrowLeft, Dices, Info, Loader2, Minus, Plus, ShieldCheck } from "lucide-react";
 import { casinoGameImage } from "@/lib/casino-media";
 import { getGameById } from "@/lib/casino-data";
 import { formatCurrency } from "@/lib/format";
 import { useBetting } from "@/lib/betting-store";
+import { useAuth } from "@/lib/auth-context";
+import { getRecentRounds, playCasinoRound, type CasinoRound } from "@/lib/casino-engine";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/casino/$gameId")({
   loader: ({ params }) => {
@@ -32,9 +37,63 @@ export const Route = createFileRoute("/casino/$gameId")({
   component: GamePage,
 });
 
+const STAKE_STEP = 5;
+
 function GamePage() {
   const { game } = Route.useLoaderData();
-  const { balance } = useBetting();
+  const { balance, refresh } = useBetting();
+  const { user } = useAuth();
+  const [stake, setStake] = useState(() => Math.max(game.minStake, Math.min(game.maxStake, 10)));
+  const [playing, setPlaying] = useState(false);
+  const [lastResult, setLastResult] = useState<CasinoRound | null>(null);
+  const [rounds, setRounds] = useState<CasinoRound[]>([]);
+
+  useEffect(() => {
+    if (!user) {
+      setRounds([]);
+      return;
+    }
+    let cancelled = false;
+    getRecentRounds(user.id, game.id, 8)
+      .then((r) => {
+        if (!cancelled) setRounds(r);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [user, game.id]);
+
+  const insufficientFunds = stake > balance;
+
+  async function handlePlay() {
+    if (!user || playing) return;
+    if (stake < game.minStake || stake > game.maxStake) {
+      toast.error(`Stake must be between ${formatCurrency(game.minStake)} and ${formatCurrency(game.maxStake)}.`);
+      return;
+    }
+    if (insufficientFunds) {
+      toast.error("Insufficient balance.");
+      return;
+    }
+    setPlaying(true);
+    setLastResult(null);
+    try {
+      const result = await playCasinoRound(game.id, stake);
+      if (!result.ok || !result.round) {
+        toast.error(result.error ?? "Round failed. Try again.");
+        return;
+      }
+      // Purely presentational pause so the reveal doesn't feel instantaneous -
+      // the outcome itself was already decided server-side before this.
+      await new Promise((resolve) => setTimeout(resolve, 650));
+      setLastResult(result.round);
+      setRounds((prev) => [result.round!, ...prev].slice(0, 8));
+      await refresh();
+    } finally {
+      setPlaying(false);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
@@ -52,17 +111,77 @@ function GamePage() {
               height={600}
               className="absolute inset-0 h-full w-full object-cover"
             />
-            <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px]" />
-            <div className="relative flex flex-col items-center justify-center py-24 text-center">
+            <div className="absolute inset-0 bg-background/75 backdrop-blur-[2px]" />
+            <div className="relative flex flex-col items-center justify-center px-4 py-14 text-center">
               <p className="text-4xl font-black tracking-tighter text-foreground drop-shadow">{game.name}</p>
               <p className="mt-2 text-sm text-muted-foreground">{game.tagline}</p>
-              <p className="mt-8 max-w-sm text-xs text-muted-foreground">
-                The game client connects to the server-side round engine. Outcomes are generated and settled server-side —
-                nothing is decided in this browser.
-              </p>
-              <span className="mt-6 rounded-full border border-border bg-secondary/90 px-4 py-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Engine pending
-              </span>
+
+              <div
+                className={cn(
+                  "mt-8 flex h-28 w-28 items-center justify-center rounded-full border-4 text-lg font-black transition-colors",
+                  playing
+                    ? "border-border text-muted-foreground"
+                    : lastResult?.outcome === "win"
+                      ? "border-primary text-primary"
+                      : lastResult?.outcome === "lose"
+                        ? "border-destructive/60 text-destructive"
+                        : "border-border text-muted-foreground"
+                )}
+              >
+                {playing ? (
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                ) : lastResult ? (
+                  lastResult.outcome === "win" ? (
+                    `+${formatCurrency(lastResult.payout)}`
+                  ) : (
+                    "Lost"
+                  )
+                ) : (
+                  <Dices className="h-8 w-8" />
+                )}
+              </div>
+
+              {user ? (
+                <div className="mt-8 flex flex-col items-center gap-3">
+                  <div className="flex items-center rounded-xl border border-border bg-background/90">
+                    <button
+                      type="button"
+                      onClick={() => setStake((s) => Math.max(game.minStake, s - STAKE_STEP))}
+                      className="px-3 py-2 text-muted-foreground hover:text-foreground"
+                      aria-label="Decrease stake"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <div className="min-w-[5rem] text-center text-base font-bold text-foreground">
+                      {formatCurrency(stake)}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setStake((s) => Math.min(game.maxStake, s + STAKE_STEP))}
+                      className="px-3 py-2 text-muted-foreground hover:text-foreground"
+                      aria-label="Increase stake"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handlePlay()}
+                    disabled={playing || insufficientFunds}
+                    className="rounded-full bg-primary px-8 py-3 text-sm font-bold text-primary-foreground transition-transform hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
+                  >
+                    {playing ? "Rolling…" : `Play for ${formatCurrency(stake)}`}
+                  </button>
+                  {insufficientFunds && <p className="text-xs font-medium text-destructive">Insufficient balance</p>}
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  className="mt-8 rounded-full bg-primary px-8 py-3 text-sm font-bold text-primary-foreground transition-transform hover:scale-105 active:scale-95"
+                >
+                  Log in to play
+                </Link>
+              )}
             </div>
           </section>
 
@@ -80,13 +199,29 @@ function GamePage() {
               <Row label="Stake range" value={`${formatCurrency(game.minStake)} – ${formatCurrency(game.maxStake)}`} />
             </dl>
 
+            {user && rounds.length > 0 && (
+              <div className="rounded-2xl border border-border bg-card p-4">
+                <p className="mb-3 text-xs uppercase tracking-wider text-muted-foreground">Recent rounds</p>
+                <ul className="space-y-2">
+                  {rounds.map((round) => (
+                    <li key={round.id} className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">{formatCurrency(round.stake)} stake</span>
+                      <span className={cn("font-semibold", round.outcome === "win" ? "text-primary" : "text-destructive")}>
+                        {round.outcome === "win" ? `+${formatCurrency(round.payout)}` : "Lost"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <p className="flex gap-2 rounded-2xl border border-border bg-secondary p-4 text-xs text-muted-foreground">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
               Credits carry no monetary value and cannot be purchased, withdrawn or exchanged.
             </p>
             <p className="flex gap-2 text-xs text-muted-foreground">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              Round history appears in your account once a round has been settled.
+              Every round is generated and settled server-side - nothing is decided in this browser.
             </p>
           </aside>
         </div>
