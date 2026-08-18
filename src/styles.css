@@ -210,6 +210,16 @@
   to { transform: rotate(360deg); }
 }
 
+@keyframes casino-reel-spin {
+  from { transform: translateY(0); }
+  to { transform: translateY(-480px); }
+}
+
+@keyframes casino-shimmer {
+  0% { transform: translateX(-120%) skewX(-15deg); }
+  100% { transform: translateX(220%) skewX(-15deg); }
+}
+
 @keyframes casino-coin-loop {
   from { transform: rotateY(0deg); }
   to { transform: rotateY(360deg); }

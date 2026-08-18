@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { ArrowLeft, Info, Minus, Plus, ShieldCheck } from "lucide-react";
+import { ArrowLeft, BookOpen, Info, Minus, Plus, ShieldCheck } from "lucide-react";
 import { casinoGameImage } from "@/lib/casino-media";
 import { getGameById } from "@/lib/casino-data";
 import { formatCurrency } from "@/lib/format";
@@ -213,6 +213,20 @@ function GamePage() {
                 Virtual balance
               </p>
               <p className="text-2xl font-black text-foreground">{formatCurrency(balance)}</p>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <p className="mb-3 flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+                <BookOpen className="h-3.5 w-3.5" /> How to play
+              </p>
+              <ul className="space-y-2 text-sm text-foreground">
+                {game.howToPlay.map((line, i) => (
+                  <li key={i} className="flex gap-2">
+                    <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-primary" />
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
 
             <dl className="space-y-2 rounded-2xl border border-border bg-card p-4 text-sm">

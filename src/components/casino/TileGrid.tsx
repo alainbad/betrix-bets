@@ -23,15 +23,19 @@ export function TileGrid({ phase, outcome }: CasinoStageProps) {
           <div
             key={i}
             className={cn(
-              "flex h-12 w-12 items-center justify-center rounded-lg border-2 text-xl transition-all duration-300",
+              "flex h-12 w-12 items-center justify-center rounded-lg border-2 text-xl transition-all",
               revealed
-                ? isBomb
-                  ? "border-destructive bg-destructive/20"
-                  : "border-primary/50 bg-primary/10"
+                ? cn(
+                    "duration-300 ease-out",
+                    isBomb
+                      ? "border-destructive bg-destructive/25 shadow-[0_0_16px_theme(colors.destructive.DEFAULT/0.5)]"
+                      : "border-primary/60 bg-primary/10 shadow-[0_0_10px_theme(colors.primary.DEFAULT/0.35)]",
+                  )
                 : "border-border bg-background/60",
             )}
             style={{
-              transitionDelay: revealed ? `${i * 45}ms` : "0ms",
+              transform: revealed ? "scale(1)" : undefined,
+              transitionDelay: revealed ? `${i * 55}ms` : "0ms",
               animation:
                 !revealed && phase === "spinning"
                   ? "casino-pulse-soft 1.1s ease-in-out infinite"
@@ -39,7 +43,15 @@ export function TileGrid({ phase, outcome }: CasinoStageProps) {
               animationDelay: !revealed && phase === "spinning" ? `${(i % 3) * 120}ms` : undefined,
             }}
           >
-            {revealed ? (isBomb ? "💣" : "💎") : ""}
+            <span
+              className={cn(
+                "inline-block transition-transform duration-300",
+                revealed ? "scale-100" : "scale-0",
+              )}
+              style={{ transitionDelay: revealed ? `${i * 55}ms` : "0ms" }}
+            >
+              {revealed ? (isBomb ? "💣" : "💎") : ""}
+            </span>
           </div>
         );
       })}
