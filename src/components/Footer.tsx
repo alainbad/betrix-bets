@@ -8,8 +8,8 @@ export function Footer() {
           <div>
             <p className="text-lg font-black tracking-tight text-foreground">Betrix</p>
             <p className="mt-2 max-w-xs text-xs leading-relaxed text-muted-foreground">
-              A sportsbook and casino simulation platform. Virtual credits have no monetary value and cannot be purchased,
-              withdrawn or exchanged.
+              A sportsbook and casino simulation platform. Virtual credits have no monetary value
+              and cannot be purchased, withdrawn or exchanged.
             </p>
           </div>
           <FooterCol title="Sportsbook">
@@ -27,7 +27,8 @@ export function Footer() {
           </FooterCol>
         </div>
         <p className="mt-10 border-t border-border pt-6 text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Betrix. Simulation platform for entertainment purposes only. 18+.
+          © {new Date().getFullYear()} Betrix. Simulation platform for entertainment purposes only.
+          18+.
         </p>
       </div>
     </footer>
@@ -37,7 +38,9 @@ export function Footer() {
 function FooterCol({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">{title}</p>
+      <p className="mb-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+        {title}
+      </p>
       <ul className="space-y-2 text-sm">{children}</ul>
     </div>
   );

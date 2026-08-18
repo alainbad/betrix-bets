@@ -2,7 +2,13 @@ import { useCallback, useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { AlertTriangle, Gauge, Search, ShieldCheck, TrendingUp, Users } from "lucide-react";
-import { ADMIN_PLAYERS, AUDIT_LOG, EXPOSURE, PLATFORM_METRICS, TRAFFIC_SERIES } from "@/lib/admin-data";
+import {
+  ADMIN_PLAYERS,
+  AUDIT_LOG,
+  EXPOSURE,
+  PLATFORM_METRICS,
+  TRAFFIC_SERIES,
+} from "@/lib/admin-data";
 import { getAllEvents } from "@/lib/sports-data";
 import type { Event } from "@/lib/betting-data";
 import { supabase } from "@/lib/supabase";
@@ -13,10 +19,18 @@ export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
       { title: "Operator Console — Betrix Admin" },
-      { name: "description", content: "Betrix operator console: player monitoring, liability and exposure analytics, casino performance and the audit trail." },
+      {
+        name: "description",
+        content:
+          "Betrix operator console: player monitoring, liability and exposure analytics, casino performance and the audit trail.",
+      },
       { name: "robots", content: "noindex" },
       { property: "og:title", content: "Betrix Operator Console" },
-      { property: "og:description", content: "Player monitoring, exposure analytics and audit trail for the Betrix simulation platform." },
+      {
+        property: "og:description",
+        content:
+          "Player monitoring, exposure analytics and audit trail for the Betrix simulation platform.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -36,11 +50,16 @@ function AdminPage() {
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Operator console</p>
-              <h1 className="text-2xl font-black tracking-tight text-foreground">Platform control room</h1>
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                Operator console
+              </p>
+              <h1 className="text-2xl font-black tracking-tight text-foreground">
+                Platform control room
+              </h1>
             </div>
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
-              <ShieldCheck className="h-3.5 w-3.5" /> Feed healthy · {PLATFORM_METRICS.feedLatencyMs} ms
+              <ShieldCheck className="h-3.5 w-3.5" /> Feed healthy ·{" "}
+              {PLATFORM_METRICS.feedLatencyMs} ms
             </span>
           </div>
           <nav className="mt-6 flex gap-1 overflow-x-auto">
@@ -53,7 +72,7 @@ function AdminPage() {
                   "whitespace-nowrap rounded-t-lg border-b-2 px-4 py-2 text-sm font-semibold transition-colors",
                   tab === t
                     ? "border-primary text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
                 )}
               >
                 {t}
@@ -80,14 +99,37 @@ function Overview() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Metric icon={<Users className="h-4 w-4" />} label="Active players" value={PLATFORM_METRICS.activePlayers.toLocaleString()} delta="+6.2%" />
-        <Metric icon={<TrendingUp className="h-4 w-4" />} label="Bets today" value={PLATFORM_METRICS.betsToday.toLocaleString()} delta="+11.4%" />
-        <Metric icon={<Gauge className="h-4 w-4" />} label="Stake volume" value={formatCurrency(PLATFORM_METRICS.stakeVolume)} delta="+3.1%" />
-        <Metric icon={<AlertTriangle className="h-4 w-4" />} label="Open liability" value={formatCurrency(PLATFORM_METRICS.openLiability)} delta="-1.8%" negative />
+        <Metric
+          icon={<Users className="h-4 w-4" />}
+          label="Active players"
+          value={PLATFORM_METRICS.activePlayers.toLocaleString()}
+          delta="+6.2%"
+        />
+        <Metric
+          icon={<TrendingUp className="h-4 w-4" />}
+          label="Bets today"
+          value={PLATFORM_METRICS.betsToday.toLocaleString()}
+          delta="+11.4%"
+        />
+        <Metric
+          icon={<Gauge className="h-4 w-4" />}
+          label="Stake volume"
+          value={formatCurrency(PLATFORM_METRICS.stakeVolume)}
+          delta="+3.1%"
+        />
+        <Metric
+          icon={<AlertTriangle className="h-4 w-4" />}
+          label="Open liability"
+          value={formatCurrency(PLATFORM_METRICS.openLiability)}
+          delta="-1.8%"
+          negative
+        />
       </div>
 
       <section className="rounded-2xl border border-border bg-card p-5">
-        <h2 className="mb-6 text-sm font-bold uppercase tracking-wider text-muted-foreground">Bet volume by hour (UTC)</h2>
+        <h2 className="mb-6 text-sm font-bold uppercase tracking-wider text-muted-foreground">
+          Bet volume by hour (UTC)
+        </h2>
         <div className="flex h-48 items-end gap-3">
           {TRAFFIC_SERIES.map((d) => (
             <div key={d.hour} className="flex flex-1 flex-col items-center gap-2">
@@ -104,14 +146,22 @@ function Overview() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="rounded-2xl border border-border bg-card p-5">
-          <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-muted-foreground">Sportsbook margin</h2>
+          <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-muted-foreground">
+            Sportsbook margin
+          </h2>
           <p className="text-4xl font-black text-foreground">{PLATFORM_METRICS.houseMargin}%</p>
-          <p className="mt-1 text-xs text-muted-foreground">Theoretical hold across settled markets in the last 24 hours.</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Theoretical hold across settled markets in the last 24 hours.
+          </p>
         </section>
         <section className="rounded-2xl border border-border bg-card p-5">
-          <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-muted-foreground">Casino actual RTP</h2>
+          <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-muted-foreground">
+            Casino actual RTP
+          </h2>
           <p className="text-4xl font-black text-foreground">{PLATFORM_METRICS.casinoRtp}%</p>
-          <p className="mt-1 text-xs text-muted-foreground">{PLATFORM_METRICS.casinoRounds.toLocaleString()} rounds settled today.</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {PLATFORM_METRICS.casinoRounds.toLocaleString()} rounds settled today.
+          </p>
         </section>
       </div>
     </div>
@@ -171,8 +221,8 @@ function Settlement() {
   return (
     <div className="space-y-4">
       <p className="text-xs text-muted-foreground">
-        Declaring a final score settles every open market on the event and pays out winning bets immediately. This
-        action requires an administrator role server-side and cannot be undone.
+        Declaring a final score settles every open market on the event and pays out winning bets
+        immediately. This action requires an administrator role server-side and cannot be undone.
       </p>
       {events.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-12 text-center">
@@ -239,7 +289,9 @@ function Settlement() {
 
 function Players() {
   const [q, setQ] = useState("");
-  const rows = ADMIN_PLAYERS.filter((p) => `${p.username} ${p.email} ${p.id}`.toLowerCase().includes(q.toLowerCase()));
+  const rows = ADMIN_PLAYERS.filter((p) =>
+    `${p.username} ${p.email} ${p.id}`.toLowerCase().includes(q.toLowerCase()),
+  );
 
   return (
     <div className="space-y-4">
@@ -268,17 +320,36 @@ function Players() {
           </thead>
           <tbody>
             {rows.map((p) => (
-              <tr key={p.id} className="border-b border-border/60 last:border-0 hover:bg-betrix-surface-elevated">
+              <tr
+                key={p.id}
+                className="border-b border-border/60 last:border-0 hover:bg-betrix-surface-elevated"
+              >
                 <td className="px-4 py-3">
                   <p className="font-semibold text-foreground">{p.username}</p>
-                  <p className="text-xs text-muted-foreground">{p.email} · {p.country}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {p.email} · {p.country}
+                  </p>
                 </td>
-                <td className="px-4 py-3"><StatusPill status={p.status} /></td>
-                <td className="px-4 py-3 text-right font-semibold text-foreground">{formatCurrency(p.credits)}</td>
-                <td className={cn("px-4 py-3 text-right font-semibold", p.sportsNet >= 0 ? "text-primary" : "text-destructive")}>
+                <td className="px-4 py-3">
+                  <StatusPill status={p.status} />
+                </td>
+                <td className="px-4 py-3 text-right font-semibold text-foreground">
+                  {formatCurrency(p.credits)}
+                </td>
+                <td
+                  className={cn(
+                    "px-4 py-3 text-right font-semibold",
+                    p.sportsNet >= 0 ? "text-primary" : "text-destructive",
+                  )}
+                >
                   {formatCurrency(p.sportsNet)}
                 </td>
-                <td className={cn("px-4 py-3 text-right font-semibold", p.casinoNet >= 0 ? "text-primary" : "text-destructive")}>
+                <td
+                  className={cn(
+                    "px-4 py-3 text-right font-semibold",
+                    p.casinoNet >= 0 ? "text-primary" : "text-destructive",
+                  )}
+                >
                   {formatCurrency(p.casinoNet)}
                 </td>
                 <td className="px-4 py-3 text-right text-muted-foreground">{p.betsPlaced}</td>
@@ -289,8 +360,8 @@ function Players() {
         </table>
       </div>
       <p className="text-xs text-muted-foreground">
-        Credit adjustments are performed server-side and always write an audit record. This view is read-only until the
-        engine is wired up.
+        Credit adjustments are performed server-side and always write an audit record. This view is
+        read-only until the engine is wired up.
       </p>
     </div>
   );
@@ -308,12 +379,17 @@ function Exposure() {
               <p className="text-xs uppercase tracking-wider text-muted-foreground">{row.league}</p>
             </div>
             <div className="text-right">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">Worst-case liability</p>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                Worst-case liability
+              </p>
               <p className="text-xl font-black text-foreground">{formatCurrency(row.liability)}</p>
             </div>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-secondary">
-            <div className="h-full rounded-full bg-accent" style={{ width: `${(row.liability / max) * 100}%` }} />
+            <div
+              className="h-full rounded-full bg-accent"
+              style={{ width: `${(row.liability / max) * 100}%` }}
+            />
           </div>
           <div className="mt-3 flex justify-between text-xs text-muted-foreground">
             <span>Stake volume {formatCurrency(row.stakeVolume)}</span>
@@ -338,7 +414,9 @@ function Casino() {
       ].map((g) => (
         <div key={g.name} className="rounded-2xl border border-border bg-card p-5">
           <p className="font-bold text-foreground">{g.name}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{g.rounds.toLocaleString()} rounds today</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {g.rounds.toLocaleString()} rounds today
+          </p>
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
             <div>
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Actual RTP</p>
@@ -362,7 +440,9 @@ function Audit() {
         <li key={entry.id} className="relative rounded-2xl border border-border bg-card p-4">
           <span className="absolute -left-[1.9rem] top-6 h-2.5 w-2.5 rounded-full bg-primary" />
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="font-mono text-xs font-bold uppercase tracking-wider text-accent">{entry.action}</p>
+            <p className="font-mono text-xs font-bold uppercase tracking-wider text-accent">
+              {entry.action}
+            </p>
             <p className="text-xs text-muted-foreground">{entry.at}</p>
           </div>
           <p className="mt-2 text-sm text-foreground">{entry.detail}</p>
@@ -375,7 +455,19 @@ function Audit() {
   );
 }
 
-function Metric({ icon, label, value, delta, negative }: { icon: React.ReactNode; label: string; value: string; delta: string; negative?: boolean }) {
+function Metric({
+  icon,
+  label,
+  value,
+  delta,
+  negative,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  delta: string;
+  negative?: boolean;
+}) {
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
       <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
@@ -383,7 +475,11 @@ function Metric({ icon, label, value, delta, negative }: { icon: React.ReactNode
         {label}
       </p>
       <p className="mt-2 text-2xl font-black text-foreground">{value}</p>
-      <p className={cn("mt-1 text-xs font-semibold", negative ? "text-destructive" : "text-primary")}>{delta} vs yesterday</p>
+      <p
+        className={cn("mt-1 text-xs font-semibold", negative ? "text-destructive" : "text-primary")}
+      >
+        {delta} vs yesterday
+      </p>
     </div>
   );
 }
@@ -395,6 +491,13 @@ function StatusPill({ status }: { status: "active" | "restricted" | "review" }) 
     restricted: "border-destructive/40 bg-destructive/10 text-destructive",
   } as const;
   return (
-    <span className={cn("rounded-full border px-2.5 py-0.5 text-xs font-semibold capitalize", map[status])}>{status}</span>
+    <span
+      className={cn(
+        "rounded-full border px-2.5 py-0.5 text-xs font-semibold capitalize",
+        map[status],
+      )}
+    >
+      {status}
+    </span>
   );
 }

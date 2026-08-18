@@ -43,13 +43,11 @@ export function EventCard({ event }: { event: Event }) {
         <TeamColumn name={event.homeTeam} align="right" />
       </div>
 
-
       {event.status === "live" && (
         <div className="mb-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-xl bg-betrix-surface-elevated px-3 py-2">
           <Score value={event.awayScore ?? 0} label={event.awayTeam} />
           <span className="shrink-0 text-xs font-bold uppercase text-muted-foreground">Score</span>
           <Score value={event.homeScore ?? 0} label={event.homeTeam} />
-
         </div>
       )}
 
@@ -76,7 +74,6 @@ export function EventCard({ event }: { event: Event }) {
           );
         })}
       </div>
-
     </article>
   );
 }
@@ -87,7 +84,9 @@ function TeamColumn({ name, align = "left" }: { name: string; align?: "left" | "
       className={`flex min-w-0 items-center gap-2 sm:gap-3 ${align === "right" ? "flex-row-reverse text-right" : "text-left"}`}
     >
       <TeamLogo team={name} size={44} />
-      <p className="min-w-0 break-words text-sm font-bold leading-tight text-foreground line-clamp-2">{name}</p>
+      <p className="min-w-0 break-words text-sm font-bold leading-tight text-foreground line-clamp-2">
+        {name}
+      </p>
     </div>
   );
 }
@@ -100,4 +99,3 @@ function Score({ value, label }: { value: number; label: string }) {
     </div>
   );
 }
-

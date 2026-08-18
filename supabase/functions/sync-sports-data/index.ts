@@ -15,13 +15,18 @@
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { MockSportsProvider } from "../_shared/mock-provider.ts";
 import { TheOddsApiProvider } from "../_shared/the-odds-api-provider.ts";
-import type { ProviderCompetition, ProviderFixture, SportsDataProvider } from "../_shared/sports-types.ts";
+import type {
+  ProviderCompetition,
+  ProviderFixture,
+  SportsDataProvider,
+} from "../_shared/sports-types.ts";
 
 function getProvider(): SportsDataProvider {
   const kind = Deno.env.get("SPORTS_PROVIDER") ?? "mock";
   if (kind === "the_odds_api") {
     const apiKey = Deno.env.get("SPORTS_API_KEY");
-    if (!apiKey) throw new Error("SPORTS_PROVIDER=the_odds_api requires the SPORTS_API_KEY secret to be set.");
+    if (!apiKey)
+      throw new Error("SPORTS_PROVIDER=the_odds_api requires the SPORTS_API_KEY secret to be set.");
     // Optional: SPORTS_COMPETITION_ALLOWLIST="soccer_epl,basketball_nba" to
     // sync only specific leagues. Unset caps at SPORTS_COMPETITION_CAP
     // leagues per sport (default 5) instead of every active league, since
@@ -32,7 +37,11 @@ function getProvider(): SportsDataProvider {
       .filter(Boolean);
     const capEnv = Deno.env.get("SPORTS_COMPETITION_CAP");
     const cap = capEnv ? Number.parseInt(capEnv, 10) : undefined;
-    return new TheOddsApiProvider(apiKey, allowlist, cap && Number.isFinite(cap) && cap > 0 ? cap : undefined);
+    return new TheOddsApiProvider(
+      apiKey,
+      allowlist,
+      cap && Number.isFinite(cap) && cap > 0 ? cap : undefined,
+    );
   }
   return new MockSportsProvider();
 }
@@ -98,7 +107,11 @@ async function chunkedUpsertReturning(
   return out;
 }
 
-async function chunkedInsert(supabase: SupabaseClient, table: string, rows: Record<string, unknown>[]): Promise<void> {
+async function chunkedInsert(
+  supabase: SupabaseClient,
+  table: string,
+  rows: Record<string, unknown>[],
+): Promise<void> {
   for (const batch of chunk(rows, BATCH_SIZE)) {
     const { error } = await supabase.from(table).insert(batch);
     if (error) throw error;
@@ -129,7 +142,10 @@ interface SyncCounts {
   selections: number;
 }
 
-async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): Promise<SyncCounts> {
+async function runSync(
+  supabase: SupabaseClient,
+  provider: SportsDataProvider,
+): Promise<SyncCounts> {
   const counts: SyncCounts = { sports: 0, competitions: 0, events: 0, markets: 0, selections: 0 };
 
   const providerId = await upsertProvider(supabase, provider.code);
@@ -146,7 +162,12 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
   for (const row of mappingRows ?? []) {
     mappingCache.set(`${row.entity_type}:${row.provider_ref}`, row.internal_id as string);
   }
-  const newMappingRows: { provider_id: string; entity_type: string; internal_id: string; provider_ref: string }[] = [];
+  const newMappingRows: {
+    provider_id: string;
+    entity_type: string;
+    internal_id: string;
+    provider_ref: string;
+  }[] = [];
 
   function resolveId(entityType: string, providerRef: string): { id: string; isNew: boolean } {
     const key = `${entityType}:${providerRef}`;
@@ -154,7 +175,12 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
     if (existing) return { id: existing, isNew: false };
     const id = crypto.randomUUID();
     mappingCache.set(key, id);
-    newMappingRows.push({ provider_id: providerId, entity_type: entityType, internal_id: id, provider_ref: providerRef });
+    newMappingRows.push({
+      provider_id: providerId,
+      entity_type: entityType,
+      internal_id: id,
+      provider_ref: providerRef,
+    });
     return { id, isNew: true };
   }
 
@@ -167,7 +193,9 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
     "code",
     "id, code",
   );
-  const countryIdByCode = new Map<string, string>(countryRows.map((r) => [r.code as string, r.id as string]));
+  const countryIdByCode = new Map<string, string>(
+    countryRows.map((r) => [r.code as string, r.id as string]),
+  );
 
   console.log("step: sports");
   const sports = await provider.getSports();
@@ -178,7 +206,9 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
     "code",
     "id, code",
   );
-  const sportIdByCode = new Map<string, string>(sportRows.map((r) => [r.code as string, r.id as string]));
+  const sportIdByCode = new Map<string, string>(
+    sportRows.map((r) => [r.code as string, r.id as string]),
+  );
   counts.sports = sports.length;
 
   console.log("step: competitions");
@@ -209,12 +239,18 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
     const key = `competition:${comp.id}`;
     if (!mappingCache.has(key)) {
       mappingCache.set(key, internalId);
-      newMappingRows.push({ provider_id: providerId, entity_type: "competition", internal_id: internalId, provider_ref: comp.id });
+      newMappingRows.push({
+        provider_id: providerId,
+        entity_type: "competition",
+        internal_id: internalId,
+        provider_ref: comp.id,
+      });
     }
   }
 
   console.log("step: fixtures");
-  const fixtureEntries: { sportCode: string; competitionId: string; fixture: ProviderFixture }[] = [];
+  const fixtureEntries: { sportCode: string; competitionId: string; fixture: ProviderFixture }[] =
+    [];
   for (const { sportCode, comp } of competitionEntries) {
     const sportId = sportIdByCode.get(sportCode)!;
     const competitionId = competitionIdBySportSlug.get(`${sportId}:${comp.slug}`)!;
@@ -231,11 +267,19 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
   }
 
   console.log("step: participants", fixtureEntries.length, "fixtures");
-  const participantByKey = new Map<string, { sportId: string; name: string; shortName?: string; kind: "team" | "individual" }>();
+  const participantByKey = new Map<
+    string,
+    { sportId: string; name: string; shortName?: string; kind: "team" | "individual" }
+  >();
   for (const { sportCode, fixture } of fixtureEntries) {
     const sportId = sportIdByCode.get(sportCode)!;
     for (const p of [fixture.homeParticipant, fixture.awayParticipant]) {
-      const entry: { sportId: string; name: string; shortName?: string; kind: "team" | "individual" } = {
+      const entry: {
+        sportId: string;
+        name: string;
+        shortName?: string;
+        kind: "team" | "individual";
+      } = {
         sportId,
         name: p.name,
         kind: p.kind,
@@ -324,7 +368,12 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
 
   console.log("step: selections");
   const selectionUpsertRows: Record<string, unknown>[] = [];
-  const selectionMeta: { id: string; newOdds: number; providerUpdatedAt: string | null; isNew: boolean }[] = [];
+  const selectionMeta: {
+    id: string;
+    newOdds: number;
+    providerUpdatedAt: string | null;
+    isNew: boolean;
+  }[] = [];
   for (const { fixture } of fixtureEntries) {
     for (const market of fixture.markets) {
       for (const selection of market.selections) {
@@ -349,8 +398,16 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
   }
 
   const existingSelectionIds = selectionMeta.filter((s) => !s.isNew).map((s) => s.id);
-  const oldOddsRows = await chunkedSelectIn(supabase, "selections", "id, decimal_odds", "id", existingSelectionIds);
-  const oldOddsById = new Map<string, number>(oldOddsRows.map((r) => [r.id as string, r.decimal_odds as number]));
+  const oldOddsRows = await chunkedSelectIn(
+    supabase,
+    "selections",
+    "id, decimal_odds",
+    "id",
+    existingSelectionIds,
+  );
+  const oldOddsById = new Map<string, number>(
+    oldOddsRows.map((r) => [r.id as string, r.decimal_odds as number]),
+  );
 
   await chunkedUpsert(supabase, "selections", selectionUpsertRows, "id");
   counts.selections = selectionUpsertRows.length;
@@ -367,7 +424,12 @@ async function runSync(supabase: SupabaseClient, provider: SportsDataProvider): 
   await chunkedInsert(supabase, "odds_history", oddsHistoryRows);
 
   console.log("step: flush mappings", newMappingRows.length, "new");
-  await chunkedUpsert(supabase, "provider_mappings", newMappingRows, "provider_id,entity_type,provider_ref");
+  await chunkedUpsert(
+    supabase,
+    "provider_mappings",
+    newMappingRows,
+    "provider_id,entity_type,provider_ref",
+  );
 
   return counts;
 }

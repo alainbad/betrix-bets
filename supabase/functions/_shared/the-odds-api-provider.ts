@@ -87,7 +87,10 @@ interface TheOddsApiEvent {
 }
 
 function slugify(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
 // The Odds API returns its plan's remaining/used credit counts on every
@@ -98,7 +101,9 @@ function logQuota(context: string, res: Response): void {
   const used = res.headers.get("x-requests-used");
   const lastCost = res.headers.get("x-requests-last");
   if (remaining !== null || used !== null) {
-    console.log(`the-odds-api quota [${context}]: remaining=${remaining} used=${used} lastCost=${lastCost}`);
+    console.log(
+      `the-odds-api quota [${context}]: remaining=${remaining} used=${used} lastCost=${lastCost}`,
+    );
   }
 }
 
@@ -121,12 +126,22 @@ function mapMarket(
   for (const outcome of outcomes) {
     let id: string;
     let name: string;
-    if (outcome.name === homeTeam) { id = "home"; name = "Home"; }
-    else if (outcome.name === awayTeam) { id = "away"; name = "Away"; }
-    else if (outcome.name === "Draw") { id = "draw"; name = "Draw"; }
-    else if (outcome.name === "Over") { id = "over"; name = "Over"; }
-    else if (outcome.name === "Under") { id = "under"; name = "Under"; }
-    else continue;
+    if (outcome.name === homeTeam) {
+      id = "home";
+      name = "Home";
+    } else if (outcome.name === awayTeam) {
+      id = "away";
+      name = "Away";
+    } else if (outcome.name === "Draw") {
+      id = "draw";
+      name = "Draw";
+    } else if (outcome.name === "Over") {
+      id = "over";
+      name = "Over";
+    } else if (outcome.name === "Under") {
+      id = "under";
+      name = "Under";
+    } else continue;
     const selection: ProviderSelection = { id, name, decimalOdds: outcome.price };
     if (outcome.point !== undefined) selection.line = outcome.point;
     selections.push(selection);
@@ -154,7 +169,10 @@ export class TheOddsApiProvider implements SportsDataProvider {
   }
 
   async getSports(): Promise<ProviderSport[]> {
-    return Object.keys(SPORT_GROUP_MAP).map((code) => ({ code, name: code[0]!.toUpperCase() + code.slice(1) }));
+    return Object.keys(SPORT_GROUP_MAP).map((code) => ({
+      code,
+      name: code[0]!.toUpperCase() + code.slice(1),
+    }));
   }
 
   async getCountries(): Promise<ProviderCountry[]> {
@@ -169,7 +187,9 @@ export class TheOddsApiProvider implements SportsDataProvider {
     const sports = await this.fetchSports();
     const inGroup = sports.filter((s) => s.active && s.group.toLowerCase() === group.toLowerCase());
     const selected =
-      this.allowlist.length > 0 ? inGroup.filter((s) => this.allowlist.includes(s.key)) : inGroup.slice(0, this.cap);
+      this.allowlist.length > 0
+        ? inGroup.filter((s) => this.allowlist.includes(s.key))
+        : inGroup.slice(0, this.cap);
     return selected.map((s) => ({ id: s.key, sportCode, name: s.title, slug: slugify(s.key) }));
   }
 
@@ -202,7 +222,9 @@ export class TheOddsApiProvider implements SportsDataProvider {
 
   async getLiveEvents(sportCode: string): Promise<ProviderFixture[]> {
     const competitions = await this.getCompetitions(sportCode);
-    const fixturesByCompetition = await Promise.all(competitions.map((c) => this.getFixtures(c.id)));
+    const fixturesByCompetition = await Promise.all(
+      competitions.map((c) => this.getFixtures(c.id)),
+    );
     const now = Date.now();
     return fixturesByCompetition
       .flat()
@@ -215,13 +237,34 @@ export class TheOddsApiProvider implements SportsDataProvider {
 
     const markets: ProviderMarket[] = [];
     for (const m of bookmaker.markets) {
-      const marketType = m.key === "h2h" ? "moneyline" : m.key === "spreads" ? "spread" : m.key === "totals" ? "total" : m.key;
-      const label = m.key === "h2h" ? "Moneyline" : m.key === "spreads" ? "Spread" : m.key === "totals" ? "Total" : m.key;
+      const marketType =
+        m.key === "h2h"
+          ? "moneyline"
+          : m.key === "spreads"
+            ? "spread"
+            : m.key === "totals"
+              ? "total"
+              : m.key;
+      const label =
+        m.key === "h2h"
+          ? "Moneyline"
+          : m.key === "spreads"
+            ? "Spread"
+            : m.key === "totals"
+              ? "Total"
+              : m.key;
       // Market id must be unique per event (not just per market type) — every
       // fixture has its own moneyline/spread/total, and this id becomes the
       // provider_mappings key the ingestion job upserts against.
       const marketId = `${event.id}-${marketType}`;
-      const mapped = mapMarket(marketId, marketType, label, m.outcomes, event.home_team, event.away_team);
+      const mapped = mapMarket(
+        marketId,
+        marketType,
+        label,
+        m.outcomes,
+        event.home_team,
+        event.away_team,
+      );
       if (mapped) markets.push(mapped);
     }
 

@@ -11,9 +11,17 @@ export const Route = createFileRoute("/live")({
   head: () => ({
     meta: [
       { title: "Live Betting — In-Play Odds on Betrix" },
-      { name: "description", content: "Follow in-play matches on Betrix with live scores, momentum and continuously updating simulated odds." },
+      {
+        name: "description",
+        content:
+          "Follow in-play matches on Betrix with live scores, momentum and continuously updating simulated odds.",
+      },
       { property: "og:title", content: "Live Betting on Betrix" },
-      { property: "og:description", content: "In-play scores, momentum and simulated odds across football, basketball, tennis and esports." },
+      {
+        property: "og:description",
+        content:
+          "In-play scores, momentum and simulated odds across football, basketball, tennis and esports.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -32,14 +40,20 @@ function LivePage() {
             <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-accent">
               <Radio className="h-3 w-3 animate-pulse" /> In-play now
             </p>
-            <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">Live betting</h1>
+            <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+              Live betting
+            </h1>
             <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-              Prices update as the game moves. Markets suspend automatically around scoring events, exactly as they would on a
-              regulated book.
+              Prices update as the game moves. Markets suspend automatically around scoring events,
+              exactly as they would on a regulated book.
             </p>
           </div>
           <dl className="flex gap-6 text-right">
-            <Stat icon={<Activity className="h-4 w-4" />} label="Live events" value={String(live.length)} />
+            <Stat
+              icon={<Activity className="h-4 w-4" />}
+              label="Live events"
+              value={String(live.length)}
+            />
             <Stat icon={<Timer className="h-4 w-4" />} label="Feed latency" value="340 ms" />
           </dl>
         </div>
@@ -53,7 +67,10 @@ function LivePage() {
         ) : (
           <div className="rounded-2xl border border-dashed border-border p-12 text-center">
             <p className="text-sm text-muted-foreground">No events are in play right now.</p>
-            <Link to="/sports" className="mt-3 inline-block text-sm font-semibold text-primary hover:underline">
+            <Link
+              to="/sports"
+              className="mt-3 inline-block text-sm font-semibold text-primary hover:underline"
+            >
               Browse upcoming fixtures
             </Link>
           </div>
