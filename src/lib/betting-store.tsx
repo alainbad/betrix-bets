@@ -1,34 +1,11 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Event, Selection } from "./betting-data";
 import { useAuth } from "./auth-context";
 import { supabase } from "./supabase";
 import { americanToDecimal, decimalToAmerican } from "./format";
+import { BettingContext, type BetSlipItem, type PlacedBet, type PlaceBetsResult } from "./betting-context";
 
-export interface BetSlipItem {
-  id: string;
-  eventId: string;
-  eventName: string;
-  marketLabel: string;
-  selection: Selection;
-  stake: number;
-}
-
-export interface PlacedBet {
-  id: string;
-  eventName: string;
-  marketLabel: string;
-  selectionLabel: string;
-  odds: number;
-  stake: number;
-  potentialReturn: number;
-  status: "pending" | "won" | "lost" | "void";
-  placedAt: string;
-}
-
-export interface PlaceBetsResult {
-  ok: boolean;
-  error?: string;
-}
+export type { BetSlipItem, PlacedBet, PlaceBetsResult };
 
 const SLIP_STORAGE_KEY = "betrix-slip-v1";
 
