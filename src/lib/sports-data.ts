@@ -110,8 +110,31 @@ function mapEvent(row: EventRow): Event {
   return event;
 }
 
+// Round-robins events across competitions (earliest game from each
+// competition first, then the next-earliest from each, ...) instead of a
+// flat chronological sort. A single competition can otherwise flood a
+// mixed "all sports" list - e.g. an ATP Challenger event runs dozens of
+// same-day morning matches, which sorts ahead of every evening football
+// fixture for the rest of the week and buries them past the fold.
+function interleaveByCompetition(events: Event[]): Event[] {
+  const byCompetition = new Map<string, Event[]>();
+  for (const event of events) {
+    const group = byCompetition.get(event.league);
+    if (group) group.push(event);
+    else byCompetition.set(event.league, [event]);
+  }
+  const groups = [...byCompetition.values()];
+  const out: Event[] = [];
+  for (let i = 0; out.length < events.length; i++) {
+    for (const group of groups) {
+      if (i < group.length) out.push(group[i]!);
+    }
+  }
+  return out;
+}
+
 async function queryEvents(
-  opts: { sportCode?: string; statuses?: string[]; limit?: number } = {},
+  opts: { sportCode?: string; statuses?: string[]; limit?: number; balanced?: boolean } = {},
 ): Promise<Event[]> {
   let query = supabase
     .from("events")
@@ -120,11 +143,16 @@ async function queryEvents(
 
   if (opts.sportCode) query = query.eq("sports.code", opts.sportCode);
   if (opts.statuses) query = query.in("status", opts.statuses);
-  if (opts.limit) query = query.limit(opts.limit);
+  // Balanced queries interleave after fetching, so the DB-side limit would
+  // cut the pool before balancing could help - only cap unbalanced queries.
+  if (opts.limit && !opts.balanced) query = query.limit(opts.limit);
 
   const { data, error } = await query;
   if (error) throw error;
-  return ((data ?? []) as unknown as EventRow[]).map(mapEvent);
+  const events = ((data ?? []) as unknown as EventRow[]).map(mapEvent);
+  if (!opts.balanced) return events;
+  const interleaved = interleaveByCompetition(events);
+  return opts.limit ? interleaved.slice(0, opts.limit) : interleaved;
 }
 
 export async function getSports(): Promise<Sport[]> {
@@ -147,11 +175,11 @@ export async function getSportByCode(code: string): Promise<Sport | undefined> {
 }
 
 export function getAllEvents(limit = 50): Promise<Event[]> {
-  return queryEvents({ limit });
+  return queryEvents({ limit, balanced: true });
 }
 
 export function getFeaturedEvents(limit = 4): Promise<Event[]> {
-  return queryEvents({ limit });
+  return queryEvents({ limit, balanced: true });
 }
 
 export function getEventsBySport(sportCode: string): Promise<Event[]> {
@@ -163,7 +191,10 @@ export function getLiveEvents(): Promise<Event[]> {
 }
 
 export function getUpcomingEvents(limit?: number): Promise<Event[]> {
-  const opts: { statuses: string[]; limit?: number } = { statuses: ["scheduled"] };
+  const opts: { statuses: string[]; limit?: number; balanced: boolean } = {
+    statuses: ["scheduled"],
+    balanced: true,
+  };
   if (limit) opts.limit = limit;
   return queryEvents(opts);
 }
