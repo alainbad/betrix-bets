@@ -24,7 +24,6 @@ import { Route as SportsRouteImport } from './routes/sports'
 import { Route as CasinoGameIdRouteImport } from './routes/casino.$gameId'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as SportsSportIdRouteImport } from './routes/sports.$sportId'
-import { Route as SportsSportIdCompetitionSlugRouteImport } from './routes/sports.$sportId.$competitionSlug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -101,12 +100,6 @@ const SportsSportIdRoute = SportsSportIdRouteImport.update({
   path: '/$sportId',
   getParentRoute: () => SportsRoute,
 } as any)
-const SportsSportIdCompetitionSlugRoute =
-  SportsSportIdCompetitionSlugRouteImport.update({
-    id: '/$competitionSlug',
-    path: '/$competitionSlug',
-    getParentRoute: () => SportsSportIdRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -123,8 +116,7 @@ export interface FileRoutesByFullPath {
   '/sports': typeof SportsRouteWithChildren
   '/casino/$gameId': typeof CasinoGameIdRoute
   '/events/$eventId': typeof EventsEventIdRoute
-  '/sports/$sportId': typeof SportsSportIdRouteWithChildren
-  '/sports/$sportId/$competitionSlug': typeof SportsSportIdCompetitionSlugRoute
+  '/sports/$sportId': typeof SportsSportIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -141,8 +133,7 @@ export interface FileRoutesByTo {
   '/sports': typeof SportsRouteWithChildren
   '/casino/$gameId': typeof CasinoGameIdRoute
   '/events/$eventId': typeof EventsEventIdRoute
-  '/sports/$sportId': typeof SportsSportIdRouteWithChildren
-  '/sports/$sportId/$competitionSlug': typeof SportsSportIdCompetitionSlugRoute
+  '/sports/$sportId': typeof SportsSportIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -160,8 +151,7 @@ export interface FileRoutesById {
   '/sports': typeof SportsRouteWithChildren
   '/casino/$gameId': typeof CasinoGameIdRoute
   '/events/$eventId': typeof EventsEventIdRoute
-  '/sports/$sportId': typeof SportsSportIdRouteWithChildren
-  '/sports/$sportId/$competitionSlug': typeof SportsSportIdCompetitionSlugRoute
+  '/sports/$sportId': typeof SportsSportIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -181,7 +171,6 @@ export interface FileRouteTypes {
     | '/casino/$gameId'
     | '/events/$eventId'
     | '/sports/$sportId'
-    | '/sports/$sportId/$competitionSlug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -199,7 +188,6 @@ export interface FileRouteTypes {
     | '/casino/$gameId'
     | '/events/$eventId'
     | '/sports/$sportId'
-    | '/sports/$sportId/$competitionSlug'
   id:
     | '__root__'
     | '/'
@@ -217,7 +205,6 @@ export interface FileRouteTypes {
     | '/casino/$gameId'
     | '/events/$eventId'
     | '/sports/$sportId'
-    | '/sports/$sportId/$competitionSlug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -343,13 +330,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SportsSportIdRouteImport
       parentRoute: typeof SportsRoute
     }
-    '/sports/$sportId/$competitionSlug': {
-      id: '/sports/$sportId/$competitionSlug'
-      path: '/$competitionSlug'
-      fullPath: '/sports/$sportId/$competitionSlug'
-      preLoaderRoute: typeof SportsSportIdCompetitionSlugRouteImport
-      parentRoute: typeof SportsSportIdRoute
-    }
   }
 }
 
@@ -364,24 +344,12 @@ const CasinoRouteChildren: CasinoRouteChildren = {
 const CasinoRouteWithChildren =
   CasinoRoute._addFileChildren(CasinoRouteChildren)
 
-interface SportsSportIdRouteChildren {
-  SportsSportIdCompetitionSlugRoute: typeof SportsSportIdCompetitionSlugRoute
-}
-
-const SportsSportIdRouteChildren: SportsSportIdRouteChildren = {
-  SportsSportIdCompetitionSlugRoute: SportsSportIdCompetitionSlugRoute,
-}
-
-const SportsSportIdRouteWithChildren = SportsSportIdRoute._addFileChildren(
-  SportsSportIdRouteChildren,
-)
-
 interface SportsRouteChildren {
-  SportsSportIdRoute: typeof SportsSportIdRouteWithChildren
+  SportsSportIdRoute: typeof SportsSportIdRoute
 }
 
 const SportsRouteChildren: SportsRouteChildren = {
-  SportsSportIdRoute: SportsSportIdRouteWithChildren,
+  SportsSportIdRoute: SportsSportIdRoute,
 }
 
 const SportsRouteWithChildren =
