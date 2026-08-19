@@ -67,17 +67,29 @@ function SportsPage() {
             Top competitions
           </h2>
           <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1">
-            {LEAGUE_BRANDS.filter((b) => sports.some((s) => s.id === b.sportId)).map((brand) => (
-              <Link
-                key={brand.name}
-                to="/sports/$sportId"
-                params={{ sportId: brand.sportId }}
-                className="flex shrink-0 items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-betrix-surface-elevated"
-              >
-                <LeagueLogo league={brand.name} size={44} />
-                {brand.name}
-              </Link>
-            ))}
+            {LEAGUE_BRANDS.filter((b) => sports.some((s) => s.id === b.sportId)).map((brand) =>
+              brand.competitionSlug ? (
+                <Link
+                  key={brand.name}
+                  to="/sports/$sportId/$competitionSlug"
+                  params={{ sportId: brand.sportId, competitionSlug: brand.competitionSlug }}
+                  className="flex shrink-0 items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-betrix-surface-elevated"
+                >
+                  <LeagueLogo league={brand.name} size={44} />
+                  {brand.name}
+                </Link>
+              ) : (
+                <Link
+                  key={brand.name}
+                  to="/sports/$sportId"
+                  params={{ sportId: brand.sportId }}
+                  className="flex shrink-0 items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-betrix-surface-elevated"
+                >
+                  <LeagueLogo league={brand.name} size={44} />
+                  {brand.name}
+                </Link>
+              ),
+            )}
           </div>
         </section>
 

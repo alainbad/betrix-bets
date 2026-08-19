@@ -12,31 +12,89 @@ export type LeagueBrand = {
   sportId: string;
   /** Optional CDN asset URL to use instead of Logo.dev. */
   assetUrl?: string;
+  /**
+   * Exact `competitions.name` and `.slug` values as synced from the sports
+   * data provider (see supabase/functions/_shared/opticodds-provider.ts).
+   * Providers name competitions like "England - Premier League", not just
+   * "Premier League" - without these, logo lookup (by name) and per-league
+   * routing (by slug) can't match a brand to its real competition rows.
+   * Omitted for brands with no distinct competition in our data (Wimbledon
+   * is a week inside the ATP/WTA tour, not its own league) - those fall
+   * back to linking at the sport level instead of a specific league.
+   */
+  competitionName?: string;
+  competitionSlug?: string;
 };
 
 export const LEAGUE_BRANDS: LeagueBrand[] = [
-  { name: "Premier League", domain: "premierleague.com", sportId: "football" },
-  { name: "LaLiga", domain: "laliga.com", sportId: "football" },
+  {
+    name: "Premier League",
+    domain: "premierleague.com",
+    sportId: "football",
+    competitionName: "England - Premier League",
+    competitionSlug: "england-premier-league",
+  },
+  {
+    name: "LaLiga",
+    domain: "laliga.com",
+    sportId: "football",
+    competitionName: "Spain - La Liga",
+    competitionSlug: "spain-la-liga",
+  },
   {
     name: "Champions League",
     domain: "uefa.com",
     sportId: "football",
     assetUrl: championsLeagueAsset.url,
+    competitionName: "UEFA - Champions League",
+    competitionSlug: "uefa-champions-league",
   },
-  { name: "Serie A", domain: "legaseriea.it", sportId: "football" },
-  { name: "Bundesliga", domain: "bundesliga.com", sportId: "football" },
-  { name: "NBA", domain: "nba.com", sportId: "basketball" },
+  {
+    name: "Serie A",
+    domain: "legaseriea.it",
+    sportId: "football",
+    competitionName: "Italy - Serie A",
+    competitionSlug: "italy-serie-a",
+  },
+  {
+    name: "Bundesliga",
+    domain: "bundesliga.com",
+    sportId: "football",
+    competitionName: "Germany - Bundesliga",
+    competitionSlug: "germany-bundesliga",
+  },
+  {
+    name: "NBA",
+    domain: "nba.com",
+    sportId: "basketball",
+    competitionName: "NBA",
+    competitionSlug: "nba",
+  },
   { name: "NFL", domain: "nfl.com", sportId: "americanfootball" },
   { name: "MLB", domain: "mlb.com", sportId: "baseball" },
   { name: "Wimbledon", domain: "wimbledon.com", sportId: "tennis" },
-  { name: "ATP Tour", domain: "atptour.com", sportId: "tennis" },
+  {
+    name: "ATP Tour",
+    domain: "atptour.com",
+    sportId: "tennis",
+    competitionName: "ATP",
+    competitionSlug: "atp",
+  },
   { name: "LCS", domain: "lolesports.com", sportId: "esports" },
 ];
 
-const BY_NAME = new Map(LEAGUE_BRANDS.map((b) => [b.name.toLowerCase(), b]));
-
 export function getLeagueBrand(league: string): LeagueBrand | undefined {
-  return BY_NAME.get(league.trim().toLowerCase());
+  const key = league.trim().toLowerCase();
+  return LEAGUE_BRANDS.find(
+    (b) => b.name.toLowerCase() === key || b.competitionName?.toLowerCase() === key,
+  );
+}
+
+export function getLeagueBrandBySlug(
+  sportId: string,
+  competitionSlug: string,
+): LeagueBrand | undefined {
+  return LEAGUE_BRANDS.find((b) => b.sportId === sportId && b.competitionSlug === competitionSlug);
 }
 
 export type LeagueLogoSource = {
