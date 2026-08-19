@@ -134,7 +134,13 @@ function interleaveByCompetition(events: Event[]): Event[] {
 }
 
 async function queryEvents(
-  opts: { sportCode?: string; statuses?: string[]; limit?: number; balanced?: boolean } = {},
+  opts: {
+    sportCode?: string;
+    competitionName?: string;
+    statuses?: string[];
+    limit?: number;
+    balanced?: boolean;
+  } = {},
 ): Promise<Event[]> {
   let query = supabase
     .from("events")
@@ -142,6 +148,7 @@ async function queryEvents(
     .order("scheduled_start", { ascending: true });
 
   if (opts.sportCode) query = query.eq("sports.code", opts.sportCode);
+  if (opts.competitionName) query = query.eq("competitions.name", opts.competitionName);
   if (opts.statuses) query = query.in("status", opts.statuses);
   // Balanced queries interleave after fetching, so the DB-side limit would
   // cut the pool before balancing could help - only cap unbalanced queries.
@@ -184,6 +191,13 @@ export function getFeaturedEvents(limit = 4): Promise<Event[]> {
 
 export function getEventsBySport(sportCode: string): Promise<Event[]> {
   return queryEvents({ sportCode });
+}
+
+export function getEventsByCompetition(
+  sportCode: string,
+  competitionName: string,
+): Promise<Event[]> {
+  return queryEvents({ sportCode, competitionName });
 }
 
 export function getLiveEvents(): Promise<Event[]> {
