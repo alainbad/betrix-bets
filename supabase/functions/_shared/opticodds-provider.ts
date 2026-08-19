@@ -39,7 +39,8 @@ import type {
 //    only the sport's real main markets are ever requested.
 //  - /fixtures/odds accepts `fixture_id` as a repeatable array param, so
 //    odds for every fixture in a league are fetched in batches of
-//    ODDS_BATCH_SIZE (25) rather than one request per fixture.
+//    ODDS_BATCH_SIZE (5 - OpticOdds' own hard cap, see the constant below)
+//    rather than one request per fixture.
 //  - Selection mapping uses `team_id` (matched against the fixture's
 //    home/away competitor ids) and `selection_line` ("over"/"under") rather
 //    than string-matching team names against outcome labels - more robust
@@ -55,7 +56,13 @@ import type {
 const BASE_URL = "https://api.opticodds.com/api/v3";
 const DEFAULT_COMPETITION_CAP = 5;
 const DEFAULT_FIXTURE_CAP = 20;
-const ODDS_BATCH_SIZE = 25;
+// OpticOdds enforces a hard limit of 5 total fixture_id/player_id/team_id
+// values per /fixtures/odds request ("maximum 5 total fixture_id/player_id/
+// team_id allowed") - confirmed against a live trial key, since the
+// published docs don't call this limit out explicitly. Any league with more
+// than 5 scheduled fixtures throws a 400 on a bigger batch, which used to
+// take the whole league down with it (see fetchOddsBatched below).
+const ODDS_BATCH_SIZE = 5;
 
 // Our sport code -> OpticOdds sport id. See the sport-id gotcha note above.
 const SPORT_ID_MAP: Record<string, string> = {
@@ -312,11 +319,19 @@ export class OpticOddsProvider implements SportsDataProvider {
       };
       if (markets && markets.length > 0) params.market = markets;
 
-      const { data } = await this.get<OpticOddsListResponse<OpticOddsFixtureOdds>>(
-        "/fixtures/odds",
-        params,
-      );
-      for (const entry of data) out.set(entry.id, entry.odds);
+      // One bad batch (a transient error, an unsupported market for this
+      // subset of fixtures) shouldn't cost every other fixture in the
+      // league its odds too - catch per batch and leave those fixtures
+      // with no markets rather than losing the whole league.
+      try {
+        const { data } = await this.get<OpticOddsListResponse<OpticOddsFixtureOdds>>(
+          "/fixtures/odds",
+          params,
+        );
+        for (const entry of data) out.set(entry.id, entry.odds);
+      } catch (err) {
+        console.warn(`OpticOdds odds batch failed for ${batch.length} fixture(s), skipping`, err);
+      }
     }
     return out;
   }
