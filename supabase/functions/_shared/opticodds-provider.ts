@@ -39,7 +39,8 @@ import type {
 //    only the sport's real main markets are ever requested.
 //  - /fixtures/odds accepts `fixture_id` as a repeatable array param, so
 //    odds for every fixture in a league are fetched in batches of
-//    ODDS_BATCH_SIZE (25) rather than one request per fixture.
+//    ODDS_BATCH_SIZE (5 - OpticOdds' own hard cap, see the constant below)
+//    rather than one request per fixture.
 //  - Selection mapping uses `team_id` (matched against the fixture's
 //    home/away competitor ids) and `selection_line` ("over"/"under") rather
 //    than string-matching team names against outcome labels - more robust
