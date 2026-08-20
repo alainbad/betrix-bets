@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Minus, Plus, Trash2, Ticket } from "lucide-react";
+import { AlertTriangle, ArrowDownRight, ArrowUpRight, Minus, Plus, RefreshCw, Trash2, Ticket } from "lucide-react";
 import { useBetting } from "@/lib/betting-store";
 import { useAuth } from "@/lib/auth-context";
 import { americanToDecimal, formatCurrency, formatOdds } from "@/lib/format";
@@ -39,16 +39,26 @@ function BetSlipPage() {
     totalPotentialReturn,
     balance,
     placing,
+    oddsChanges,
+    unavailableIds,
+    syncingOdds,
+    acceptOddsChanges,
+    syncOdds,
   } = useBetting();
   const { user } = useAuth();
   const [placed, setPlaced] = useState(false);
   const insufficientFunds = totalStake > balance;
+  const hasOddsChanges = Object.keys(oddsChanges).length > 0;
+  const hasUnavailable = unavailableIds.length > 0;
+  const missingStake = slip.some((item) => !item.stake || item.stake <= 0);
+  const blocked = insufficientFunds || hasUnavailable || missingStake || slip.length === 0;
 
   async function handlePlace() {
-    if (insufficientFunds || slip.length === 0 || placing) return;
+    if (blocked || placing) return;
     const result = await placeBets();
     if (result.ok) {
       setPlaced(true);
+      toast.success("Bet placed at live odds.");
       setTimeout(() => setPlaced(false), 2000);
     } else if (result.error) {
       toast.error(result.error);
@@ -110,6 +120,30 @@ function BetSlipPage() {
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
+                {unavailableIds.includes(item.id) && (
+                  <p className="mb-3 flex items-center gap-1.5 rounded-lg bg-destructive/10 px-2.5 py-1.5 text-xs font-semibold text-destructive">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    Market suspended — remove this pick to continue
+                  </p>
+                )}
+                {oddsChanges[item.id] && (
+                  <p
+                    className={cn(
+                      "mb-3 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold",
+                      oddsChanges[item.id]!.to > oddsChanges[item.id]!.from
+                        ? "bg-accent/10 text-accent"
+                        : "bg-secondary text-muted-foreground",
+                    )}
+                  >
+                    {oddsChanges[item.id]!.to > oddsChanges[item.id]!.from ? (
+                      <ArrowUpRight className="h-3.5 w-3.5" />
+                    ) : (
+                      <ArrowDownRight className="h-3.5 w-3.5" />
+                    )}
+                    Price moved {formatOdds(oddsChanges[item.id]!.from)} →{" "}
+                    {formatOdds(oddsChanges[item.id]!.to)}
+                  </p>
+                )}
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center rounded-xl border border-border bg-background">
                     <button
@@ -119,9 +153,19 @@ function BetSlipPage() {
                     >
                       <Minus className="h-4 w-4" />
                     </button>
-                    <div className="min-w-[4rem] text-center text-base font-bold text-foreground">
-                      ${item.stake}
-                    </div>
+                    <label className="sr-only" htmlFor={`stake-${item.id}`}>
+                      Stake for {item.selection.label}
+                    </label>
+                    <input
+                      id={`stake-${item.id}`}
+                      inputMode="decimal"
+                      value={item.stake === 0 ? "" : String(item.stake)}
+                      onChange={(e) => {
+                        const next = Number(e.target.value.replace(/[^0-9.]/g, ""));
+                        updateStake(item.id, Number.isFinite(next) ? next : 0);
+                      }}
+                      className="w-[4.5rem] bg-transparent text-center text-base font-bold text-foreground outline-none"
+                    />
                     <button
                       onClick={() => updateStake(item.id, item.stake + 5)}
                       className="px-3 py-2 text-muted-foreground hover:text-foreground"
@@ -139,11 +183,36 @@ function BetSlipPage() {
                     </p>
                   </div>
                 </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {[5, 10, 25, 100].map((amount) => (
+                    <button
+                      key={amount}
+                      onClick={() => updateStake(item.id, amount)}
+                      className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                    >
+                      ${amount}
+                    </button>
+                  ))}
+                </div>
               </div>
             ))}
 
             <div className="rounded-2xl border border-border bg-card p-5">
               <div className="space-y-2 border-b border-border pb-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-1.5 text-muted-foreground">
+                    Live odds
+                    <RefreshCw
+                      className={cn("h-3 w-3", syncingOdds && "animate-spin text-primary")}
+                    />
+                  </span>
+                  <button
+                    onClick={() => void syncOdds()}
+                    className="text-xs font-semibold text-primary hover:underline"
+                  >
+                    Refresh prices
+                  </button>
+                </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Total stake</span>
                   <span className="font-semibold text-foreground">
@@ -168,6 +237,19 @@ function BetSlipPage() {
                   </span>
                 </div>
               </div>
+              {hasOddsChanges && (
+                <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-secondary px-3 py-2">
+                  <p className="text-xs font-semibold text-foreground">
+                    Odds updated since you picked — payouts recalculated.
+                  </p>
+                  <button
+                    onClick={acceptOddsChanges}
+                    className="shrink-0 text-xs font-bold text-primary hover:underline"
+                  >
+                    Accept
+                  </button>
+                </div>
+              )}
               {insufficientFunds && (
                 <p className="mt-3 text-center text-sm font-medium text-destructive">
                   Insufficient funds
@@ -176,7 +258,7 @@ function BetSlipPage() {
               {user ? (
                 <button
                   onClick={() => void handlePlace()}
-                  disabled={insufficientFunds || placed || placing}
+                  disabled={blocked || placed || placing}
                   className={cn(
                     "mt-4 w-full rounded-xl py-3.5 text-sm font-bold text-primary-foreground transition-all disabled:opacity-60",
                     placed ? "bg-accent text-accent-foreground" : "bg-primary hover:bg-primary/90",
@@ -213,7 +295,22 @@ function BetSlipPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-bold text-foreground">{formatCurrency(bet.stake)}</p>
-                    <p className="text-xs text-muted-foreground">{bet.status}</p>
+                    <p
+                      className={cn(
+                        "text-xs font-semibold capitalize",
+                        bet.status === "won"
+                          ? "text-accent"
+                          : bet.status === "lost"
+                            ? "text-destructive"
+                            : "text-muted-foreground",
+                      )}
+                    >
+                      {bet.status === "pending"
+                        ? `To return ${formatCurrency(bet.potentialReturn)}`
+                        : bet.status === "lost"
+                          ? "Lost"
+                          : `${bet.status === "void" ? "Refunded" : "Paid"} ${formatCurrency(bet.payout)}`}
+                    </p>
                   </div>
                 </div>
               ))}
