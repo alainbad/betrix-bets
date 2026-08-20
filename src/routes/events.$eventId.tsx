@@ -42,12 +42,13 @@ export const Route = createFileRoute("/events/$eventId")({
   component: EventDetailPage,
 });
 
-type Category = "main" | "handicap" | "totals";
+type Category = "main" | "handicap" | "totals" | "specials";
 
 const CATEGORY_LABEL: Record<Category, string> = {
   main: "Main",
   handicap: "Handicap",
   totals: "Over/Under",
+  specials: "Specials",
 };
 
 interface MarketGroup {
@@ -62,8 +63,17 @@ interface MarketGroup {
 function categoryOf(market: Market): Category {
   if (market.type === "total") return "totals";
   if (market.type === "moneyline") return "main";
-  return "handicap";
+  if (market.type === "spread") return "handicap";
+  // Secondary markets from the feed (both teams to score, double chance,
+  // draw no bet, halves, corners...) land in their own tab.
+  return "specials";
 }
+
+const SPECIAL_LABELS: Record<string, string> = {
+  "1X": "Home or Draw",
+  X2: "Draw or Away",
+  "12": "Home or Away",
+};
 
 function rowLabel(market: Market, selection: Selection, event: Event) {
   if (market.type === "moneyline") {
@@ -77,13 +87,28 @@ function rowLabel(market: Market, selection: Selection, event: Event) {
       label: `${selection.label.toUpperCase()} ${selection.value ?? ""}`.trim(),
     };
   }
-  const team =
-    selection.label === "Home"
-      ? event.homeTeam
-      : selection.label === "Away"
-        ? event.awayTeam
-        : selection.label;
-  return { label: team, sublabel: selection.value ? `Handicap ${selection.value}` : undefined };
+  if (market.type === "spread") {
+    const team =
+      selection.label === "Home"
+        ? event.homeTeam
+        : selection.label === "Away"
+          ? event.awayTeam
+          : selection.label;
+    return { label: team, sublabel: selection.value ? `Handicap ${selection.value}` : undefined };
+  }
+  const special = SPECIAL_LABELS[selection.label];
+  if (special) {
+    const named = special
+      .replace("Home", event.homeTeam)
+      .replace("Away", event.awayTeam);
+    return { label: selection.label, sublabel: named };
+  }
+  if (selection.label === "Home") return { label: event.homeTeam };
+  if (selection.label === "Away") return { label: event.awayTeam };
+  return {
+    label: selection.label,
+    sublabel: selection.value ? `Line ${selection.value}` : undefined,
+  };
 }
 
 /** Merges markets that share a label (e.g. several total lines) into one board section. */
