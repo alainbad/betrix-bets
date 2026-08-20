@@ -132,12 +132,14 @@ export function BettingProvider({ children }: { children: ReactNode }) {
   // minutes old; a book must place the bet at the price that is live now, so
   // the slip pulls the authoritative price, surfaces any movement, and flags
   // selections whose market has suspended or closed.
-  const syncOdds = useCallback(async () => {
+  // Returns the ids of slip legs that are no longer bettable, so callers can
+  // act on the fresh result instead of state that has not re-rendered yet.
+  const runOddsSync = useCallback(async (): Promise<string[]> => {
     const current = slipRef.current;
     if (current.length === 0) {
       setOddsChanges({});
       setUnavailableIds([]);
-      return;
+      return [];
     }
     setSyncingOdds(true);
     try {
@@ -170,12 +172,18 @@ export function BettingProvider({ children }: { children: ReactNode }) {
       }
       setOddsChanges(changes);
       setUnavailableIds(gone);
+      return gone;
     } catch {
       // A failed price check must not wipe the slip; keep the last known state.
+      return [];
     } finally {
       setSyncingOdds(false);
     }
   }, []);
+
+  const syncOdds = useCallback(async () => {
+    await runOddsSync();
+  }, [runOddsSync]);
 
   // Re-price whenever the set of picks changes, and on a timer while the slip
   // is open.
@@ -270,8 +278,8 @@ export function BettingProvider({ children }: { children: ReactNode }) {
     // Final price check at the moment of placement. If anything moved or
     // closed in the meantime, stop and let the user re-confirm rather than
     // silently placing at a price they never saw.
-    await syncOdds();
-    if (unavailableIds.length > 0)
+    const gone = await runOddsSync();
+    if (gone.length > 0)
       return { ok: false, error: "Some selections are no longer available." };
 
     setPlacing(true);
