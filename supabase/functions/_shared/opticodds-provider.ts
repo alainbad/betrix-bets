@@ -237,6 +237,7 @@ export class OpticOddsProvider implements SportsDataProvider {
   private readonly leagueCap: number;
   private readonly fixtureCap: number;
   private readonly mainMarketsByLeague = new Map<string, string[]>();
+  private readonly extraMarketsByLeague = new Map<string, string[]>();
 
   constructor(
     apiKey: string,
