@@ -3,6 +3,7 @@ import { EventCard } from "@/components/EventCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { SportPill } from "@/components/SportPill";
 import { getFeaturedEvents, getSports } from "@/lib/sports-data";
+import { useLiveUpdates } from "@/lib/use-live-updates";
 import ogAsset from "@/assets/betrix-og.jpg.asset.json";
 
 const OG_IMAGE = `https://project--6a0e946c-c85b-4a07-8f34-3b6259233927.lovable.app${ogAsset.url}`;
@@ -36,6 +37,7 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const { sports, featured } = Route.useLoaderData();
+  useLiveUpdates();
 
   return (
     <main className="min-h-screen bg-background">

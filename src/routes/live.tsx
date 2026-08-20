@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Activity, Radio, Timer } from "lucide-react";
 import { getLiveEvents, getUpcomingEvents } from "@/lib/sports-data";
 import { EventCard } from "@/components/EventCard";
+import { useLiveUpdates } from "@/lib/use-live-updates";
 
 export const Route = createFileRoute("/live")({
   loader: async () => {
@@ -31,6 +32,8 @@ export const Route = createFileRoute("/live")({
 
 function LivePage() {
   const { live, soon } = Route.useLoaderData();
+  // In-play page: fastest refresh cadence.
+  useLiveUpdates({ pollMs: 10_000 });
 
   return (
     <main className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
