@@ -1,6 +1,7 @@
+import { useMemo, useState } from "react";
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { Clock, Radio } from "lucide-react";
-import { OddsButton } from "@/components/OddsButton";
+import { ChevronDown, Clock, Radio, Star } from "lucide-react";
+import { MarketRow } from "@/components/MarketRow";
 import { TeamLogo } from "@/components/TeamLogo";
 import { LeagueBadge } from "@/components/LeagueLogo";
 import { MarketStatusBadge } from "@/components/MarketStatusBadge";
@@ -8,6 +9,8 @@ import { useBetting } from "@/lib/betting-store";
 import { getEventById } from "@/lib/sports-data";
 import { formatDateTime } from "@/lib/format";
 import { useLiveUpdates } from "@/lib/use-live-updates";
+import { cn } from "@/lib/utils";
+import type { Event, Market, Selection } from "@/lib/betting-data";
 
 export const Route = createFileRoute("/events/$eventId")({
   loader: async ({ params }) => {
@@ -22,7 +25,7 @@ export const Route = createFileRoute("/events/$eventId")({
       },
       {
         name: "description",
-        content: `View odds and markets for ${loaderData?.event?.awayTeam ?? ""} @ ${loaderData?.event?.homeTeam ?? ""} on Betrix.`,
+        content: `All betting markets — money line, handicaps and totals — for ${loaderData?.event?.awayTeam ?? ""} @ ${loaderData?.event?.homeTeam ?? ""} on Betrix.`,
       },
       {
         property: "og:title",
@@ -30,7 +33,7 @@ export const Route = createFileRoute("/events/$eventId")({
       },
       {
         property: "og:description",
-        content: `View odds and markets for ${loaderData?.event?.awayTeam ?? ""} @ ${loaderData?.event?.homeTeam ?? ""} on Betrix.`,
+        content: `All betting markets — money line, handicaps and totals — for ${loaderData?.event?.awayTeam ?? ""} @ ${loaderData?.event?.homeTeam ?? ""} on Betrix.`,
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -39,10 +42,105 @@ export const Route = createFileRoute("/events/$eventId")({
   component: EventDetailPage,
 });
 
+type Category = "main" | "handicap" | "totals";
+
+const CATEGORY_LABEL: Record<Category, string> = {
+  main: "Main",
+  handicap: "Handicap",
+  totals: "Over/Under",
+};
+
+interface MarketGroup {
+  key: string;
+  label: string;
+  category: Category;
+  status: Market["status"];
+  columns: 2 | 3;
+  rows: { selection: Selection; label: string; sublabel?: string | undefined }[];
+}
+
+function categoryOf(market: Market): Category {
+  if (market.type === "total") return "totals";
+  if (market.type === "moneyline") return "main";
+  return "handicap";
+}
+
+function rowLabel(market: Market, selection: Selection, event: Event) {
+  if (market.type === "moneyline") {
+    if (selection.label === "Home") return { label: event.homeTeam };
+    if (selection.label === "Away") return { label: event.awayTeam };
+    if (selection.label === "Draw") return { label: "Draw (X)" };
+    return { label: selection.label };
+  }
+  if (market.type === "total") {
+    return {
+      label: `${selection.label.toUpperCase()} ${selection.value ?? ""}`.trim(),
+    };
+  }
+  const team =
+    selection.label === "Home"
+      ? event.homeTeam
+      : selection.label === "Away"
+        ? event.awayTeam
+        : selection.label;
+  return { label: team, sublabel: selection.value ? `Handicap ${selection.value}` : undefined };
+}
+
+/** Merges markets that share a label (e.g. several total lines) into one board section. */
+function buildGroups(event: Event): MarketGroup[] {
+  const groups = new Map<string, MarketGroup>();
+  for (const market of event.markets) {
+    if (market.selections.length === 0) continue;
+    const key = `${market.type}:${market.label}`;
+    let group = groups.get(key);
+    if (!group) {
+      group = {
+        key,
+        label: market.label,
+        category: categoryOf(market),
+        status: market.status,
+        columns: market.selections.length === 3 && market.type === "moneyline" ? 3 : 2,
+        rows: [],
+      };
+      groups.set(key, group);
+    }
+    if (market.status !== "open") group.status = market.status;
+    for (const selection of market.selections) {
+      const { label, sublabel } = rowLabel(market, selection, event);
+      group.rows.push({ selection, label, sublabel });
+    }
+  }
+  const list = [...groups.values()];
+  // Totals read best as ordered Over/Under ladders: 1.5, 2.5, 3.5 ...
+  for (const group of list) {
+    if (group.category !== "totals") continue;
+    group.rows.sort((a, b) => {
+      const lineA = Number(a.selection.value ?? 0);
+      const lineB = Number(b.selection.value ?? 0);
+      if (lineA !== lineB) return lineA - lineB;
+      return a.selection.label.localeCompare(b.selection.label);
+    });
+  }
+  const order: Category[] = ["main", "handicap", "totals"];
+  return list.sort((a, b) => order.indexOf(a.category) - order.indexOf(b.category));
+}
+
 function EventDetailPage() {
   const { event } = Route.useLoaderData();
   useLiveUpdates({ pollMs: event.status === "live" ? 10_000 : 30_000 });
   const { addToSlip, isInSlip } = useBetting();
+
+  const groups = useMemo(() => buildGroups(event), [event]);
+  const categories = useMemo(() => {
+    const seen: Category[] = [];
+    for (const group of groups) if (!seen.includes(group.category)) seen.push(group.category);
+    return seen;
+  }, [groups]);
+
+  const [filter, setFilter] = useState<Category | "all">("all");
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+  const visible = filter === "all" ? groups : groups.filter((g) => g.category === filter);
 
   return (
     <main className="min-h-screen bg-background px-4 pb-16 pt-6 sm:px-6 lg:px-8">
@@ -77,33 +175,108 @@ function EventDetailPage() {
           </div>
         </div>
 
-        <div className="space-y-6">
-          {event.markets.map((market) => (
-            <section key={market.type} className="rounded-2xl border border-border bg-card p-5">
-              <div className="mb-4 flex flex-wrap items-center gap-2">
-                <h2 className="text-lg font-bold text-foreground">{market.label}</h2>
-                <MarketStatusBadge status={market.status} showOpen />
-              </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {market.selections.map((selection) => {
-                  const active = isInSlip(event.id, selection.id);
-                  return (
-                    <OddsButton
-                      key={selection.id}
-                      selection={selection}
-                      active={active}
-                      onClick={() => addToSlip(event, market.label, selection)}
-                      marketStatus={market.status}
-                      showHistory
-                    />
-                  );
-                })}
-              </div>
-            </section>
-          ))}
+        {/* Market filter tabs — All / Main / Handicap / Over-Under */}
+        <div className="sticky top-0 z-20 -mx-4 mb-4 border-b border-border bg-background/95 px-4 py-2 backdrop-blur sm:mx-0 sm:rounded-xl sm:border sm:px-3">
+          <div className="flex items-center gap-1 overflow-x-auto">
+            <FilterTab active={filter === "all"} onClick={() => setFilter("all")}>
+              All ({groups.length})
+            </FilterTab>
+            {categories.map((category) => (
+              <FilterTab
+                key={category}
+                active={filter === category}
+                onClick={() => setFilter(category)}
+              >
+                {CATEGORY_LABEL[category]}
+              </FilterTab>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {visible.map((group) => {
+            const isCollapsed = collapsed[group.key] ?? false;
+            return (
+              <section
+                key={group.key}
+                className="overflow-hidden rounded-2xl border border-border bg-card"
+              >
+                <button
+                  type="button"
+                  onClick={() => setCollapsed((prev) => ({ ...prev, [group.key]: !isCollapsed }))}
+                  aria-expanded={!isCollapsed}
+                  className="flex w-full items-center justify-between gap-2 bg-betrix-surface-elevated px-4 py-3 text-left"
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    <Star className="h-3.5 w-3.5 shrink-0 text-primary" />
+                    <span className="truncate text-sm font-bold uppercase tracking-wide text-foreground">
+                      {group.label}
+                    </span>
+                    <MarketStatusBadge status={group.status} />
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+                      isCollapsed && "-rotate-90",
+                    )}
+                  />
+                </button>
+                {!isCollapsed && (
+                  <div
+                    className={cn(
+                      "grid gap-2 p-3",
+                      group.columns === 3 ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2",
+                    )}
+                  >
+                    {group.rows.map((row) => (
+                      <MarketRow
+                        key={row.selection.id}
+                        selection={row.selection}
+                        label={row.label}
+                        sublabel={row.sublabel}
+                        active={isInSlip(event.id, row.selection.id)}
+                        onClick={() => addToSlip(event, group.label, row.selection)}
+                        marketStatus={group.status}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
+          {visible.length === 0 && (
+            <p className="rounded-2xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
+              No markets priced for this fixture yet.
+            </p>
+          )}
         </div>
       </div>
     </main>
+  );
+}
+
+function FilterTab({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "shrink-0 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-bold transition-colors",
+        active
+          ? "bg-primary text-primary-foreground"
+          : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+      )}
+    >
+      {children}
+    </button>
   );
 }
 
