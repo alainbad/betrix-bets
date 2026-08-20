@@ -34,6 +34,15 @@ export interface OddsChange {
 export interface PlaceBetsResult {
   ok: boolean;
   error?: string;
+  /** Set when the final price check found movement the user has not accepted. */
+  priceMoved?: boolean;
+  /** Ids of the bets created, for the receipt screen. */
+  betIds?: string[];
+}
+
+export interface PlaceBetsOptions {
+  /** Place at the new price without a second confirmation. */
+  acceptPriceMoves?: boolean;
 }
 
 export interface BettingContextValue {
@@ -45,7 +54,7 @@ export interface BettingContextValue {
   removeFromSlip: (itemId: string) => void;
   updateStake: (itemId: string, stake: number) => void;
   clearSlip: () => void;
-  placeBets: () => Promise<PlaceBetsResult>;
+  placeBets: (options?: PlaceBetsOptions) => Promise<PlaceBetsResult>;
   totalStake: number;
   totalPotentialReturn: number;
   isInSlip: (eventId: string, selectionId: string) => boolean;

@@ -3,6 +3,7 @@ import { Clock, Radio } from "lucide-react";
 import { OddsButton } from "@/components/OddsButton";
 import { TeamLogo } from "@/components/TeamLogo";
 import { LeagueBadge } from "@/components/LeagueLogo";
+import { MarketStatusBadge } from "@/components/MarketStatusBadge";
 import { useBetting } from "@/lib/betting-store";
 import { getEventById } from "@/lib/sports-data";
 import { formatDateTime } from "@/lib/format";
@@ -79,7 +80,10 @@ function EventDetailPage() {
         <div className="space-y-6">
           {event.markets.map((market) => (
             <section key={market.type} className="rounded-2xl border border-border bg-card p-5">
-              <h2 className="mb-4 text-lg font-bold text-foreground">{market.label}</h2>
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                <h2 className="text-lg font-bold text-foreground">{market.label}</h2>
+                <MarketStatusBadge status={market.status} showOpen />
+              </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {market.selections.map((selection) => {
                   const active = isInSlip(event.id, selection.id);
@@ -89,6 +93,8 @@ function EventDetailPage() {
                       selection={selection}
                       active={active}
                       onClick={() => addToSlip(event, market.label, selection)}
+                      marketStatus={market.status}
+                      showHistory
                     />
                   );
                 })}

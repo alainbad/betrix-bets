@@ -10,6 +10,7 @@ import {
   type OddsChange,
   type PlacedBet,
   type PlaceBetsResult,
+  type PlaceBetsOptions,
 } from "./betting-context";
 
 export type { BetSlipItem, PlacedBet, PlaceBetsResult };
@@ -108,6 +109,13 @@ export function BettingProvider({ children }: { children: ReactNode }) {
   const [syncingOdds, setSyncingOdds] = useState(false);
   const slipRef = useRef(slip);
   slipRef.current = slip;
+  // The price each pick was last *reviewed* at — set when it is added and when
+  // the user accepts a move. Placement compares against this, not the live
+  // price, so movement always needs an explicit confirmation.
+  const priceAtReviewRef = useRef<Record<string, number>>(
+    Object.fromEntries(slip.map((item) => [item.id, item.selection.odds])),
+  );
+
 
   useEffect(() => {
     saveSlip(slip);
@@ -244,6 +252,7 @@ export function BettingProvider({ children }: { children: ReactNode }) {
         selection,
         stake: 10,
       };
+      priceAtReviewRef.current[newItem.id] = selection.odds;
       return [...prev, newItem];
     });
   }
@@ -259,16 +268,20 @@ export function BettingProvider({ children }: { children: ReactNode }) {
   }
 
   function clearSlip() {
+    priceAtReviewRef.current = {};
     setSlip([]);
     setOddsChanges({});
     setUnavailableIds([]);
   }
 
   function acceptOddsChanges() {
+    for (const item of slipRef.current) {
+      priceAtReviewRef.current[item.id] = item.selection.odds;
+    }
     setOddsChanges({});
   }
 
-  async function placeBets(): Promise<PlaceBetsResult> {
+  async function placeBets(options: PlaceBetsOptions = {}): Promise<PlaceBetsResult> {
     if (!user) return { ok: false, error: "Sign in to place bets." };
     if (slip.length === 0) return { ok: false, error: "Your bet slip is empty." };
     if (totalStake > balance) return { ok: false, error: "Insufficient balance." };
@@ -279,17 +292,35 @@ export function BettingProvider({ children }: { children: ReactNode }) {
     // closed in the meantime, stop and let the user re-confirm rather than
     // silently placing at a price they never saw.
     const gone = await runOddsSync();
-    if (gone.length > 0)
-      return { ok: false, error: "Some selections are no longer available." };
+    if (gone.length > 0) return { ok: false, error: "Some selections are no longer available." };
+    // A price that moved between the click and the check is a different bet
+    // than the one the punter reviewed: never place it without consent.
+    const moved = slipRef.current.some(
+      (item) => (priceAtReviewRef.current[item.id] ?? item.selection.odds) !== item.selection.odds,
+    );
+    if (moved && !options.acceptPriceMoves) {
+      return { ok: false, priceMoved: true, error: "Odds changed — confirm the new price." };
+    }
 
     setPlacing(true);
     try {
       const legs = slip.map((item) => ({ selection_id: item.selection.id, stake: item.stake }));
+      const knownIds = new Set(bets.map((bet) => bet.id));
       const { error } = await supabase.rpc("place_simulated_bet", { _legs: legs });
       if (error) return { ok: false, error: error.message };
       clearSlip();
       await refresh();
-      return { ok: true };
+      // The RPC does not hand back ids, so the receipt is keyed off whichever
+      // bets are new since placement started.
+      let betIds: string[] = [];
+      try {
+        const fresh = await fetchBets(user.id);
+        setBets(fresh);
+        betIds = fresh.filter((bet) => !knownIds.has(bet.id)).map((bet) => bet.id);
+      } catch {
+        betIds = [];
+      }
+      return { ok: true, betIds };
     } finally {
       setPlacing(false);
     }

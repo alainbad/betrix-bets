@@ -4,6 +4,7 @@ import { useBetting } from "@/lib/betting-store";
 import { formatDateTime, formatOdds } from "@/lib/format";
 import { OddsButton } from "./OddsButton";
 import { LeagueBadge } from "./LeagueLogo";
+import { MarketStatusBadge } from "./MarketStatusBadge";
 import { TeamLogo } from "./TeamLogo";
 import type { Event } from "@/lib/betting-data";
 
@@ -28,6 +29,8 @@ export function EventCard({ event }: { event: Event }) {
             </span>
           )}
         </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {moneyline && <MarketStatusBadge status={moneyline.status} />}
         <Link
           to="/events/$eventId"
           params={{ eventId: event.id }}
@@ -35,6 +38,7 @@ export function EventCard({ event }: { event: Event }) {
         >
           More markets
         </Link>
+        </div>
       </div>
 
       <div className="mb-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-3">
@@ -69,6 +73,7 @@ export function EventCard({ event }: { event: Event }) {
               caption={caption}
               active={active}
               onClick={() => addToSlip(event, moneyline.label, selection)}
+              marketStatus={moneyline.status}
               size="sm"
             />
           );
