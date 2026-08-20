@@ -205,6 +205,24 @@ function mapSelection(
     if (odd.points !== null) s.line = odd.points;
     return s;
   }
+  // Secondary-market outcomes. Checked before the plain draw test because
+  // "Home or Draw" also contains the word "draw".
+  const label = odd.name.trim();
+  const homeName = home?.name ?? "\u0000";
+  const awayName = away?.name ?? "\u0000";
+  const isHomeWord = (part: string) => /^home$/i.test(part) || part === homeName;
+  const isAwayWord = (part: string) => /^away$/i.test(part) || part === awayName;
+  const parts = label.split(/\s+or\s+/i).map((p) => p.trim());
+  if (parts.length === 2) {
+    const hasHome = parts.some(isHomeWord);
+    const hasAway = parts.some(isAwayWord);
+    const hasDraw = parts.some((p) => /^(draw|tie|x)$/i.test(p));
+    if (hasHome && hasDraw) return { id: "home_or_draw", name: "1X", decimalOdds: odd.price };
+    if (hasAway && hasDraw) return { id: "draw_or_away", name: "X2", decimalOdds: odd.price };
+    if (hasHome && hasAway) return { id: "home_or_away", name: "12", decimalOdds: odd.price };
+  }
+  if (/^yes$/i.test(label)) return { id: "yes", name: "Yes", decimalOdds: odd.price };
+  if (/^no$/i.test(label)) return { id: "no", name: "No", decimalOdds: odd.price };
   if (!odd.team_id && /\b(draw|tie)\b/i.test(odd.name)) {
     return { id: "draw", name: "Draw", decimalOdds: odd.price };
   }
