@@ -225,7 +225,35 @@
   to { transform: rotateY(360deg); }
 }
 
+@keyframes odds-flash-up {
+  0% { background-color: color-mix(in oklab, var(--color-primary) 32%, transparent); }
+  100% { background-color: transparent; }
+}
+
+@keyframes odds-flash-down {
+  0% { background-color: color-mix(in oklab, var(--color-destructive) 32%, transparent); }
+  100% { background-color: transparent; }
+}
+
+@keyframes odds-value-pop {
+  0% { transform: translateY(var(--odds-pop-from, -4px)); opacity: 0.35; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
 @layer utilities {
+  .odds-flash-up {
+    animation: odds-flash-up 1.6s ease-out;
+  }
+  .odds-flash-down {
+    animation: odds-flash-down 1.6s ease-out;
+  }
+  .odds-value-pop {
+    animation: odds-value-pop 320ms ease-out;
+  }
+}
+
+@layer utilities {
+
   .league-logo-3d {
     filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.28))
       drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6))
