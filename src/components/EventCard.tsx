@@ -72,9 +72,10 @@ export function EventCard({ event }: { event: Event }) {
             </>
           ) : (
             <>
-              <span className="truncate">{moneyline?.label ?? ""}</span>
-              <span />
+              <span>1</span>
+              <span>2</span>
             </>
+
           )}
         </div>
         <div className={`grid gap-2 ${threeWay ? "grid-cols-3" : "grid-cols-2"}`}>
