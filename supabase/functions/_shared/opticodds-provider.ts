@@ -71,6 +71,23 @@ const SPORT_ID_MAP: Record<string, string> = {
   tennis: "tennis",
 };
 
+// Secondary markets beyond the sport's `main_markets` (which only cover
+// 1X2 / handicap / totals). Requested in a SEPARATE /fixtures/odds call so
+// that an id this league doesn't price can only cost us the extras, never
+// the main board. Override per deployment with SPORTS_EXTRA_MARKETS.
+const EXTRA_MARKETS_BY_SPORT: Record<string, string[]> = {
+  football: [
+    "both_teams_to_score",
+    "double_chance",
+    "draw_no_bet",
+    "1st_half_moneyline",
+    "1st_half_total_goals",
+    "total_corners",
+  ],
+  basketball: ["1st_half_moneyline", "1st_quarter_moneyline", "team_total_points"],
+  tennis: ["total_sets", "set_betting"],
+};
+
 interface OpticOddsSportRef {
   id: string;
   name: string;
@@ -188,6 +205,24 @@ function mapSelection(
     if (odd.points !== null) s.line = odd.points;
     return s;
   }
+  // Secondary-market outcomes. Checked before the plain draw test because
+  // "Home or Draw" also contains the word "draw".
+  const label = odd.name.trim();
+  const homeName = home?.name ?? "\u0000";
+  const awayName = away?.name ?? "\u0000";
+  const isHomeWord = (part: string) => /^home$/i.test(part) || part === homeName;
+  const isAwayWord = (part: string) => /^away$/i.test(part) || part === awayName;
+  const parts = label.split(/\s+or\s+/i).map((p) => p.trim());
+  if (parts.length === 2) {
+    const hasHome = parts.some(isHomeWord);
+    const hasAway = parts.some(isAwayWord);
+    const hasDraw = parts.some((p) => /^(draw|tie|x)$/i.test(p));
+    if (hasHome && hasDraw) return { id: "home_or_draw", name: "1X", decimalOdds: odd.price };
+    if (hasAway && hasDraw) return { id: "draw_or_away", name: "X2", decimalOdds: odd.price };
+    if (hasHome && hasAway) return { id: "home_or_away", name: "12", decimalOdds: odd.price };
+  }
+  if (/^yes$/i.test(label)) return { id: "yes", name: "Yes", decimalOdds: odd.price };
+  if (/^no$/i.test(label)) return { id: "no", name: "No", decimalOdds: odd.price };
   if (!odd.team_id && /\b(draw|tie)\b/i.test(odd.name)) {
     return { id: "draw", name: "Draw", decimalOdds: odd.price };
   }
@@ -202,6 +237,7 @@ export class OpticOddsProvider implements SportsDataProvider {
   private readonly leagueCap: number;
   private readonly fixtureCap: number;
   private readonly mainMarketsByLeague = new Map<string, string[]>();
+  private readonly extraMarketsByLeague = new Map<string, string[]>();
 
   constructor(
     apiKey: string,
@@ -270,6 +306,7 @@ export class OpticOddsProvider implements SportsDataProvider {
         league.id,
         (league.sport.main_markets ?? []).map((m) => m.id),
       );
+      this.extraMarketsByLeague.set(league.id, EXTRA_MARKETS_BY_SPORT[sportCode] ?? []);
     }
 
     return selected.map((league) => {
@@ -293,11 +330,22 @@ export class OpticOddsProvider implements SportsDataProvider {
     const fixtures = data.slice(0, this.fixtureCap);
     if (fixtures.length === 0) return [];
 
+    const fixtureIds = fixtures.map((f) => f.id);
     const markets = this.mainMarketsByLeague.get(competitionId);
-    const oddsByFixtureId = await this.fetchOddsBatched(
-      fixtures.map((f) => f.id),
-      markets,
-    );
+    const extras = this.extraMarketsByLeague.get(competitionId) ?? [];
+    // Two passes: the main board first, then secondary markets. Keeping them
+    // in separate requests means an unpriced extra market id can never take
+    // the 1X2/handicap/totals board down with it.
+    const oddsByFixtureId = await this.fetchOddsBatched(fixtureIds, markets);
+    if (extras.length > 0) {
+      const extraOdds = await this.fetchOddsBatched(fixtureIds, extras);
+      for (const [fixtureId, odds] of extraOdds) {
+        const existing = oddsByFixtureId.get(fixtureId);
+        if (existing) existing.push(...odds);
+        else oddsByFixtureId.set(fixtureId, odds);
+      }
+    }
+
 
     return fixtures.map((fixture) =>
       this.mapFixture(fixture, competitionId, oddsByFixtureId.get(fixture.id) ?? []),
