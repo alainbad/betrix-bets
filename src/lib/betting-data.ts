@@ -15,9 +15,14 @@ export interface Sport {
 
 export type MarketType = "moneyline" | "spread" | "total";
 
+// Trading state of a market/selection. Only "open" is bettable; the rest are
+// surfaced to the punter as a badge instead of silently disappearing.
+export type MarketStatus = "open" | "suspended" | "closed" | "settled";
+
 export interface Market {
   type: MarketType;
   label: string;
+  status: MarketStatus;
   selections: Selection[];
 }
 
@@ -26,6 +31,7 @@ export interface Selection {
   label: string;
   value?: string;
   odds: number;
+  status?: MarketStatus;
 }
 
 export type EventStatus = "upcoming" | "live" | "finished";

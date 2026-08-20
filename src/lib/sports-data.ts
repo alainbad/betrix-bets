@@ -9,7 +9,15 @@
 // still assumes American format.
 
 import { supabase } from "./supabase";
-import type { Event, EventStatus, Market, MarketType, Selection, Sport } from "./betting-data";
+import type {
+  Event,
+  EventStatus,
+  Market,
+  MarketStatus,
+  MarketType,
+  Selection,
+  Sport,
+} from "./betting-data";
 import { decimalToAmerican } from "./format";
 
 const STATUS_MAP: Record<string, EventStatus> = {
@@ -23,6 +31,14 @@ const STATUS_MAP: Record<string, EventStatus> = {
   abandoned: "finished",
 };
 
+// Markets/selections carry a trading status in the DB; anything unexpected is
+// treated as closed so the UI never invites a bet it cannot honour.
+function normalizeStatus(raw: string | null | undefined): MarketStatus {
+  if (!raw) return "open";
+  if (raw === "open" || raw === "suspended" || raw === "closed" || raw === "settled") return raw;
+  return "closed";
+}
+
 const MARKET_ORDER: Record<string, number> = { moneyline: 0, spread: 1, total: 2 };
 
 function formatLine(line: number, marketType: string): string {
@@ -32,6 +48,7 @@ function formatLine(line: number, marketType: string): string {
 
 interface SelectionRow {
   id: string;
+  status?: string | null;
   name: string;
   decimal_odds: number;
   line: number | null;
@@ -42,6 +59,7 @@ interface MarketRow {
   id: string;
   market_type: string;
   label: string;
+  status?: string | null;
   selections: SelectionRow[];
 }
 
@@ -70,7 +88,7 @@ const EVENT_SELECT = `
   sports!inner ( code ),
   competitions ( name ),
   event_participants ( side, participants ( name ) ),
-  markets ( id, market_type, label, selections ( id, name, decimal_odds, line, display_order ) )
+  markets ( id, market_type, label, status, selections ( id, name, decimal_odds, line, display_order, status ) )
 `;
 
 function mapEvent(row: EventRow): Event {
@@ -82,6 +100,7 @@ function mapEvent(row: EventRow): Event {
     .map((m) => ({
       type: (m.market_type as MarketType) ?? "moneyline",
       label: m.label,
+      status: normalizeStatus(m.status),
       selections: [...m.selections]
         .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
         .map((s): Selection => {
@@ -89,6 +108,7 @@ function mapEvent(row: EventRow): Event {
             id: s.id,
             label: s.name,
             odds: decimalToAmerican(s.decimal_odds),
+            status: normalizeStatus(s.status),
           };
           if (s.line !== null) selection.value = formatLine(s.line, m.market_type);
           return selection;
