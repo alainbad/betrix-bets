@@ -222,3 +222,38 @@ export async function getEventById(id: string): Promise<Event | undefined> {
   if (error) throw error;
   return data ? mapEvent(data as unknown as EventRow) : undefined;
 }
+
+// Live price check for selections sitting in a user's bet slip. A slip can be
+// open for a long time; odds move and markets suspend, so the slip re-reads
+// the authoritative price before the user commits money to it.
+export interface LiveSelectionPrice {
+  id: string;
+  odds: number; // American, matching the rest of the UI
+  available: boolean;
+}
+
+export async function getSelectionPrices(ids: string[]): Promise<LiveSelectionPrice[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from("selections")
+    .select("id, decimal_odds, status, markets ( status, events ( status ) )")
+    .in("id", ids);
+  if (error) throw error;
+  return (data ?? []).map((row) => {
+    const r = row as unknown as {
+      id: string;
+      decimal_odds: number;
+      status: string;
+      markets: { status: string; events: { status: string } | null } | null;
+    };
+    const eventStatus = r.markets?.events?.status ?? "scheduled";
+    return {
+      id: r.id,
+      odds: decimalToAmerican(r.decimal_odds),
+      available:
+        r.status === "open" &&
+        (r.markets?.status ?? "open") === "open" &&
+        !["finished", "postponed", "cancelled", "abandoned"].includes(eventStatus),
+    };
+  });
+}
