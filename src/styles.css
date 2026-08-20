@@ -268,3 +268,13 @@
       drop-shadow(0 8px 12px rgba(0, 0, 0, 0.65));
   }
 }
+
+/* Odds movement cues must not animate for motion-sensitive users; the arrow,
+   colour and badge carry the same information without movement. */
+@media (prefers-reduced-motion: reduce) {
+  .odds-flash-up,
+  .odds-flash-down,
+  .odds-value-pop {
+    animation: none !important;
+  }
+}
