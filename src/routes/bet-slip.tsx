@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, Minus, Plus, RefreshCw, Trash2, Ticket } from "lucide-react";
@@ -46,20 +46,32 @@ function BetSlipPage() {
     syncOdds,
   } = useBetting();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [placed, setPlaced] = useState(false);
+  // Set when the final price check found movement: the punter must explicitly
+  // accept the new price before the bet goes on.
+  const [confirmPriceMove, setConfirmPriceMove] = useState(false);
   const insufficientFunds = totalStake > balance;
   const hasOddsChanges = Object.keys(oddsChanges).length > 0;
   const hasUnavailable = unavailableIds.length > 0;
   const missingStake = slip.some((item) => !item.stake || item.stake <= 0);
   const blocked = insufficientFunds || hasUnavailable || missingStake || slip.length === 0;
 
-  async function handlePlace() {
+  async function handlePlace(acceptPriceMoves = false) {
     if (blocked || placing) return;
-    const result = await placeBets();
+    const result = await placeBets({ acceptPriceMoves });
     if (result.ok) {
       setPlaced(true);
+      setConfirmPriceMove(false);
       toast.success("Bet placed at live odds.");
+      const receiptId = result.betIds?.[0];
+      if (receiptId) {
+        void navigate({ to: "/receipt/$betId", params: { betId: receiptId } });
+        return;
+      }
       setTimeout(() => setPlaced(false), 2000);
+    } else if (result.priceMoved) {
+      setConfirmPriceMove(true);
     } else if (result.error) {
       toast.error(result.error);
     }
@@ -254,6 +266,28 @@ function BetSlipPage() {
                 <p className="mt-3 text-center text-sm font-medium text-destructive">
                   Insufficient funds
                 </p>
+              )}
+              {confirmPriceMove && (
+                <div className="mt-3 rounded-xl border border-accent/40 bg-accent/10 p-3">
+                  <p className="text-xs font-semibold text-foreground">
+                    Prices moved while you were reviewing. Place at the new odds?
+                  </p>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      onClick={() => void handlePlace(true)}
+                      disabled={placing}
+                      className="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground disabled:opacity-60"
+                    >
+                      Accept new odds & place
+                    </button>
+                    <button
+                      onClick={() => setConfirmPriceMove(false)}
+                      className="rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-muted-foreground"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               )}
               {user ? (
                 <button
