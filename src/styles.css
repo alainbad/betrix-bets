@@ -250,9 +250,10 @@
   .odds-value-pop {
     animation: odds-value-pop 320ms ease-out;
   }
-
+}
 
 @layer utilities {
+
   .league-logo-3d {
     filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.28))
       drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6))
