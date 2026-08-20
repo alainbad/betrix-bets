@@ -20,6 +20,15 @@ export interface PlacedBet {
   potentialReturn: number;
   status: "pending" | "won" | "lost" | "void";
   placedAt: string;
+  settledAt?: string | undefined;
+  // What the wallet actually received once the bet settled: the full return on
+  // a win, the stake back on a void, nothing on a loss.
+  payout: number;
+}
+
+export interface OddsChange {
+  from: number;
+  to: number;
 }
 
 export interface PlaceBetsResult {
@@ -41,6 +50,14 @@ export interface BettingContextValue {
   totalPotentialReturn: number;
   isInSlip: (eventId: string, selectionId: string) => boolean;
   refresh: () => Promise<void>;
+  // Live-pricing state for the slip: prices that moved since the pick was
+  // added, selections whose market suspended/closed, and whether a price
+  // check is currently in flight.
+  oddsChanges: Record<string, OddsChange>;
+  unavailableIds: string[];
+  syncingOdds: boolean;
+  acceptOddsChanges: () => void;
+  syncOdds: () => Promise<void>;
 }
 
 // Lives in its own module so React Fast Refresh of the provider file does not
