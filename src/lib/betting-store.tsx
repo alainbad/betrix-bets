@@ -1,9 +1,16 @@
-import { useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Event, Selection } from "./betting-data";
 import { useAuth } from "./auth-context";
 import { supabase } from "./supabase";
 import { americanToDecimal, decimalToAmerican } from "./format";
-import { BettingContext, type BetSlipItem, type PlacedBet, type PlaceBetsResult } from "./betting-context";
+import { getSelectionPrices } from "./sports-data";
+import {
+  BettingContext,
+  type BetSlipItem,
+  type OddsChange,
+  type PlacedBet,
+  type PlaceBetsResult,
+} from "./betting-context";
 
 export type { BetSlipItem, PlacedBet, PlaceBetsResult };
 
@@ -40,21 +47,30 @@ interface BetRow {
   total_stake: number;
   potential_return: number;
   placed_at: string;
+  settled_at: string | null;
   bet_selections: BetSelectionRow[];
 }
 
 function mapBetRow(row: BetRow): PlacedBet {
   const leg = row.bet_selections[0];
+  const stake = Number(row.total_stake);
+  const potentialReturn = Number(row.potential_return);
+  const status = (row.status as PlacedBet["status"]) ?? "pending";
+  // Mirrors settle_event(): a win pays the full return, a void refunds the
+  // stake, a loss pays nothing.
+  const payout = status === "won" ? potentialReturn : status === "void" ? stake : 0;
   return {
     id: row.id,
     eventName: leg?.event_name ?? "",
     marketLabel: leg?.market_label ?? "",
     selectionLabel: leg?.selection_label ?? "",
     odds: leg ? decimalToAmerican(leg.decimal_odds_at_placement) : 0,
-    stake: Number(row.total_stake),
-    potentialReturn: Number(row.potential_return),
-    status: (row.status as PlacedBet["status"]) ?? "pending",
+    stake,
+    potentialReturn,
+    status,
     placedAt: row.placed_at,
+    settledAt: row.settled_at ?? undefined,
+    payout,
   };
 }
 
@@ -72,7 +88,7 @@ async function fetchBets(userId: string): Promise<PlacedBet[]> {
   const { data, error } = await supabase
     .from("bets")
     .select(
-      "id, status, total_stake, potential_return, placed_at, bet_selections ( event_name, market_label, selection_label, decimal_odds_at_placement )",
+      "id, status, total_stake, potential_return, placed_at, settled_at, bet_selections ( event_name, market_label, selection_label, decimal_odds_at_placement )",
     )
     .eq("user_id", userId)
     .order("placed_at", { ascending: false });
@@ -87,6 +103,11 @@ export function BettingProvider({ children }: { children: ReactNode }) {
   const [balance, setBalance] = useState(0);
   const [bets, setBets] = useState<PlacedBet[]>([]);
   const [placing, setPlacing] = useState(false);
+  const [oddsChanges, setOddsChanges] = useState<Record<string, OddsChange>>({});
+  const [unavailableIds, setUnavailableIds] = useState<string[]>([]);
+  const [syncingOdds, setSyncingOdds] = useState(false);
+  const slipRef = useRef(slip);
+  slipRef.current = slip;
 
   useEffect(() => {
     saveSlip(slip);
@@ -106,6 +127,87 @@ export function BettingProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  // Re-price the slip against the database. The odds a user clicked can be
+  // minutes old; a book must place the bet at the price that is live now, so
+  // the slip pulls the authoritative price, surfaces any movement, and flags
+  // selections whose market has suspended or closed.
+  const syncOdds = useCallback(async () => {
+    const current = slipRef.current;
+    if (current.length === 0) {
+      setOddsChanges({});
+      setUnavailableIds([]);
+      return;
+    }
+    setSyncingOdds(true);
+    try {
+      const prices = await getSelectionPrices(current.map((item) => item.selection.id));
+      const byId = new Map(prices.map((p) => [p.id, p]));
+      const changes: Record<string, OddsChange> = {};
+      const gone: string[] = [];
+
+      for (const item of current) {
+        const price = byId.get(item.selection.id);
+        if (!price) {
+          gone.push(item.id);
+          continue;
+        }
+        if (!price.available) gone.push(item.id);
+        if (price.odds !== item.selection.odds) {
+          changes[item.id] = { from: item.selection.odds, to: price.odds };
+        }
+      }
+
+      if (Object.keys(changes).length > 0) {
+        setSlip((prev) =>
+          prev.map((item) => {
+            const price = byId.get(item.selection.id);
+            return price && price.odds !== item.selection.odds
+              ? { ...item, selection: { ...item.selection, odds: price.odds } }
+              : item;
+          }),
+        );
+      }
+      setOddsChanges(changes);
+      setUnavailableIds(gone);
+    } catch {
+      // A failed price check must not wipe the slip; keep the last known state.
+    } finally {
+      setSyncingOdds(false);
+    }
+  }, []);
+
+  // Re-price whenever the set of picks changes, and on a timer while the slip
+  // is open.
+  const slipKey = slip.map((item) => item.selection.id).join(",");
+  useEffect(() => {
+    if (!slipKey) return;
+    void syncOdds();
+    const interval = setInterval(() => void syncOdds(), 15_000);
+    return () => clearInterval(interval);
+  }, [slipKey, syncOdds]);
+
+  // Wallet + settlement pushes: a payout credited by settle_event should show
+  // up without a reload.
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`wallet-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "wallets", filter: `user_id=eq.${user.id}` },
+        () => void refresh(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "bets", filter: `user_id=eq.${user.id}` },
+        () => void refresh(),
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [user, refresh]);
 
   const totalStake = slip.reduce((sum, item) => sum + (item.stake || 0), 0);
   const totalPotentialReturn = slip.reduce((sum, item) => {
@@ -150,12 +252,27 @@ export function BettingProvider({ children }: { children: ReactNode }) {
 
   function clearSlip() {
     setSlip([]);
+    setOddsChanges({});
+    setUnavailableIds([]);
+  }
+
+  function acceptOddsChanges() {
+    setOddsChanges({});
   }
 
   async function placeBets(): Promise<PlaceBetsResult> {
     if (!user) return { ok: false, error: "Sign in to place bets." };
     if (slip.length === 0) return { ok: false, error: "Your bet slip is empty." };
     if (totalStake > balance) return { ok: false, error: "Insufficient balance." };
+    if (slip.some((item) => item.stake <= 0))
+      return { ok: false, error: "Every selection needs a stake." };
+
+    // Final price check at the moment of placement. If anything moved or
+    // closed in the meantime, stop and let the user re-confirm rather than
+    // silently placing at a price they never saw.
+    await syncOdds();
+    if (unavailableIds.length > 0)
+      return { ok: false, error: "Some selections are no longer available." };
 
     setPlacing(true);
     try {
@@ -190,6 +307,11 @@ export function BettingProvider({ children }: { children: ReactNode }) {
         totalPotentialReturn,
         refresh,
         isInSlip,
+        oddsChanges,
+        unavailableIds,
+        syncingOdds,
+        acceptOddsChanges,
+        syncOdds,
       }}
     >
       {children}
