@@ -306,6 +306,7 @@ export class OpticOddsProvider implements SportsDataProvider {
         league.id,
         (league.sport.main_markets ?? []).map((m) => m.id),
       );
+      this.extraMarketsByLeague.set(league.id, EXTRA_MARKETS_BY_SPORT[sportCode] ?? []);
     }
 
     return selected.map((league) => {
@@ -329,11 +330,22 @@ export class OpticOddsProvider implements SportsDataProvider {
     const fixtures = data.slice(0, this.fixtureCap);
     if (fixtures.length === 0) return [];
 
+    const fixtureIds = fixtures.map((f) => f.id);
     const markets = this.mainMarketsByLeague.get(competitionId);
-    const oddsByFixtureId = await this.fetchOddsBatched(
-      fixtures.map((f) => f.id),
-      markets,
-    );
+    const extras = this.extraMarketsByLeague.get(competitionId) ?? [];
+    // Two passes: the main board first, then secondary markets. Keeping them
+    // in separate requests means an unpriced extra market id can never take
+    // the 1X2/handicap/totals board down with it.
+    const oddsByFixtureId = await this.fetchOddsBatched(fixtureIds, markets);
+    if (extras.length > 0) {
+      const extraOdds = await this.fetchOddsBatched(fixtureIds, extras);
+      for (const [fixtureId, odds] of extraOdds) {
+        const existing = oddsByFixtureId.get(fixtureId);
+        if (existing) existing.push(...odds);
+        else oddsByFixtureId.set(fixtureId, odds);
+      }
+    }
+
 
     return fixtures.map((fixture) =>
       this.mapFixture(fixture, competitionId, oddsByFixtureId.get(fixture.id) ?? []),
