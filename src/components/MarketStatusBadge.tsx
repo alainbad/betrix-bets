@@ -44,7 +44,7 @@ export function MarketStatusBadge({
     );
   }
 
-  const config = CONFIG[status];
+  const config = CONFIG[status] ?? CONFIG.closed;
   const Icon = config.icon;
   return (
     <span
