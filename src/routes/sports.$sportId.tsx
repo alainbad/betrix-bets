@@ -6,6 +6,7 @@ import { SportPill } from "@/components/SportPill";
 import { LeagueLogo } from "@/components/LeagueLogo";
 import { getLeagueBrandBySlug } from "@/lib/league-logos";
 import { getSportImage } from "@/lib/sport-media";
+import { useLiveUpdates } from "@/lib/use-live-updates";
 import {
   getEventsByCompetition,
   getEventsBySport,
@@ -55,6 +56,7 @@ export const Route = createFileRoute("/sports/$sportId")({
 
 function SportPage() {
   const { sport, events, sports, brand } = Route.useLoaderData();
+  useLiveUpdates();
 
   return (
     <main className="min-h-screen bg-background pb-16">

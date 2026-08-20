@@ -6,6 +6,7 @@ import { LeagueBadge } from "@/components/LeagueLogo";
 import { useBetting } from "@/lib/betting-store";
 import { getEventById } from "@/lib/sports-data";
 import { formatDateTime } from "@/lib/format";
+import { useLiveUpdates } from "@/lib/use-live-updates";
 
 export const Route = createFileRoute("/events/$eventId")({
   loader: async ({ params }) => {
@@ -39,6 +40,7 @@ export const Route = createFileRoute("/events/$eventId")({
 
 function EventDetailPage() {
   const { event } = Route.useLoaderData();
+  useLiveUpdates({ pollMs: event.status === "live" ? 10_000 : 30_000 });
   const { addToSlip, isInSlip } = useBetting();
 
   return (
