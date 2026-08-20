@@ -146,7 +146,7 @@ function buildGroups(event: Event): MarketGroup[] {
       return a.selection.label.localeCompare(b.selection.label);
     });
   }
-  const order: Category[] = ["main", "handicap", "totals"];
+  const order: Category[] = ["main", "handicap", "totals", "specials"];
   return list.sort((a, b) => order.indexOf(a.category) - order.indexOf(b.category));
 }
 
