@@ -252,6 +252,7 @@ export function BettingProvider({ children }: { children: ReactNode }) {
         selection,
         stake: 10,
       };
+      priceAtReviewRef.current[newItem.id] = selection.odds;
       return [...prev, newItem];
     });
   }
@@ -267,12 +268,16 @@ export function BettingProvider({ children }: { children: ReactNode }) {
   }
 
   function clearSlip() {
+    priceAtReviewRef.current = {};
     setSlip([]);
     setOddsChanges({});
     setUnavailableIds([]);
   }
 
   function acceptOddsChanges() {
+    for (const item of slipRef.current) {
+      priceAtReviewRef.current[item.id] = item.selection.odds;
+    }
     setOddsChanges({});
   }
 
