@@ -10,7 +10,12 @@ import type { Event } from "@/lib/betting-data";
 
 export function EventCard({ event }: { event: Event }) {
   const { addToSlip, isInSlip } = useBetting();
-  const moneyline = event.markets.find((m) => m.type === "moneyline");
+  // Prefer the headline 1X2/moneyline market, but never leave a card blank:
+  // some feeds only price handicaps or totals for a fixture.
+  const moneyline =
+    event.markets.find((m) => m.type === "moneyline" && m.selections.length > 0) ??
+    event.markets.find((m) => m.selections.length > 0);
+  const threeWay = moneyline?.selections.length === 3;
 
   return (
     <article className="group flex flex-col rounded-2xl border border-border bg-card p-4 transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
