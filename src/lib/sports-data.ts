@@ -176,7 +176,12 @@ async function queryEvents(
 
   const { data, error } = await query;
   if (error) throw error;
-  const events = ((data ?? []) as unknown as EventRow[]).map(mapEvent);
+  // A fixture with no priced selections is dead weight in a sportsbook list:
+  // it renders as a bare "Team @ Team" row with nowhere to bet. Feeds (tennis
+  // challengers especially) carry plenty of those, so drop them here.
+  const events = ((data ?? []) as unknown as EventRow[])
+    .map(mapEvent)
+    .filter((event) => event.markets.some((m) => m.selections.length > 0));
   if (!opts.balanced) return events;
   const interleaved = interleaveByCompetition(events);
   return opts.limit ? interleaved.slice(0, opts.limit) : interleaved;

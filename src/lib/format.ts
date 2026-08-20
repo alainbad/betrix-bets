@@ -7,9 +7,11 @@ export function formatCurrency(value: number): string {
   }).format(value);
 }
 
+// Prices are stored American internally but shown in decimal, the format
+// punters here expect (and the only one that stays readable on longshots
+// where American runs to +8200 / -100000).
 export function formatOdds(odds: number): string {
-  if (odds > 0) return `+${odds}`;
-  return `${odds}`;
+  return americanToDecimal(odds).toFixed(2);
 }
 
 export function americanToDecimal(americanOdds: number): number {
