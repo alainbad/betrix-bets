@@ -71,6 +71,23 @@ const SPORT_ID_MAP: Record<string, string> = {
   tennis: "tennis",
 };
 
+// Secondary markets beyond the sport's `main_markets` (which only cover
+// 1X2 / handicap / totals). Requested in a SEPARATE /fixtures/odds call so
+// that an id this league doesn't price can only cost us the extras, never
+// the main board. Override per deployment with SPORTS_EXTRA_MARKETS.
+const EXTRA_MARKETS_BY_SPORT: Record<string, string[]> = {
+  football: [
+    "both_teams_to_score",
+    "double_chance",
+    "draw_no_bet",
+    "1st_half_moneyline",
+    "1st_half_total_goals",
+    "total_corners",
+  ],
+  basketball: ["1st_half_moneyline", "1st_quarter_moneyline", "team_total_points"],
+  tennis: ["total_sets", "set_betting"],
+};
+
 interface OpticOddsSportRef {
   id: string;
   name: string;
