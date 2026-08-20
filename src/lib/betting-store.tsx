@@ -109,6 +109,13 @@ export function BettingProvider({ children }: { children: ReactNode }) {
   const [syncingOdds, setSyncingOdds] = useState(false);
   const slipRef = useRef(slip);
   slipRef.current = slip;
+  // The price each pick was last *reviewed* at — set when it is added and when
+  // the user accepts a move. Placement compares against this, not the live
+  // price, so movement always needs an explicit confirmation.
+  const priceAtReviewRef = useRef<Record<string, number>>(
+    Object.fromEntries(slip.map((item) => [item.id, item.selection.odds])),
+  );
+
 
   useEffect(() => {
     saveSlip(slip);
