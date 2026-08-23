@@ -12,19 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AdminRouteImport } from './routes/admin'
-import { Route as BetSlipRouteImport } from './routes/bet-slip'
 import { Route as CasinoRouteImport } from './routes/casino'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as LiveRouteImport } from './routes/live'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as SportsRouteImport } from './routes/sports'
-import { Route as CasinoGameIdRouteImport } from './routes/casino.$gameId'
-import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
-import { Route as ReceiptBetIdRouteImport } from './routes/receipt.$betId'
-import { Route as SportsSportIdRouteImport } from './routes/sports.$sportId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -41,11 +34,6 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BetSlipRoute = BetSlipRouteImport.update({
-  id: '/bet-slip',
-  path: '/bet-slip',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CasinoRoute = CasinoRouteImport.update({
   id: '/casino',
   path: '/casino',
@@ -54,11 +42,6 @@ const CasinoRoute = CasinoRouteImport.update({
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LiveRoute = LiveRouteImport.update({
-  id: '/live',
-  path: '/live',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -81,86 +64,40 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SportsRoute = SportsRouteImport.update({
-  id: '/sports',
-  path: '/sports',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CasinoGameIdRoute = CasinoGameIdRouteImport.update({
-  id: '/$gameId',
-  path: '/$gameId',
-  getParentRoute: () => CasinoRoute,
-} as any)
-const EventsEventIdRoute = EventsEventIdRouteImport.update({
-  id: '/events/$eventId',
-  path: '/events/$eventId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReceiptBetIdRoute = ReceiptBetIdRouteImport.update({
-  id: '/receipt/$betId',
-  path: '/receipt/$betId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SportsSportIdRoute = SportsSportIdRouteImport.update({
-  id: '/$sportId',
-  path: '/$sportId',
-  getParentRoute: () => SportsRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
-  '/bet-slip': typeof BetSlipRoute
-  '/casino': typeof CasinoRouteWithChildren
+  '/casino': typeof CasinoRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/live': typeof LiveRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/sports': typeof SportsRouteWithChildren
-  '/casino/$gameId': typeof CasinoGameIdRoute
-  '/events/$eventId': typeof EventsEventIdRoute
-  '/receipt/$betId': typeof ReceiptBetIdRoute
-  '/sports/$sportId': typeof SportsSportIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
-  '/bet-slip': typeof BetSlipRoute
-  '/casino': typeof CasinoRouteWithChildren
+  '/casino': typeof CasinoRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/live': typeof LiveRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/sports': typeof SportsRouteWithChildren
-  '/casino/$gameId': typeof CasinoGameIdRoute
-  '/events/$eventId': typeof EventsEventIdRoute
-  '/receipt/$betId': typeof ReceiptBetIdRoute
-  '/sports/$sportId': typeof SportsSportIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
-  '/bet-slip': typeof BetSlipRoute
-  '/casino': typeof CasinoRouteWithChildren
+  '/casino': typeof CasinoRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/live': typeof LiveRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/sports': typeof SportsRouteWithChildren
-  '/casino/$gameId': typeof CasinoGameIdRoute
-  '/events/$eventId': typeof EventsEventIdRoute
-  '/receipt/$betId': typeof ReceiptBetIdRoute
-  '/sports/$sportId': typeof SportsSportIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -168,72 +105,46 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
-    | '/bet-slip'
     | '/casino'
     | '/forgot-password'
-    | '/live'
     | '/login'
     | '/profile'
     | '/register'
     | '/reset-password'
-    | '/sports'
-    | '/casino/$gameId'
-    | '/events/$eventId'
-    | '/receipt/$betId'
-    | '/sports/$sportId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/account'
     | '/admin'
-    | '/bet-slip'
     | '/casino'
     | '/forgot-password'
-    | '/live'
     | '/login'
     | '/profile'
     | '/register'
     | '/reset-password'
-    | '/sports'
-    | '/casino/$gameId'
-    | '/events/$eventId'
-    | '/receipt/$betId'
-    | '/sports/$sportId'
   id:
     | '__root__'
     | '/'
     | '/account'
     | '/admin'
-    | '/bet-slip'
     | '/casino'
     | '/forgot-password'
-    | '/live'
     | '/login'
     | '/profile'
     | '/register'
     | '/reset-password'
-    | '/sports'
-    | '/casino/$gameId'
-    | '/events/$eventId'
-    | '/receipt/$betId'
-    | '/sports/$sportId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRoute
-  BetSlipRoute: typeof BetSlipRoute
-  CasinoRoute: typeof CasinoRouteWithChildren
+  CasinoRoute: typeof CasinoRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
-  LiveRoute: typeof LiveRoute
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  SportsRoute: typeof SportsRouteWithChildren
-  EventsEventIdRoute: typeof EventsEventIdRoute
-  ReceiptBetIdRoute: typeof ReceiptBetIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -259,13 +170,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/bet-slip': {
-      id: '/bet-slip'
-      path: '/bet-slip'
-      fullPath: '/bet-slip'
-      preLoaderRoute: typeof BetSlipRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/casino': {
       id: '/casino'
       path: '/casino'
@@ -278,13 +182,6 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/live': {
-      id: '/live'
-      path: '/live'
-      fullPath: '/live'
-      preLoaderRoute: typeof LiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -315,81 +212,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sports': {
-      id: '/sports'
-      path: '/sports'
-      fullPath: '/sports'
-      preLoaderRoute: typeof SportsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/casino/$gameId': {
-      id: '/casino/$gameId'
-      path: '/$gameId'
-      fullPath: '/casino/$gameId'
-      preLoaderRoute: typeof CasinoGameIdRouteImport
-      parentRoute: typeof CasinoRoute
-    }
-    '/events/$eventId': {
-      id: '/events/$eventId'
-      path: '/events/$eventId'
-      fullPath: '/events/$eventId'
-      preLoaderRoute: typeof EventsEventIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/receipt/$betId': {
-      id: '/receipt/$betId'
-      path: '/receipt/$betId'
-      fullPath: '/receipt/$betId'
-      preLoaderRoute: typeof ReceiptBetIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sports/$sportId': {
-      id: '/sports/$sportId'
-      path: '/$sportId'
-      fullPath: '/sports/$sportId'
-      preLoaderRoute: typeof SportsSportIdRouteImport
-      parentRoute: typeof SportsRoute
-    }
   }
 }
-
-interface CasinoRouteChildren {
-  CasinoGameIdRoute: typeof CasinoGameIdRoute
-}
-
-const CasinoRouteChildren: CasinoRouteChildren = {
-  CasinoGameIdRoute: CasinoGameIdRoute,
-}
-
-const CasinoRouteWithChildren =
-  CasinoRoute._addFileChildren(CasinoRouteChildren)
-
-interface SportsRouteChildren {
-  SportsSportIdRoute: typeof SportsSportIdRoute
-}
-
-const SportsRouteChildren: SportsRouteChildren = {
-  SportsSportIdRoute: SportsSportIdRoute,
-}
-
-const SportsRouteWithChildren =
-  SportsRoute._addFileChildren(SportsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
-  BetSlipRoute: BetSlipRoute,
-  CasinoRoute: CasinoRouteWithChildren,
+  CasinoRoute: CasinoRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
-  LiveRoute: LiveRoute,
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  SportsRoute: SportsRouteWithChildren,
-  EventsEventIdRoute: EventsEventIdRoute,
-  ReceiptBetIdRoute: ReceiptBetIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
