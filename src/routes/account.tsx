@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { LogOut, TrendingUp, UserCog, Wallet } from "lucide-react";
-import { useBetting } from "@/lib/betting-store";
+import { useWallet } from "@/lib/wallet-store";
 import { useAuth } from "@/lib/auth-context";
-import { formatCurrency, formatOdds } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -12,12 +12,12 @@ export const Route = createFileRoute("/account")({
       { title: "My Account — Betrix" },
       {
         name: "description",
-        content: "Track your play-money balance and betting history on Betrix.",
+        content: "Track your virtual coin balance and casino round history on Betrix.",
       },
       { property: "og:title", content: "My Account — Betrix" },
       {
         property: "og:description",
-        content: "Track your play-money balance and betting history on Betrix.",
+        content: "Track your virtual coin balance and casino round history on Betrix.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -27,10 +27,10 @@ export const Route = createFileRoute("/account")({
 });
 
 function AccountPage() {
-  const { balance, bets } = useBetting();
+  const { balance, rounds } = useWallet();
   const { user, loading, signOut } = useAuth();
-  const totalStaked = bets.reduce((sum, b) => sum + b.stake, 0);
-  const totalPotential = bets.reduce((sum, b) => sum + b.potentialReturn, 0);
+  const totalStaked = rounds.reduce((sum, r) => sum + r.stake, 0);
+  const totalWon = rounds.reduce((sum, r) => sum + r.payout, 0);
 
   if (!loading && !user) {
     return (
@@ -38,7 +38,7 @@ function AccountPage() {
         <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center">
           <h1 className="text-xl font-bold text-foreground">Sign in to view your account</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Log in or create a free account to track your simulation credits and betting history.
+            Log in or create a free account to track your virtual coins and casino history.
           </p>
           <div className="mt-6 flex justify-center gap-2">
             <Link to="/login">
@@ -60,7 +60,7 @@ function AccountPage() {
           <div>
             <h1 className="text-3xl font-black tracking-tight text-foreground">My account</h1>
             <p className="text-muted-foreground">
-              {user ? `Signed in as ${user.email}` : "Play-money balance and betting history."}
+              {user ? `Signed in as ${user.email}` : "Virtual coin balance and casino history."}
             </p>
           </div>
           {user && (
@@ -89,46 +89,42 @@ function AccountPage() {
             icon={<TrendingUp className="h-5 w-5" />}
           />
           <StatCard
-            label="Potential wins"
-            value={formatCurrency(totalPotential)}
+            label="Total won"
+            value={formatCurrency(totalWon)}
             icon={<TrendingUp className="h-5 w-5" />}
           />
         </div>
 
-        <h2 className="mb-4 mt-10 text-xl font-bold text-foreground">Betting history</h2>
-        {bets.length === 0 ? (
+        <h2 className="mb-4 mt-10 text-xl font-bold text-foreground">Casino history</h2>
+        {rounds.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card py-12 text-center">
-            <p className="text-muted-foreground">No bets placed yet.</p>
+            <p className="text-muted-foreground">No rounds played yet.</p>
           </div>
         ) : (
           <div className="overflow-hidden rounded-2xl border border-border bg-card">
             <table className="w-full text-left text-sm">
               <thead className="bg-secondary text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3 font-semibold">Event</th>
-                  <th className="px-4 py-3 font-semibold">Selection</th>
-                  <th className="px-4 py-3 font-semibold">Odds</th>
+                  <th className="px-4 py-3 font-semibold">Game</th>
                   <th className="px-4 py-3 font-semibold">Stake</th>
-                  <th className="px-4 py-3 font-semibold">Return</th>
-                  <th className="px-4 py-3 font-semibold">Status</th>
+                  <th className="px-4 py-3 font-semibold">Payout</th>
+                  <th className="px-4 py-3 font-semibold">Result</th>
+                  <th className="px-4 py-3 font-semibold">When</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {bets.map((bet) => (
-                  <tr key={bet.id}>
-                    <td className="px-4 py-3 font-medium text-foreground">{bet.eventName}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {bet.marketLabel} · {bet.selectionLabel}
-                    </td>
-                    <td className="px-4 py-3 font-semibold text-foreground">
-                      {formatOdds(bet.odds)}
-                    </td>
-                    <td className="px-4 py-3 text-foreground">{formatCurrency(bet.stake)}</td>
+                {rounds.map((round) => (
+                  <tr key={round.id}>
+                    <td className="px-4 py-3 font-medium text-foreground">{round.gameId}</td>
+                    <td className="px-4 py-3 text-foreground">{formatCurrency(round.stake)}</td>
                     <td className="px-4 py-3 font-semibold text-primary">
-                      {formatCurrency(bet.potentialReturn)}
+                      {formatCurrency(round.payout)}
                     </td>
                     <td className="px-4 py-3">
-                      <StatusBadge status={bet.status} />
+                      <ResultBadge outcome={round.outcome} />
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {new Date(round.createdAt).toLocaleString()}
                     </td>
                   </tr>
                 ))}
@@ -153,17 +149,17 @@ function StatCard({ label, value, icon }: { label: string; value: string; icon: 
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
+function ResultBadge({ outcome }: { outcome: "win" | "lose" | "push" }) {
   return (
     <span
       className={cn(
         "inline-flex rounded-full px-2 py-1 text-xs font-semibold",
-        status === "won" && "bg-primary/10 text-primary",
-        status === "lost" && "bg-destructive/10 text-destructive",
-        status === "pending" && "bg-accent/10 text-accent",
+        outcome === "win" && "bg-primary/10 text-primary",
+        outcome === "lose" && "bg-destructive/10 text-destructive",
+        outcome === "push" && "bg-accent/10 text-accent",
       )}
     >
-      {status}
+      {outcome}
     </span>
   );
 }

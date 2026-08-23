@@ -1,47 +1,44 @@
 import { useState } from "react";
-import { createFileRoute, Link, Outlet, useMatches } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Dices, Search, Sparkles } from "lucide-react";
-import { CASINO_CATEGORIES, CASINO_GAMES, type CasinoCategory } from "@/lib/casino-data";
-import { casinoGameImage } from "@/lib/casino-media";
+import { toast } from "sonner";
+import {
+  CASINO_CATEGORIES,
+  CASINO_GAMES,
+  type CasinoCategory,
+  type Html5CasinoGame,
+} from "@/lib/casino-data";
+import { GameModal } from "@/components/casino/GameModal";
+import { useWallet } from "@/lib/wallet-store";
 import { cn } from "@/lib/utils";
-import ogAsset from "@/assets/betrix-og.jpg.asset.json";
-
-const CASINO_OG_IMAGE = `https://project--6a0e946c-c85b-4a07-8f34-3b6259233927.lovable.app${ogAsset.url}`;
+import heroCasino from "@/assets/hero-casino.jpg";
 
 export const Route = createFileRoute("/casino")({
   head: () => ({
     meta: [
-      { title: "Casino Simulation — Slots & Tables on Betrix" },
+      { title: "Casino — Betrix" },
       {
         name: "description",
-        content:
-          "Play Betrix casino simulations: slots, instant-win originals, blackjack, roulette and live-studio tables using virtual credits.",
+        content: "Betrix free-to-play social casino: no real money, virtual coins only.",
       },
-      { property: "og:title", content: "Betrix Casino Simulation" },
+      { property: "og:title", content: "Betrix Casino" },
       {
         property: "og:description",
-        content: "Slots, instant-win originals and table games — all played with virtual credits.",
+        content: "Free-to-play social casino games, played with virtual coins.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: CASINO_OG_IMAGE },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: CASINO_OG_IMAGE },
     ],
   }),
   component: CasinoPage,
 });
 
 function CasinoPage() {
-  const matches = useMatches();
+  const { balance, refresh } = useWallet();
   const [category, setCategory] = useState<CasinoCategory | "all">("all");
   const [query, setQuery] = useState("");
-
-  // /casino is the parent route for /casino/$gameId (shared file prefix), so
-  // when a specific game is matched, render its page through the outlet
-  // instead of this lobby grid.
-  if (matches.some((m) => m.routeId === "/casino/$gameId")) {
-    return <Outlet />;
-  }
+  const [activeGame, setActiveGame] = useState<Html5CasinoGame | null>(null);
+  const [liveBalance, setLiveBalance] = useState(balance);
 
   const games = CASINO_GAMES.filter(
     (g) =>
@@ -50,17 +47,27 @@ function CasinoPage() {
         `${g.name} ${g.provider}`.toLowerCase().includes(query.toLowerCase())),
   );
 
+  function openGame(game: Html5CasinoGame) {
+    setLiveBalance(balance);
+    setActiveGame(game);
+  }
+
+  function closeGame() {
+    setActiveGame(null);
+    void refresh();
+  }
+
   return (
     <main className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <header className="mb-8">
           <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            <Dices className="h-3 w-3" /> Simulation credits only
+            <Dices className="h-3 w-3" /> Free-to-play · virtual coins only
           </p>
           <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">Casino</h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Every round is settled by the server-side engine and logged to your history. Published
-            RTP figures are theoretical over millions of rounds.
+            No real money, no cash-out - every round is played with virtual coins and logged to your
+            account history.
           </p>
         </header>
 
@@ -93,17 +100,23 @@ function CasinoPage() {
           </label>
         </div>
 
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {games.map((game) => (
-            <Link
+            <button
               key={game.id}
-              to="/casino/$gameId"
-              params={{ gameId: game.id }}
-              className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10"
+              type="button"
+              onClick={() => {
+                if (!balance) {
+                  toast.error("You need a virtual coin balance to play.");
+                  return;
+                }
+                openGame(game);
+              }}
+              className="group relative overflow-hidden rounded-2xl border border-border bg-card text-left transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10"
             >
               <div className="relative aspect-[4/5] overflow-hidden">
                 <img
-                  src={casinoGameImage(game.id)}
+                  src={game.thumbnail ?? heroCasino}
                   alt={`${game.name} by ${game.provider}`}
                   loading="lazy"
                   width={800}
@@ -118,14 +131,9 @@ function CasinoPage() {
                   </span>
                 </div>
 
-                {game.badge && (
-                  <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-background/85 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent backdrop-blur-sm">
-                    <Sparkles className="h-3 w-3" />
-                    {game.badge}
-                  </span>
-                )}
-                <span className="absolute right-3 top-3 rounded-full bg-background/85 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary backdrop-blur-sm">
-                  RTP {game.rtp}%
+                <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-background/85 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent backdrop-blur-sm">
+                  <Sparkles className="h-3 w-3" />
+                  Free play
                 </span>
 
                 <div className="absolute inset-x-0 bottom-0 p-3">
@@ -133,11 +141,11 @@ function CasinoPage() {
                     {game.name}
                   </p>
                   <p className="mt-0.5 truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                    {game.provider} · {game.volatility} vol.
+                    {game.provider}
                   </p>
                 </div>
               </div>
-            </Link>
+            </button>
           ))}
         </div>
 
@@ -147,6 +155,15 @@ function CasinoPage() {
           </p>
         )}
       </div>
+
+      {activeGame && (
+        <GameModal
+          game={activeGame}
+          balance={liveBalance}
+          onClose={closeGame}
+          onBalanceUpdate={setLiveBalance}
+        />
+      )}
     </main>
   );
 }

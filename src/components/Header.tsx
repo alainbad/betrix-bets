@@ -1,12 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { Ticket, User, Wallet } from "lucide-react";
-import { useBetting } from "@/lib/betting-store";
+import { User, Wallet } from "lucide-react";
+import { useWallet } from "@/lib/wallet-store";
 import { useAuth } from "@/lib/auth-context";
 import { formatCurrency } from "@/lib/format";
 import betrixLogo from "@/assets/betrix-logo-alt.png";
 
 export function Header() {
-  const { balance, slip } = useBetting();
+  const { balance } = useWallet();
   const { user, loading } = useAuth();
 
   return (
@@ -28,11 +28,6 @@ export function Header() {
               Betrix
             </span>
           </Link>
-          <nav className="flex flex-1 items-center overflow-x-auto no-scrollbar sm:flex-none">
-            <TopTab to="/sports" label="Sports" />
-            <TopTab to="/live" label="Live" />
-            <TopTab to="/casino" label="Casino" />
-          </nav>
         </div>
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
@@ -40,19 +35,6 @@ export function Header() {
             <Wallet className="h-4 w-4 text-primary" />
             <span className="text-sm font-semibold text-foreground">{formatCurrency(balance)}</span>
           </div>
-
-          <Link
-            to="/bet-slip"
-            className="relative inline-flex items-center gap-2 rounded-full bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:scale-105 active:scale-95 sm:px-4"
-          >
-            <Ticket className="h-4 w-4" />
-            <span className="hidden sm:inline">Slip</span>
-            {slip.length > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
-                {slip.length}
-              </span>
-            )}
-          </Link>
 
           {!loading && !user ? (
             <div className="hidden items-center gap-2 sm:flex">
@@ -81,21 +63,5 @@ export function Header() {
         </div>
       </div>
     </header>
-  );
-}
-
-function TopTab({ to, label }: { to: string; label: string }) {
-  return (
-    <Link
-      to={to}
-      activeProps={{ className: "border-b-2 border-primary text-primary bg-primary/10" }}
-      inactiveProps={{
-        className:
-          "border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50",
-      }}
-      className="inline-flex h-14 items-center justify-center whitespace-nowrap px-3 text-sm font-semibold transition-colors sm:px-5 lg:px-7 lg:text-base"
-    >
-      {label}
-    </Link>
   );
 }

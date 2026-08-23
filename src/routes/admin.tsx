@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { toast } from "sonner";
 import { AlertTriangle, Gauge, Search, ShieldCheck, TrendingUp, Users } from "lucide-react";
 import {
   ADMIN_PLAYERS,
@@ -9,9 +8,6 @@ import {
   PLATFORM_METRICS,
   TRAFFIC_SERIES,
 } from "@/lib/admin-data";
-import { getAllEvents } from "@/lib/sports-data";
-import type { Event } from "@/lib/betting-data";
-import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +34,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
-const TABS = ["Overview", "Settlement", "Players", "Exposure", "Casino", "Audit"] as const;
+const TABS = ["Overview", "Players", "Exposure", "Casino", "Audit"] as const;
 type Tab = (typeof TABS)[number];
 
 function AdminPage() {
@@ -84,7 +80,6 @@ function AdminPage() {
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {tab === "Overview" && <Overview />}
-        {tab === "Settlement" && <Settlement />}
         {tab === "Players" && <Players />}
         {tab === "Exposure" && <Exposure />}
         {tab === "Casino" && <Casino />}
@@ -164,125 +159,6 @@ function Overview() {
           </p>
         </section>
       </div>
-    </div>
-  );
-}
-
-interface ScoreDraft {
-  home: string;
-  away: string;
-}
-
-function Settlement() {
-  const [events, setEvents] = useState<Event[] | null>(null);
-  const [scores, setScores] = useState<Record<string, ScoreDraft>>({});
-  const [settlingId, setSettlingId] = useState<string | null>(null);
-
-  const loadEvents = useCallback(async () => {
-    const all = await getAllEvents(100);
-    setEvents(all.filter((e) => e.status !== "finished"));
-  }, []);
-
-  useEffect(() => {
-    void loadEvents();
-  }, [loadEvents]);
-
-  async function handleSettle(event: Event) {
-    const draft = scores[event.id];
-    const home = Number(draft?.home);
-    const away = Number(draft?.away);
-    if (!Number.isFinite(home) || !Number.isFinite(away) || home < 0 || away < 0) {
-      toast.error("Enter a valid final score for both teams.");
-      return;
-    }
-
-    setSettlingId(event.id);
-    try {
-      const { error } = await supabase.rpc("settle_event", {
-        _event_id: event.id,
-        _home_score: home,
-        _away_score: away,
-      });
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-      toast.success(`${event.awayTeam} @ ${event.homeTeam} settled`);
-      await loadEvents();
-    } finally {
-      setSettlingId(null);
-    }
-  }
-
-  if (events === null) {
-    return <p className="text-sm text-muted-foreground">Loading open events…</p>;
-  }
-
-  return (
-    <div className="space-y-4">
-      <p className="text-xs text-muted-foreground">
-        Declaring a final score settles every open market on the event and pays out winning bets
-        immediately. This action requires an administrator role server-side and cannot be undone.
-      </p>
-      {events.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border p-12 text-center">
-          <p className="text-sm text-muted-foreground">No open events to settle.</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {events.map((event) => (
-            <div
-              key={event.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4"
-            >
-              <div>
-                <p className="font-bold text-foreground">
-                  {event.awayTeam} @ {event.homeTeam}
-                </p>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                  {event.league} · {event.status}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min={0}
-                  placeholder="Away"
-                  value={scores[event.id]?.away ?? ""}
-                  onChange={(e) =>
-                    setScores((prev) => ({
-                      ...prev,
-                      [event.id]: { home: prev[event.id]?.home ?? "", away: e.target.value },
-                    }))
-                  }
-                  className="w-16 rounded-lg border border-border bg-background px-2 py-1.5 text-center text-sm text-foreground"
-                />
-                <span className="text-muted-foreground">–</span>
-                <input
-                  type="number"
-                  min={0}
-                  placeholder="Home"
-                  value={scores[event.id]?.home ?? ""}
-                  onChange={(e) =>
-                    setScores((prev) => ({
-                      ...prev,
-                      [event.id]: { home: e.target.value, away: prev[event.id]?.away ?? "" },
-                    }))
-                  }
-                  className="w-16 rounded-lg border border-border bg-background px-2 py-1.5 text-center text-sm text-foreground"
-                />
-                <button
-                  onClick={() => void handleSettle(event)}
-                  disabled={settlingId === event.id}
-                  className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition-transform hover:scale-105 active:scale-95 disabled:opacity-60"
-                >
-                  {settlingId === event.id ? "Settling…" : "Settle"}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

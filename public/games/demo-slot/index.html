@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Demo Slot</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    background: radial-gradient(circle at 50% 20%, #1a2e22, #0b0f0d 70%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #e6f2ea;
+  }
+  h1 { margin: 0; font-size: 1.1rem; letter-spacing: 0.08em; text-transform: uppercase; color: #7fe3a3; }
+  .reels {
+    display: flex;
+    gap: 12px;
+    font-size: 3rem;
+    background: #101713;
+    border: 1px solid #2a3b31;
+    border-radius: 16px;
+    padding: 20px 28px;
+  }
+  .reel { width: 64px; text-align: center; }
+  .reel.spinning { animation: spin 0.08s linear infinite; }
+  @keyframes spin { from { transform: translateY(-4px); } to { transform: translateY(4px); } }
+  .controls { display: flex; align-items: center; gap: 16px; }
+  .stake-input {
+    width: 90px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #2a3b31;
+    background: #101713;
+    color: #e6f2ea;
+    font-size: 1rem;
+    text-align: center;
+  }
+  button {
+    padding: 10px 24px;
+    border-radius: 999px;
+    border: none;
+    background: #3fb950;
+    color: #04140a;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .balance { font-size: 1.1rem; font-weight: 700; }
+  .balance span { color: #7fe3a3; }
+  .result { min-height: 1.4em; font-size: 0.95rem; font-weight: 600; }
+  .result.win { color: #7fe3a3; }
+  .result.lose { color: #f28b82; }
+  .note { max-width: 320px; text-align: center; font-size: 0.72rem; color: #6b7d73; line-height: 1.4; }
+</style>
+</head>
+<body>
+  <h1>Demo Slot — test game</h1>
+  <div class="balance">Coins: <span id="balance">0</span></div>
+  <div class="reels" id="reels">
+    <div class="reel">🍒</div>
+    <div class="reel">🍋</div>
+    <div class="reel">🍇</div>
+  </div>
+  <div class="controls">
+    <input class="stake-input" id="stake" type="number" min="1" step="1" value="10" />
+    <button id="spinBtn">Spin</button>
+  </div>
+  <p class="result" id="result"></p>
+  <p class="note">
+    This is a placeholder game for testing the wallet bridge end to end - not a real HTML5 casino
+    game. It picks its own outcome client-side, reports it to the parent lobby via postMessage, and
+    waits for the server-confirmed balance before updating its own display.
+  </p>
+
+<script>
+  const SYMBOLS = ["🍒", "🍋", "🍇", "🔔", "💎", "7️⃣"];
+  const PAYOUTS = { "💎💎💎": 15, "7️⃣7️⃣7️⃣": 12, "🔔🔔🔔": 8, "🍇🍇🍇": 5, "🍋🍋🍋": 3, "🍒🍒🍒": 2 };
+
+  const reelEls = [...document.querySelectorAll(".reel")];
+  const balanceEl = document.getElementById("balance");
+  const resultEl = document.getElementById("result");
+  const stakeInput = document.getElementById("stake");
+  const spinBtn = document.getElementById("spinBtn");
+
+  function getInitialBalance() {
+    const params = new URLSearchParams(window.location.search);
+    const coins = params.get("coins");
+    return coins ? parseInt(coins, 10) : 0;
+  }
+
+  let playerCoins = getInitialBalance();
+  let spinning = false;
+  updateUIMoney(playerCoins);
+
+  function updateUIMoney(coins) {
+    playerCoins = coins;
+    balanceEl.textContent = Math.floor(coins).toLocaleString();
+  }
+
+  function randomSymbol() {
+    return SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+  }
+
+  function dispatchRoundOutcome(betAmount, winAmount) {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage(
+        { type: "CASINO_ROUND_FINISH", bet: betAmount, win: winAmount },
+        "*",
+      );
+    }
+  }
+
+  window.addEventListener("message", (event) => {
+    if (event.data && event.data.type === "SUPABASE_BALANCE_ACK") {
+      updateUIMoney(event.data.newBalance);
+      spinning = false;
+      spinBtn.disabled = false;
+    }
+  });
+
+  spinBtn.addEventListener("click", () => {
+    if (spinning) return;
+    const stake = Math.max(1, Math.floor(Number(stakeInput.value) || 0));
+    if (stake > playerCoins) {
+      resultEl.textContent = "Not enough coins.";
+      resultEl.className = "result lose";
+      return;
+    }
+
+    spinning = true;
+    spinBtn.disabled = true;
+    resultEl.textContent = "";
+    resultEl.className = "result";
+    reelEls.forEach((el) => el.classList.add("spinning"));
+
+    setTimeout(() => {
+      const outcome = [randomSymbol(), randomSymbol(), randomSymbol()];
+      reelEls.forEach((el, i) => {
+        el.classList.remove("spinning");
+        el.textContent = outcome[i];
+      });
+
+      const key = outcome.join("");
+      const multiplier = PAYOUTS[key] ?? 0;
+      const win = multiplier > 0 ? stake * multiplier : 0;
+
+      if (win > 0) {
+        resultEl.textContent = `Win! +${win} coins (${multiplier}x)`;
+        resultEl.className = "result win";
+      } else {
+        resultEl.textContent = "No win this round.";
+        resultEl.className = "result lose";
+      }
+
+      // Optimistic local debit so the reels/result feel immediate; the
+      // authoritative number comes back via SUPABASE_BALANCE_ACK, which
+      // also re-enables the Spin button.
+      updateUIMoney(playerCoins - stake + win);
+      dispatchRoundOutcome(stake, win);
+    }, 650);
+  });
+</script>
+</body>
+</html>

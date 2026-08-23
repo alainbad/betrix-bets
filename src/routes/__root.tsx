@@ -13,7 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
-import { BettingProvider } from "@/lib/betting-store";
+import { WalletProvider } from "@/lib/wallet-store";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -82,18 +82,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Betrix — Play-Money Sports Betting" },
+      { title: "Betrix — Free-to-Play Social Casino" },
       {
         name: "description",
-        content:
-          "Betrix is a play-money sportsbook for tracking picks, exploring odds, and competing with friends.",
+        content: "Betrix is a free-to-play social casino - no real money, virtual coins only.",
       },
       { name: "author", content: "Betrix" },
-      { property: "og:title", content: "Betrix — Play-Money Sports Betting" },
+      { property: "og:title", content: "Betrix — Free-to-Play Social Casino" },
       {
         property: "og:description",
-        content:
-          "Betrix is a play-money sportsbook for tracking picks, exploring odds, and competing with friends.",
+        content: "Betrix is a free-to-play social casino - no real money, virtual coins only.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -133,13 +131,13 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <BettingProvider>
+        <WalletProvider>
           <Header />
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
           <Footer />
           <Toaster />
-        </BettingProvider>
+        </WalletProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
