@@ -77,13 +77,14 @@
   <p class="result" id="result"></p>
   <p class="note">
     This is a placeholder game for testing the wallet bridge end to end - not a real HTML5 casino
-    game. It picks its own outcome client-side, reports it to the parent lobby via postMessage, and
-    waits for the server-confirmed balance before updating its own display.
+    game. It asks the parent lobby for each spin's outcome via postMessage and only animates to
+    whatever the server decided - it never picks its own result.
   </p>
 
 <script>
   const SYMBOLS = ["🍒", "🍋", "🍇", "🔔", "💎", "7️⃣"];
-  const PAYOUTS = { "💎💎💎": 15, "7️⃣7️⃣7️⃣": 12, "🔔🔔🔔": 8, "🍇🍇🍇": 5, "🍋🍋🍋": 3, "🍒🍒🍒": 2 };
+  const WIN_SYMBOL = "💎";
+  const LOSE_SYMBOLS = ["🍒", "🍋", "🍇", "🔔", "7️⃣"];
 
   const reelEls = [...document.querySelectorAll(".reel")];
   const balanceEl = document.getElementById("balance");
@@ -106,22 +107,51 @@
     balanceEl.textContent = Math.floor(coins).toLocaleString();
   }
 
-  function randomSymbol() {
-    return SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+  function randomSymbol(pool) {
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
-  function dispatchRoundOutcome(betAmount, winAmount) {
+  function requestSpin(betAmount) {
     if (window.parent && window.parent !== window) {
-      window.parent.postMessage(
-        { type: "CASINO_ROUND_FINISH", bet: betAmount, win: winAmount },
-        "*",
-      );
+      window.parent.postMessage({ type: "CASINO_SPIN_REQUEST", bet: betAmount }, "*");
     }
   }
 
   window.addEventListener("message", (event) => {
-    if (event.data && event.data.type === "SUPABASE_BALANCE_ACK") {
-      updateUIMoney(event.data.newBalance);
+    if (!event.data) return;
+
+    if (event.data.type === "CASINO_SPIN_RESULT") {
+      const win = Number(event.data.win) || 0;
+      const multiplier = Number(event.data.multiplier) || 0;
+
+      // Land the reels on symbols matching the server's outcome - the
+      // client never decided this, it's just presenting it.
+      const outcome =
+        win > 0
+          ? [WIN_SYMBOL, WIN_SYMBOL, WIN_SYMBOL]
+          : [randomSymbol(LOSE_SYMBOLS), randomSymbol(LOSE_SYMBOLS), randomSymbol(LOSE_SYMBOLS)];
+      reelEls.forEach((el, i) => {
+        el.classList.remove("spinning");
+        el.textContent = outcome[i];
+      });
+
+      if (win > 0) {
+        resultEl.textContent = `Win! +${win} coins (${multiplier}x)`;
+        resultEl.className = "result win";
+      } else {
+        resultEl.textContent = "No win this round.";
+        resultEl.className = "result lose";
+      }
+
+      updateUIMoney(event.data.balanceAfter);
+      spinning = false;
+      spinBtn.disabled = false;
+    }
+
+    if (event.data.type === "CASINO_SPIN_ERROR") {
+      reelEls.forEach((el) => el.classList.remove("spinning"));
+      resultEl.textContent = event.data.message || "Round failed.";
+      resultEl.className = "result lose";
       spinning = false;
       spinBtn.disabled = false;
     }
@@ -142,31 +172,7 @@
     resultEl.className = "result";
     reelEls.forEach((el) => el.classList.add("spinning"));
 
-    setTimeout(() => {
-      const outcome = [randomSymbol(), randomSymbol(), randomSymbol()];
-      reelEls.forEach((el, i) => {
-        el.classList.remove("spinning");
-        el.textContent = outcome[i];
-      });
-
-      const key = outcome.join("");
-      const multiplier = PAYOUTS[key] ?? 0;
-      const win = multiplier > 0 ? stake * multiplier : 0;
-
-      if (win > 0) {
-        resultEl.textContent = `Win! +${win} coins (${multiplier}x)`;
-        resultEl.className = "result win";
-      } else {
-        resultEl.textContent = "No win this round.";
-        resultEl.className = "result lose";
-      }
-
-      // Optimistic local debit so the reels/result feel immediate; the
-      // authoritative number comes back via SUPABASE_BALANCE_ACK, which
-      // also re-enables the Spin button.
-      updateUIMoney(playerCoins - stake + win);
-      dispatchRoundOutcome(stake, win);
-    }, 650);
+    requestSpin(stake);
   });
 </script>
 </body>

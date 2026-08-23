@@ -11,11 +11,11 @@ export interface Html5CasinoGame {
   path: string;
   thumbnail?: string;
   tagline: string;
-  // Hard cap on payout as a multiple of stake, enforced server-side in
-  // play_html5_casino_round (supabase/migrations/*_html5_casino_engine.sql).
-  // Self-hosted game files run their own client-side logic, so unlike the
-  // old in-house games the server can't roll the outcome itself - this cap
-  // is what stops a forged postMessage from minting unbounded coins.
+  // Informational only right now - the actual win multiplier is a single
+  // global constant rolled server-side in play_html5_casino_round
+  // (supabase/migrations/*_html5_casino_rtp_engine.sql), same as the native
+  // in-house games. This field isn't read by the engine yet; it's here for
+  // when per-game payout curves are worth building.
   maxWinMultiplier: number;
 }
 
@@ -39,7 +39,7 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     category: "slots",
     path: "/games/demo-slot/index.html",
     tagline: "Placeholder game for testing the wallet bridge end to end.",
-    maxWinMultiplier: 20,
+    maxWinMultiplier: 6,
   },
 ];
 
