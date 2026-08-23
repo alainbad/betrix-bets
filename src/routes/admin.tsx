@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AlertTriangle, Gauge, Search, ShieldCheck, TrendingUp, Users } from "lucide-react";
+import { toast } from "sonner";
 import {
   ADMIN_PLAYERS,
   AUDIT_LOG,
@@ -8,8 +9,12 @@ import {
   PLATFORM_METRICS,
   TRAFFIC_SERIES,
 } from "@/lib/admin-data";
+import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -39,6 +44,43 @@ type Tab = (typeof TABS)[number];
 
 function AdminPage() {
   const [tab, setTab] = useState<Tab>("Overview");
+  const { user, loading: authLoading } = useAuth();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    supabase
+      .rpc("is_admin", { _user_id: user.id })
+      .then(({ data, error }) => setIsAdmin(!error && data === true));
+  }, [authLoading, user]);
+
+  // This page is decorative reporting for most tabs, but Players now performs
+  // a real balance-changing action - the RPC itself enforces is_admin server
+  // side, this is just so a non-admin doesn't land on the console at all.
+  if (authLoading || isAdmin === null) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-background">
+        <p className="text-sm text-muted-foreground">Checking access…</p>
+      </main>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <main className="flex min-h-[70vh] items-center justify-center bg-background px-4">
+        <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center">
+          <h1 className="text-xl font-bold text-foreground">Access denied</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            The operator console is restricted to administrators.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-background">
@@ -170,76 +212,168 @@ function Players() {
   );
 
   return (
-    <div className="space-y-4">
-      <label className="relative flex max-w-sm items-center">
-        <Search className="pointer-events-none absolute left-3 h-4 w-4 text-muted-foreground" />
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search by username, email or ID"
-          className="w-full rounded-full border border-border bg-secondary py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-        />
-      </label>
+    <div className="space-y-6">
+      <TopUpForm />
 
-      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
-        <table className="w-full min-w-[52rem] text-sm">
-          <thead className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3 font-semibold">Player</th>
-              <th className="px-4 py-3 font-semibold">Status</th>
-              <th className="px-4 py-3 text-right font-semibold">Credits</th>
-              <th className="px-4 py-3 text-right font-semibold">Sports net</th>
-              <th className="px-4 py-3 text-right font-semibold">Casino net</th>
-              <th className="px-4 py-3 text-right font-semibold">Bets</th>
-              <th className="px-4 py-3 text-right font-semibold">Last active</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((p) => (
-              <tr
-                key={p.id}
-                className="border-b border-border/60 last:border-0 hover:bg-betrix-surface-elevated"
-              >
-                <td className="px-4 py-3">
-                  <p className="font-semibold text-foreground">{p.username}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {p.email} · {p.country}
-                  </p>
-                </td>
-                <td className="px-4 py-3">
-                  <StatusPill status={p.status} />
-                </td>
-                <td className="px-4 py-3 text-right font-semibold text-foreground">
-                  {formatCurrency(p.credits)}
-                </td>
-                <td
-                  className={cn(
-                    "px-4 py-3 text-right font-semibold",
-                    p.sportsNet >= 0 ? "text-primary" : "text-destructive",
-                  )}
-                >
-                  {formatCurrency(p.sportsNet)}
-                </td>
-                <td
-                  className={cn(
-                    "px-4 py-3 text-right font-semibold",
-                    p.casinoNet >= 0 ? "text-primary" : "text-destructive",
-                  )}
-                >
-                  {formatCurrency(p.casinoNet)}
-                </td>
-                <td className="px-4 py-3 text-right text-muted-foreground">{p.betsPlaced}</td>
-                <td className="px-4 py-3 text-right text-muted-foreground">{p.lastActive}</td>
+      <div className="space-y-4">
+        <label className="relative flex max-w-sm items-center">
+          <Search className="pointer-events-none absolute left-3 h-4 w-4 text-muted-foreground" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search by username, email or ID"
+            className="w-full rounded-full border border-border bg-secondary py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+          />
+        </label>
+
+        <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+          <table className="w-full min-w-[52rem] text-sm">
+            <thead className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Player</th>
+                <th className="px-4 py-3 font-semibold">Status</th>
+                <th className="px-4 py-3 text-right font-semibold">Credits</th>
+                <th className="px-4 py-3 text-right font-semibold">Sports net</th>
+                <th className="px-4 py-3 text-right font-semibold">Casino net</th>
+                <th className="px-4 py-3 text-right font-semibold">Bets</th>
+                <th className="px-4 py-3 text-right font-semibold">Last active</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {rows.map((p) => (
+                <tr
+                  key={p.id}
+                  className="border-b border-border/60 last:border-0 hover:bg-betrix-surface-elevated"
+                >
+                  <td className="px-4 py-3">
+                    <p className="font-semibold text-foreground">{p.username}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {p.email} · {p.country}
+                    </p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <StatusPill status={p.status} />
+                  </td>
+                  <td className="px-4 py-3 text-right font-semibold text-foreground">
+                    {formatCurrency(p.credits)}
+                  </td>
+                  <td
+                    className={cn(
+                      "px-4 py-3 text-right font-semibold",
+                      p.sportsNet >= 0 ? "text-primary" : "text-destructive",
+                    )}
+                  >
+                    {formatCurrency(p.sportsNet)}
+                  </td>
+                  <td
+                    className={cn(
+                      "px-4 py-3 text-right font-semibold",
+                      p.casinoNet >= 0 ? "text-primary" : "text-destructive",
+                    )}
+                  >
+                    {formatCurrency(p.casinoNet)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-muted-foreground">{p.betsPlaced}</td>
+                  <td className="px-4 py-3 text-right text-muted-foreground">{p.lastActive}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          The player table above is still sample data. Top-ups above use the real admin_topup_wallet
+          RPC against whichever email you enter.
+        </p>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Credit adjustments are performed server-side and always write an audit record. This view is
-        read-only until the engine is wired up.
-      </p>
     </div>
+  );
+}
+
+function TopUpForm() {
+  const [email, setEmail] = useState("");
+  const [amount, setAmount] = useState("");
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const coins = Number(amount);
+    if (!email.trim()) {
+      toast.error("Enter the player's email");
+      return;
+    }
+    if (!Number.isFinite(coins) || coins <= 0) {
+      toast.error("Enter a positive coin amount");
+      return;
+    }
+
+    setSubmitting(true);
+    const { data, error } = await supabase.rpc("admin_topup_wallet", {
+      p_target_email: email.trim(),
+      p_coins_to_add: coins,
+      p_notes: notes.trim() || "Manual top-up",
+    });
+    setSubmitting(false);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    const result = data as { new_balance: number };
+    toast.success(
+      `Credited ${coins.toLocaleString()} coins - new balance ${result.new_balance.toLocaleString()}`,
+    );
+    setAmount("");
+    setNotes("");
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="grid gap-3 rounded-2xl border border-border bg-card p-5 sm:grid-cols-[2fr_1fr_2fr_auto] sm:items-end"
+    >
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Player email
+        </label>
+        <Input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          type="email"
+          placeholder="player@example.com"
+          className="mt-1"
+        />
+      </div>
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Coins to add
+        </label>
+        <Input
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          type="number"
+          min="1"
+          step="1"
+          placeholder="10000"
+          className="mt-1"
+        />
+      </div>
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Notes (optional)
+        </label>
+        <Input
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Manual top-up after offline payment"
+          className="mt-1"
+        />
+      </div>
+      <Button type="submit" disabled={submitting}>
+        {submitting ? "Crediting…" : "Credit wallet"}
+      </Button>
+    </form>
   );
 }
 
