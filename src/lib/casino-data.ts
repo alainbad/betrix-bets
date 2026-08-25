@@ -1,6 +1,3 @@
-import casinoNeonReels from "@/assets/casino-neon-reels.jpg";
-import casinoVaultRush from "@/assets/casino-vault-rush.jpg";
-
 export type CasinoCategory = "slots" | "table" | "instant" | "live";
 
 export interface Html5CasinoGame {
@@ -35,37 +32,12 @@ export const CASINO_CATEGORIES: { id: CasinoCategory | "all"; label: string }[] 
 // them speak the same postMessage protocol (CASINO_SPIN_REQUEST /
 // CASINO_SPIN_RESULT), so adding a game is just dropping a new folder in
 // here and registering it below; nothing else needs to change.
-export const CASINO_GAMES: Html5CasinoGame[] = [
-  {
-    id: "demo-slot",
-    name: "Demo Slot (test game)",
-    provider: "TheBetrix (placeholder)",
-    category: "slots",
-    path: "/games/demo-slot/index.html",
-    tagline: "Placeholder game for testing the wallet bridge end to end.",
-    maxWinMultiplier: 6,
-  },
-  {
-    id: "neon-reels",
-    name: "Neon Reels",
-    provider: "TheBetrix Originals",
-    category: "slots",
-    path: "/games/neon-reels/index.html",
-    thumbnail: casinoNeonReels,
-    tagline: "Classic 5-reel slot with a neon arcade cabinet look.",
-    maxWinMultiplier: 6,
-  },
-  {
-    id: "vault-rush",
-    name: "Vault Rush",
-    provider: "TheBetrix Originals",
-    category: "slots",
-    path: "/games/vault-rush/index.html",
-    thumbnail: casinoVaultRush,
-    tagline: "Cascading gem grid - crack the vault for a payout.",
-    maxWinMultiplier: 6,
-  },
-];
+//
+// Empty while the site is between in-house games and the Plurance
+// aggregator integration - the game files themselves are still in
+// public/games/ (demo-slot, neon-reels, vault-rush) and the wallet RPC
+// they call is untouched, just nothing is listed here to launch them.
+export const CASINO_GAMES: Html5CasinoGame[] = [];
 
 export function getGameById(id: string): Html5CasinoGame | undefined {
   return CASINO_GAMES.find((g) => g.id === id);

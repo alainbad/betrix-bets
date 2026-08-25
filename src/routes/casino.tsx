@@ -151,7 +151,9 @@ function CasinoPage() {
 
         {games.length === 0 && (
           <p className="rounded-2xl border border-dashed border-border p-12 text-center text-sm text-muted-foreground">
-            No games match that search.
+            {CASINO_GAMES.length === 0
+              ? "New games coming soon."
+              : "No games match that search."}
           </p>
         )}
       </div>
