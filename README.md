@@ -1,6 +1,6 @@
-# Betrix Bets
+# TheBetrix Bets
 
-Betrix betting app
+TheBetrix betting app
 
 This project was built with [Lovable](https://lovable.dev).
 

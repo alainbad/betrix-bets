@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Betrix design system.
+ * TheBetrix design system.
  *
  * Dark sportsbook aesthetic with electric green primary accents and amber
  * highlights. All colors use oklch format.
@@ -41,7 +41,7 @@
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
 
-  /* Betrix semantic tokens */
+  /* TheBetrix semantic tokens */
   --color-betrix-green: var(--betrix-green);
   --color-betrix-green-dim: var(--betrix-green-dim);
   --color-betrix-amber: var(--betrix-amber);
@@ -97,7 +97,7 @@
   --input: oklch(0.22 0.02 260);
   --ring: oklch(0.72 0.22 145);
 
-  /* Betrix extended tokens */
+  /* TheBetrix extended tokens */
   --betrix-green: oklch(0.72 0.22 145);
   --betrix-green-dim: oklch(0.55 0.16 145);
   --betrix-amber: oklch(0.7 0.18 85);
@@ -123,7 +123,7 @@
 }
 
 .dark {
-  /* Same as root — Betrix is dark-first */
+  /* Same as root — TheBetrix is dark-first */
   --background: oklch(0.145 0.02 260);
   --foreground: oklch(0.95 0 0);
   --card: oklch(0.195 0.025 260);

@@ -8,8 +8,8 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({
     meta: [
-      { title: "Reset password — Betrix" },
-      { name: "description", content: "Reset your Betrix account password." },
+      { title: "Reset password — TheBetrix" },
+      { name: "description", content: "Reset your TheBetrix account password." },
       { name: "robots", content: "noindex" },
     ],
   }),

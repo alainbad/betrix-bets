@@ -39,7 +39,7 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
   {
     id: "demo-slot",
     name: "Demo Slot (test game)",
-    provider: "Betrix (placeholder)",
+    provider: "TheBetrix (placeholder)",
     category: "slots",
     path: "/games/demo-slot/index.html",
     tagline: "Placeholder game for testing the wallet bridge end to end.",
@@ -48,7 +48,7 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
   {
     id: "neon-reels",
     name: "Neon Reels",
-    provider: "Betrix Originals",
+    provider: "TheBetrix Originals",
     category: "slots",
     path: "/games/neon-reels/index.html",
     thumbnail: casinoNeonReels,
@@ -58,7 +58,7 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
   {
     id: "vault-rush",
     name: "Vault Rush",
-    provider: "Betrix Originals",
+    provider: "TheBetrix Originals",
     category: "slots",
     path: "/games/vault-rush/index.html",
     thumbnail: casinoVaultRush,

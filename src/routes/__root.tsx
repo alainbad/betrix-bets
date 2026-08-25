@@ -82,16 +82,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Betrix — Free-to-Play Social Casino" },
+      { title: "TheBetrix — Free-to-Play Social Casino" },
       {
         name: "description",
-        content: "Betrix is a free-to-play social casino - no real money, virtual coins only.",
+        content: "TheBetrix is a free-to-play social casino - no real money, virtual coins only.",
       },
-      { name: "author", content: "Betrix" },
-      { property: "og:title", content: "Betrix — Free-to-Play Social Casino" },
+      { name: "author", content: "TheBetrix" },
+      { property: "og:title", content: "TheBetrix — Free-to-Play Social Casino" },
       {
         property: "og:description",
-        content: "Betrix is a free-to-play social casino - no real money, virtual coins only.",
+        content: "TheBetrix is a free-to-play social casino - no real money, virtual coins only.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

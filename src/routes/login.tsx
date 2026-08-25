@@ -8,8 +8,8 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Log in — Betrix" },
-      { name: "description", content: "Log in to your Betrix account." },
+      { title: "Log in — TheBetrix" },
+      { name: "description", content: "Log in to your TheBetrix account." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -41,7 +41,7 @@ function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-black tracking-tight text-foreground">Log in</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Welcome back to Betrix.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Welcome back to TheBetrix.</p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div className="space-y-1.5">

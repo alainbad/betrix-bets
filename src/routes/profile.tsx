@@ -11,10 +11,10 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "Profile — Betrix" },
+      { title: "Profile — TheBetrix" },
       {
         name: "description",
-        content: "Manage your Betrix profile: photo, phone number and email.",
+        content: "Manage your TheBetrix profile: photo, phone number and email.",
       },
       { name: "robots", content: "noindex" },
     ],
