@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { Coins, ShieldCheck, UserPlus, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
-import { fetchOwnAccountId } from "@/lib/agent-hierarchy";
+import { fetchAllProfiles, fetchOwnAccountId, type DownlineProfile } from "@/lib/agent-hierarchy";
 import { formatCurrency } from "@/lib/format";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -31,7 +31,7 @@ interface LedgerRow {
   createdAt: string;
 }
 
-const TABS = ["Overview", "Super Agents", "Transactions"] as const;
+const TABS = ["Overview", "All Users", "Super Agents", "Transactions"] as const;
 type Tab = (typeof TABS)[number];
 
 async function fetchAccountsWithRole(role: "super_agent" | "agent"): Promise<TierAccount[]> {
@@ -159,6 +159,7 @@ export function UltraAdminView() {
             loading={loading}
           />
         )}
+        {tab === "All Users" && <AllUsersManagement />}
         {tab === "Super Agents" && (
           <SuperAgentManagement superAgents={superAgents} loading={loading} onChanged={reload} />
         )}
@@ -349,6 +350,150 @@ function SuperAgentManagement({
           onChanged();
         }}
       />
+    </div>
+  );
+}
+
+const ROLE_LABEL: Record<DownlineProfile["role"], string> = {
+  ultra_admin: "Ultra Admin",
+  super_agent: "Super Agent",
+  agent: "Agent",
+  player: "Player",
+  unknown: "Unknown",
+};
+
+// Every account on the platform, with one-click promotion into the
+// hierarchy - the "report for all agents" the ultra_admin also asked for is
+// this same list, since every super_agent/agent already shows up here with
+// their role and balance (no separate report view needed on top of it).
+function AllUsersManagement() {
+  const [rows, setRows] = useState<DownlineProfile[]>([]);
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [actingOnId, setActingOnId] = useState<string | null>(null);
+
+  async function reload() {
+    setLoading(true);
+    try {
+      setRows(await fetchAllProfiles());
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to load users");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void reload();
+  }, []);
+
+  const filtered = rows.filter((r) =>
+    `${r.username} ${r.email} ${r.accountId}`.toLowerCase().includes(query.toLowerCase()),
+  );
+
+  async function handleSetRole(target: DownlineProfile, role: "super_agent" | "agent") {
+    const label = role === "super_agent" ? "Super Agent" : "Agent";
+    if (!window.confirm(`Make ${target.username} a ${label}? This can't be undone here.`)) {
+      return;
+    }
+    setActingOnId(target.id);
+    const { error } = await supabase.rpc("ultra_admin_set_hierarchy_role", {
+      p_target_identifier: target.accountId,
+      p_role: role,
+    });
+    setActingOnId(null);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`${target.username} is now a ${label}`);
+    void reload();
+  }
+
+  return (
+    <div className="space-y-4">
+      <Input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search by username, email or account ID"
+        className="max-w-sm"
+      />
+
+      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+        <table className="w-full min-w-[54rem] text-sm">
+          <thead className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
+            <tr>
+              <th className="px-4 py-3 font-semibold">Account</th>
+              <th className="px-4 py-3 font-semibold">Account ID</th>
+              <th className="px-4 py-3 font-semibold">Role</th>
+              <th className="px-4 py-3 text-right font-semibold">Balance</th>
+              <th className="px-4 py-3 text-right font-semibold">Joined</th>
+              <th className="px-4 py-3 text-right font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
+              <tr>
+                <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
+                  Loading…
+                </td>
+              </tr>
+            )}
+            {!loading && filtered.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
+                  No users found.
+                </td>
+              </tr>
+            )}
+            {filtered.map((r) => (
+              <tr
+                key={r.id}
+                className="border-b border-border/60 last:border-0 hover:bg-betrix-surface-elevated"
+              >
+                <td className="px-4 py-3">
+                  <p className="font-semibold text-foreground">{r.username}</p>
+                  <p className="text-xs text-muted-foreground">{r.email}</p>
+                </td>
+                <td className="px-4 py-3">
+                  <AccountIdBadge accountId={r.accountId} />
+                </td>
+                <td className="px-4 py-3 text-foreground">{ROLE_LABEL[r.role]}</td>
+                <td className="px-4 py-3 text-right font-semibold text-foreground">
+                  {formatCurrency(r.balance)}
+                </td>
+                <td className="px-4 py-3 text-right text-muted-foreground">
+                  {formatDateTime(r.createdAt)}
+                </td>
+                <td className="px-4 py-3 text-right">
+                  {r.role === "player" ? (
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={actingOnId === r.id}
+                        onClick={() => void handleSetRole(r, "super_agent")}
+                      >
+                        Make Super Agent
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={actingOnId === r.id}
+                        onClick={() => void handleSetRole(r, "agent")}
+                      >
+                        Make Agent
+                      </Button>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

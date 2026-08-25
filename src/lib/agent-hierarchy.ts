@@ -51,7 +51,7 @@ async function rolesByUserId(userIds: string[]): Promise<Map<string, DownlinePro
     .from("user_roles")
     .select("user_id, role")
     .in("user_id", userIds)
-    .in("role", ["super_agent", "agent", "player"]);
+    .in("role", ["ultra_admin", "super_agent", "agent", "player"]);
   if (error) throw error;
   const map = new Map<string, DownlineProfile["role"]>();
   for (const row of data ?? []) {
@@ -81,6 +81,48 @@ export async function fetchDownline(rootId: string): Promise<DownlineProfile[]> 
       rolesByUserId(ids),
     ]);
   if (profilesError) throw profilesError;
+  if (walletsError) throw walletsError;
+
+  const balanceByUserId = new Map(
+    (wallets ?? []).map((w) => [w.user_id as string, Number(w.available_balance)]),
+  );
+
+  return (profiles ?? []).map((p) => ({
+    id: p.id as string,
+    username: p.username as string,
+    email: p.email as string,
+    accountId: p.account_id as string,
+    parentId: p.parent_id as string | null,
+    role: roles.get(p.id as string) ?? "unknown",
+    balance: balanceByUserId.get(p.id as string) ?? 0,
+    createdAt: p.created_at as string,
+  }));
+}
+
+// Every profile on the platform, regardless of hierarchy position. Unlike
+// fetchDownline (which walks the parent_id tree from a root), this has no
+// root to scope from - a plain player who signed up outside the agent
+// network, or an agent/super_agent who hasn't claimed anyone yet, has no
+// path back to the ultra_admin in that tree at all, so a downline query
+// would never surface them. Relies on the ultra_admin's blanket RLS grant
+// (see "profiles select own or admin" in
+// 20260825040000_agent_hierarchy_helpers_rls.sql) rather than the downline
+// CTE - safe to call only for a caller the RLS policy actually grants
+// full visibility to.
+export async function fetchAllProfiles(): Promise<DownlineProfile[]> {
+  const { data: profiles, error: profilesError } = await supabase
+    .from("profiles")
+    .select("id, username, email, account_id, parent_id, created_at")
+    .order("created_at", { ascending: false });
+  if (profilesError) throw profilesError;
+
+  const ids = (profiles ?? []).map((p) => p.id as string);
+  if (ids.length === 0) return [];
+
+  const [{ data: wallets, error: walletsError }, roles] = await Promise.all([
+    supabase.from("wallets").select("user_id, available_balance").in("user_id", ids),
+    rolesByUserId(ids),
+  ]);
   if (walletsError) throw walletsError;
 
   const balanceByUserId = new Map(

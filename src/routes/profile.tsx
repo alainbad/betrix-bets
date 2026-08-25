@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Camera } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
+import { detectHierarchyTier } from "@/lib/agent-hierarchy";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +42,15 @@ function ProfilePage() {
   const [savingEmail, setSavingEmail] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [isUltraAdmin, setIsUltraAdmin] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    detectHierarchyTier(user.id)
+      .then((tier) => setIsUltraAdmin(tier === "ultra_admin"))
+      .catch(() => setIsUltraAdmin(false));
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -157,6 +167,16 @@ function ProfilePage() {
         </Link>
         <h1 className="mt-2 text-3xl font-black tracking-tight text-foreground">Profile</h1>
         <p className="text-muted-foreground">Update your photo, phone number and email.</p>
+
+        {isUltraAdmin && (
+          <Link
+            to="/dashboard"
+            className="mt-4 flex items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/15"
+          >
+            <ShieldCheck className="h-4 w-4" />
+            Ultra Agent Dashboard
+          </Link>
+        )}
 
         <div className="mt-6 flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
           <Avatar className="h-16 w-16">
