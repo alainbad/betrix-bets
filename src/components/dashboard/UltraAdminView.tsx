@@ -1,24 +1,22 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Coins, ShieldCheck, UserPlus, Users } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
+import { fetchOwnAccountId } from "@/lib/agent-hierarchy";
 import { formatCurrency } from "@/lib/format";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { AccountIdBadge } from "@/components/dashboard/AccountIdBadge";
+import { IdentifierTransferModal } from "@/components/dashboard/IdentifierTransferModal";
 
 interface TierAccount {
   id: string;
   username: string;
   email: string;
+  accountId: string;
   balance: number;
   createdAt: string;
 }
@@ -48,7 +46,7 @@ async function fetchAccountsWithRole(role: "super_agent" | "agent"): Promise<Tie
 
   const [{ data: profiles, error: profilesError }, { data: wallets, error: walletsError }] =
     await Promise.all([
-      supabase.from("profiles").select("id, username, email, created_at").in("id", ids),
+      supabase.from("profiles").select("id, username, email, account_id, created_at").in("id", ids),
       supabase.from("wallets").select("user_id, available_balance").in("user_id", ids),
     ]);
   if (profilesError) throw profilesError;
@@ -62,17 +60,20 @@ async function fetchAccountsWithRole(role: "super_agent" | "agent"): Promise<Tie
     id: p.id as string,
     username: p.username as string,
     email: p.email as string,
+    accountId: p.account_id as string,
     balance: balanceByUserId.get(p.id as string) ?? 0,
     createdAt: p.created_at as string,
   }));
 }
 
 export function UltraAdminView() {
+  const { user } = useAuth();
   const [tab, setTab] = useState<Tab>("Overview");
   const [superAgents, setSuperAgents] = useState<TierAccount[]>([]);
   const [agents, setAgents] = useState<TierAccount[]>([]);
   const [playerCount, setPlayerCount] = useState(0);
   const [platformFloat, setPlatformFloat] = useState(0);
+  const [ownAccountId, setOwnAccountId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   async function reload() {
@@ -104,14 +105,22 @@ export function UltraAdminView() {
     void reload();
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    fetchOwnAccountId(user.id)
+      .then(setOwnAccountId)
+      .catch(() => setOwnAccountId(null));
+  }, [user]);
+
   return (
     <main className="min-h-screen bg-background">
       <div className="border-b border-border bg-betrix-surface">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
                 Ultra admin
+                {ownAccountId && <AccountIdBadge accountId={ownAccountId} />}
               </p>
               <h1 className="text-2xl font-black tracking-tight text-foreground">
                 Platform mint &amp; oversight
@@ -218,7 +227,7 @@ function SuperAgentManagement({
   const [mintTarget, setMintTarget] = useState<TierAccount | null>(null);
 
   const rows = superAgents.filter((a) =>
-    `${a.username} ${a.email} ${a.id}`.toLowerCase().includes(query.toLowerCase()),
+    `${a.username} ${a.email} ${a.accountId} ${a.id}`.toLowerCase().includes(query.toLowerCase()),
   );
 
   async function handleAddSuperAgent(e: React.FormEvent) {
@@ -273,10 +282,11 @@ function SuperAgentManagement({
       </label>
 
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
-        <table className="w-full min-w-[40rem] text-sm">
+        <table className="w-full min-w-[46rem] text-sm">
           <thead className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-4 py-3 font-semibold">Super Agent</th>
+              <th className="px-4 py-3 font-semibold">Account ID</th>
               <th className="px-4 py-3 text-right font-semibold">Balance</th>
               <th className="px-4 py-3 text-right font-semibold">Joined</th>
               <th className="px-4 py-3 text-right font-semibold">Actions</th>
@@ -285,14 +295,14 @@ function SuperAgentManagement({
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-muted-foreground">
+                <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
                   Loading…
                 </td>
               </tr>
             )}
             {!loading && rows.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-muted-foreground">
+                <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
                   No super agents yet.
                 </td>
               </tr>
@@ -305,6 +315,9 @@ function SuperAgentManagement({
                 <td className="px-4 py-3">
                   <p className="font-semibold text-foreground">{a.username}</p>
                   <p className="text-xs text-muted-foreground">{a.email}</p>
+                </td>
+                <td className="px-4 py-3">
+                  <AccountIdBadge accountId={a.accountId} />
                 </td>
                 <td className="px-4 py-3 text-right font-semibold text-foreground">
                   {formatCurrency(a.balance)}
@@ -323,82 +336,20 @@ function SuperAgentManagement({
         </table>
       </div>
 
-      <MintModal
-        target={mintTarget}
+      <IdentifierTransferModal
+        open={mintTarget !== null}
+        title={mintTarget ? `Mint balance for ${mintTarget.username}` : "Mint balance"}
+        actionLabel="Mint"
+        amountLabel="Coins to mint"
+        rpcName="mint_super_agent_balance"
+        initialIdentifier={mintTarget?.accountId}
         onClose={() => setMintTarget(null)}
-        onMinted={() => {
+        onDone={() => {
           setMintTarget(null);
           onChanged();
         }}
       />
     </div>
-  );
-}
-
-function MintModal({
-  target,
-  onClose,
-  onMinted,
-}: {
-  target: TierAccount | null;
-  onClose: () => void;
-  onMinted: () => void;
-}) {
-  const [amount, setAmount] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  async function handleMint() {
-    if (!target) return;
-    const coins = Number(amount);
-    if (!Number.isFinite(coins) || coins <= 0) {
-      toast.error("Enter a positive coin amount");
-      return;
-    }
-    setSubmitting(true);
-    const { data, error } = await supabase.rpc("mint_super_agent_balance", {
-      p_super_agent_id: target.id,
-      p_amount: coins,
-    });
-    setSubmitting(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    const result = data as { new_balance: number };
-    toast.success(
-      `Minted ${coins.toLocaleString()} coins - new balance ${result.new_balance.toLocaleString()}`,
-    );
-    setAmount("");
-    onMinted();
-  }
-
-  return (
-    <Dialog open={target !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Mint balance for {target?.username}</DialogTitle>
-        </DialogHeader>
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Coins to mint
-          </label>
-          <Input
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            type="number"
-            min="1"
-            step="1"
-            placeholder="100000"
-            className="mt-1"
-          />
-        </div>
-        <DialogFooter>
-          <Button onClick={handleMint} disabled={submitting}>
-            {submitting ? "Minting…" : "Mint"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }
 
