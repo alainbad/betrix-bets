@@ -8,10 +8,10 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
-      { title: "Create account — Betrix" },
+      { title: "Create account — TheBetrix" },
       {
         name: "description",
-        content: "Create a free Betrix account and get 1,000 simulation credits to start.",
+        content: "Create a free TheBetrix account and get 1,000 simulation credits to start.",
       },
       { name: "robots", content: "noindex" },
     ],

@@ -19,18 +19,18 @@ import { Input } from "@/components/ui/input";
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Operator Console — Betrix Admin" },
+      { title: "Operator Console — TheBetrix Admin" },
       {
         name: "description",
         content:
-          "Betrix operator console: player monitoring, liability and exposure analytics, casino performance and the audit trail.",
+          "TheBetrix operator console: player monitoring, liability and exposure analytics, casino performance and the audit trail.",
       },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Betrix Operator Console" },
+      { property: "og:title", content: "TheBetrix Operator Console" },
       {
         property: "og:description",
         content:
-          "Player monitoring, exposure analytics and audit trail for the Betrix simulation platform.",
+          "Player monitoring, exposure analytics and audit trail for the TheBetrix simulation platform.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

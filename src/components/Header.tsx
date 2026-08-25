@@ -19,13 +19,13 @@ export function Header() {
           >
             <img
               src={betrixLogo}
-              alt="Betrix logo"
+              alt="TheBetrix logo"
               width={40}
               height={40}
               className="h-9 w-9 rounded-lg object-contain shadow-lg shadow-black/30 ring-1 ring-white/10 sm:h-10 sm:w-10"
             />
             <span className="inline bg-gradient-to-r from-primary to-betrix-green-dim bg-clip-text text-transparent drop-shadow-sm">
-              Betrix
+              TheBetrix
             </span>
           </Link>
         </div>

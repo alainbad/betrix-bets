@@ -6,7 +6,7 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="text-lg font-black tracking-tight text-foreground">Betrix</p>
+            <p className="text-lg font-black tracking-tight text-foreground">TheBetrix</p>
             <p className="mt-2 max-w-xs text-xs leading-relaxed text-muted-foreground">
               A sportsbook and casino simulation platform. Virtual credits have no monetary value
               and cannot be purchased, withdrawn or exchanged.
@@ -27,7 +27,7 @@ export function Footer() {
           </FooterCol>
         </div>
         <p className="mt-10 border-t border-border pt-6 text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Betrix. Simulation platform for entertainment purposes only.
+          © {new Date().getFullYear()} TheBetrix. Simulation platform for entertainment purposes only.
           18+.
         </p>
       </div>

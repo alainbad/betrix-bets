@@ -9,15 +9,15 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/account")({
   head: () => ({
     meta: [
-      { title: "My Account — Betrix" },
+      { title: "My Account — TheBetrix" },
       {
         name: "description",
-        content: "Track your virtual coin balance and casino round history on Betrix.",
+        content: "Track your virtual coin balance and casino round history on TheBetrix.",
       },
-      { property: "og:title", content: "My Account — Betrix" },
+      { property: "og:title", content: "My Account — TheBetrix" },
       {
         property: "og:description",
-        content: "Track your virtual coin balance and casino round history on Betrix.",
+        content: "Track your virtual coin balance and casino round history on TheBetrix.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

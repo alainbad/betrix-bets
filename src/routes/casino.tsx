@@ -16,12 +16,12 @@ import heroCasino from "@/assets/hero-casino.jpg";
 export const Route = createFileRoute("/casino")({
   head: () => ({
     meta: [
-      { title: "Casino — Betrix" },
+      { title: "Casino — TheBetrix" },
       {
         name: "description",
-        content: "Betrix free-to-play social casino: no real money, virtual coins only.",
+        content: "TheBetrix free-to-play social casino: no real money, virtual coins only.",
       },
-      { property: "og:title", content: "Betrix Casino" },
+      { property: "og:title", content: "TheBetrix Casino" },
       {
         property: "og:description",
         content: "Free-to-play social casino games, played with virtual coins.",
