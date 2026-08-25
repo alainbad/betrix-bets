@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Vault Rush</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 24px 16px;
+    background: radial-gradient(circle at 50% 15%, #2e2205, #0f0b02 75%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #fde8b8;
+  }
+  h1 {
+    margin: 0;
+    font-size: 1.2rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #ffcc55;
+    text-shadow: 0 0 12px #ffcc5566;
+  }
+  .cabinet {
+    padding: 18px;
+    border-radius: 22px;
+    background: linear-gradient(160deg, #241a06, #120d02);
+    border: 2px solid #ffcc5544;
+    box-shadow: 0 0 30px #ffcc5522, inset 0 0 20px #ff990022;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: 6px;
+    background: #100b02;
+    border-radius: 12px;
+    padding: 12px;
+  }
+  .cell {
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background: #1e1505;
+    border: 1px solid #ffcc5522;
+    border-radius: 8px;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+  }
+  .cell.win { border-color: #ffcc55; box-shadow: 0 0 14px #ffcc55aa; animation: glow 0.55s ease-in-out infinite alternate; }
+  .cell.tumble { animation: drop 0.3s ease; }
+  @keyframes glow { from { transform: scale(1); } to { transform: scale(1.1); } }
+  @keyframes drop { from { transform: translateY(-16px); opacity: 0.3; } to { transform: translateY(0); opacity: 1; } }
+  .grid.spinning .cell { animation: shimmer 0.1s linear infinite; }
+  @keyframes shimmer { from { opacity: 0.55; } to { opacity: 1; } }
+  .controls { display: flex; align-items: center; gap: 16px; }
+  .stake-input {
+    width: 90px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #ffcc5544;
+    background: #1e1505;
+    color: #fde8b8;
+    font-size: 1rem;
+    text-align: center;
+  }
+  button {
+    padding: 10px 28px;
+    border-radius: 999px;
+    border: none;
+    background: linear-gradient(90deg, #ffcc55, #ff9900);
+    color: #1a1200;
+    font-weight: 800;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .balance { font-size: 1.05rem; font-weight: 700; }
+  .balance span { color: #ffcc55; }
+  .result { min-height: 1.4em; font-size: 0.95rem; font-weight: 700; }
+  .result.win { color: #ffcc55; }
+  .result.lose { color: #8a7a54; }
+  .note { max-width: 340px; text-align: center; font-size: 0.7rem; color: #6b5f3e; line-height: 1.4; }
+</style>
+</head>
+<body>
+  <h1>Vault Rush</h1>
+  <div class="balance">Coins: <span id="balance">0</span></div>
+  <div class="cabinet">
+    <div class="grid" id="grid"></div>
+  </div>
+  <div class="controls">
+    <input class="stake-input" id="stake" type="number" min="1" step="1" value="10" />
+    <button id="spinBtn">Drop</button>
+  </div>
+  <p class="result" id="result"></p>
+  <p class="note">
+    Self-hosted demo slot. Every drop's outcome is decided server-side by the wallet - this game only
+    animates to whatever the server returned, it never picks its own result.
+  </p>
+
+<script>
+  const SYMBOLS = ["🪙", "💰", "🔑", "💍", "🏺"];
+  const WIN_SYMBOL = "💎";
+  const COLS = 6;
+  const ROWS = 5;
+  const WIN_COUNT = 8; // how many cells light up on a winning drop
+
+  const gridEl = document.getElementById("grid");
+  const balanceEl = document.getElementById("balance");
+  const resultEl = document.getElementById("result");
+  const stakeInput = document.getElementById("stake");
+  const spinBtn = document.getElementById("spinBtn");
+
+  const cells = [];
+  for (let i = 0; i < COLS * ROWS; i++) {
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    cell.textContent = randomSymbol(SYMBOLS);
+    gridEl.appendChild(cell);
+    cells.push(cell);
+  }
+
+  function getInitialBalance() {
+    const params = new URLSearchParams(window.location.search);
+    const coins = params.get("coins");
+    return coins ? parseInt(coins, 10) : 0;
+  }
+
+  let playerCoins = getInitialBalance();
+  let spinning = false;
+  updateUIMoney(playerCoins);
+
+  function updateUIMoney(coins) {
+    playerCoins = coins;
+    balanceEl.textContent = Math.floor(coins).toLocaleString();
+  }
+
+  function randomSymbol(pool) {
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function requestSpin(betAmount) {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: "CASINO_SPIN_REQUEST", bet: betAmount }, "*");
+    }
+  }
+
+  function pickWinIndices() {
+    const indices = [...Array(cells.length).keys()];
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    return new Set(indices.slice(0, WIN_COUNT));
+  }
+
+  function landOutcome(isWin) {
+    const winSet = isWin ? pickWinIndices() : new Set();
+    cells.forEach((cell, i) => {
+      cell.classList.remove("win");
+      cell.classList.add("tumble");
+      cell.textContent = winSet.has(i) ? WIN_SYMBOL : randomSymbol(SYMBOLS);
+      if (winSet.has(i)) cell.classList.add("win");
+    });
+    // Restart the tumble animation on the next frame for future drops.
+    requestAnimationFrame(() => {
+      cells.forEach((cell) => cell.classList.remove("tumble"));
+    });
+  }
+
+  window.addEventListener("message", (event) => {
+    if (!event.data) return;
+
+    if (event.data.type === "CASINO_SPIN_RESULT") {
+      const win = Number(event.data.win) || 0;
+      const multiplier = Number(event.data.multiplier) || 0;
+
+      gridEl.classList.remove("spinning");
+      landOutcome(win > 0);
+
+      if (win > 0) {
+        resultEl.textContent = `Vault cracked! +${win} coins (${multiplier}x)`;
+        resultEl.className = "result win";
+      } else {
+        resultEl.textContent = "No matches this drop.";
+        resultEl.className = "result lose";
+      }
+
+      updateUIMoney(event.data.balanceAfter);
+      spinning = false;
+      spinBtn.disabled = false;
+    }
+
+    if (event.data.type === "CASINO_SPIN_ERROR") {
+      gridEl.classList.remove("spinning");
+      resultEl.textContent = event.data.message || "Round failed.";
+      resultEl.className = "result lose";
+      spinning = false;
+      spinBtn.disabled = false;
+    }
+  });
+
+  spinBtn.addEventListener("click", () => {
+    if (spinning) return;
+    const stake = Math.max(1, Math.floor(Number(stakeInput.value) || 0));
+    if (stake > playerCoins) {
+      resultEl.textContent = "Not enough coins.";
+      resultEl.className = "result lose";
+      return;
+    }
+
+    spinning = true;
+    spinBtn.disabled = true;
+    resultEl.textContent = "";
+    resultEl.className = "result";
+    gridEl.classList.add("spinning");
+
+    requestSpin(stake);
+  });
+</script>
+</body>
+</html>

@@ -1,3 +1,6 @@
+import casinoNeonReels from "@/assets/casino-neon-reels.jpg";
+import casinoVaultRush from "@/assets/casino-vault-rush.jpg";
+
 export type CasinoCategory = "slots" | "table" | "instant" | "live";
 
 export interface Html5CasinoGame {
@@ -27,10 +30,11 @@ export const CASINO_CATEGORIES: { id: CasinoCategory | "all"; label: string }[] 
   { id: "live", label: "Live studio" },
 ];
 
-// No real game bundles yet (user is sourcing HTML5 game files separately) -
-// this one demo game exercises the full pipeline (balance-in-URL, postMessage
-// round-trip, wallet RPC, balance refresh) end to end. Swap/add real entries
-// here once game files are provided; nothing else needs to change.
+// Self-hosted HTML5 games, each served from /public/games/<id>/index.html and
+// rendered in an iframe - see GameModal.tsx and lib/game-bridge.ts. All of
+// them speak the same postMessage protocol (CASINO_SPIN_REQUEST /
+// CASINO_SPIN_RESULT), so adding a game is just dropping a new folder in
+// here and registering it below; nothing else needs to change.
 export const CASINO_GAMES: Html5CasinoGame[] = [
   {
     id: "demo-slot",
@@ -39,6 +43,26 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     category: "slots",
     path: "/games/demo-slot/index.html",
     tagline: "Placeholder game for testing the wallet bridge end to end.",
+    maxWinMultiplier: 6,
+  },
+  {
+    id: "neon-reels",
+    name: "Neon Reels",
+    provider: "Betrix Originals",
+    category: "slots",
+    path: "/games/neon-reels/index.html",
+    thumbnail: casinoNeonReels,
+    tagline: "Classic 5-reel slot with a neon arcade cabinet look.",
+    maxWinMultiplier: 6,
+  },
+  {
+    id: "vault-rush",
+    name: "Vault Rush",
+    provider: "Betrix Originals",
+    category: "slots",
+    path: "/games/vault-rush/index.html",
+    thumbnail: casinoVaultRush,
+    tagline: "Cascading gem grid - crack the vault for a payout.",
     maxWinMultiplier: 6,
   },
 ];
