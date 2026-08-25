@@ -3,7 +3,7 @@ import { User, Wallet } from "lucide-react";
 import { useWallet } from "@/lib/wallet-store";
 import { useAuth } from "@/lib/auth-context";
 import { formatCurrency } from "@/lib/format";
-import betrixLogo from "@/assets/betrix-logo-alt.png";
+import betrixLogo from "@/assets/betrix-mark.png";
 
 export function Header() {
   const { balance } = useWallet();
