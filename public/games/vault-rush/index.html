@@ -3,129 +3,501 @@
 <head>
 <meta charset="utf-8" />
 <title>Vault Rush</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <style>
-  :root { color-scheme: dark; }
+  :root {
+    color-scheme: dark;
+    --drop-dur: 560ms;
+    --pulse-dur: 480ms;
+    --count-dur: 900ms;
+    --settle-delay: 550ms;
+  }
+  :root.turbo {
+    --drop-dur: 200ms;
+    --pulse-dur: 220ms;
+    --count-dur: 280ms;
+    --settle-delay: 200ms;
+  }
   * { box-sizing: border-box; }
-  body {
+  html, body {
     margin: 0;
-    min-height: 100vh;
+    height: 100%;
+    background: radial-gradient(circle at 50% 10%, #241a08, #05030a 78%);
+  }
+  body {
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 20px;
-    padding: 24px 16px;
-    background: radial-gradient(circle at 50% 15%, #2e2205, #0f0b02 75%);
+    gap: clamp(10px, 2.5vw, 18px);
+    padding: clamp(10px, 3vw, 24px);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     color: #fde8b8;
+    overflow-x: hidden;
   }
-  h1 {
+
+  /* ---------- Header ---------- */
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand h1 {
     margin: 0;
-    font-size: 1.2rem;
-    letter-spacing: 0.12em;
+    font-size: clamp(1.05rem, 4vw, 1.4rem);
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: #ffcc55;
-    text-shadow: 0 0 12px #ffcc5566;
+    font-weight: 900;
+    background: linear-gradient(180deg, #fff3c9, #ffcc55 45%, #b8760a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 22px rgba(255, 190, 60, 0.35);
+  }
+  .balance {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #241a06, #140e02);
+    border: 1px solid rgba(255, 204, 85, 0.35);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.4);
+    font-weight: 800;
+    font-size: clamp(0.85rem, 3vw, 1rem);
+  }
+  .balance svg { width: 1.15em; height: 1.15em; filter: drop-shadow(0 0 4px rgba(255, 200, 60, 0.7)); }
+  .balance span { color: #ffe9a8; }
+
+  /* ---------- Cabinet ---------- */
+  .stage {
+    width: min(94vw, 480px);
+    position: relative;
   }
   .cabinet {
-    padding: 18px;
-    border-radius: 22px;
-    background: linear-gradient(160deg, #241a06, #120d02);
-    border: 2px solid #ffcc5544;
-    box-shadow: 0 0 30px #ffcc5522, inset 0 0 20px #ff990022;
+    position: relative;
+    padding: clamp(10px, 2.6vw, 18px);
+    border-radius: 26px;
+    background:
+      radial-gradient(120% 90% at 50% -10%, rgba(255, 210, 120, 0.16), transparent 55%),
+      linear-gradient(160deg, #2c2008, #140d02 60%, #0c0801);
+    border: 1px solid rgba(255, 205, 90, 0.28);
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.6),
+      0 0 40px rgba(255, 170, 40, 0.16),
+      inset 0 2px 0 rgba(255, 235, 180, 0.12),
+      inset 0 -6px 14px rgba(0, 0, 0, 0.6);
+  }
+  .cabinet::before {
+    /* bevel frame accent */
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 220, 140, 0.14);
+    pointer-events: none;
+  }
+
+  .grid-wrap {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    background: radial-gradient(120% 100% at 50% 0%, #150e04, #08050a 85%);
+    box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(255, 200, 90, 0.12);
   }
   .grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     grid-template-rows: repeat(5, 1fr);
-    gap: 6px;
-    background: #100b02;
-    border-radius: 12px;
-    padding: 12px;
+    gap: clamp(4px, 1.1vw, 7px);
+    padding: clamp(6px, 1.6vw, 10px);
+    aspect-ratio: 6 / 5;
   }
+
   .cell {
-    width: 46px;
-    height: 46px;
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
-    background: #1e1505;
-    border: 1px solid #ffcc5522;
-    border-radius: 8px;
-    transition: transform 0.25s ease, opacity 0.25s ease;
+    border-radius: 10px;
+    background: linear-gradient(160deg, #1e1608, #100b02);
+    border: 1px solid rgba(255, 200, 90, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 -3px 6px rgba(0, 0, 0, 0.5);
+    overflow: visible;
   }
-  .cell.win { border-color: #ffcc55; box-shadow: 0 0 14px #ffcc55aa; animation: glow 0.55s ease-in-out infinite alternate; }
-  .cell.tumble { animation: drop 0.3s ease; }
-  @keyframes glow { from { transform: scale(1); } to { transform: scale(1.1); } }
-  @keyframes drop { from { transform: translateY(-16px); opacity: 0.3; } to { transform: translateY(0); opacity: 1; } }
-  .grid.spinning .cell { animation: shimmer 0.1s linear infinite; }
-  @keyframes shimmer { from { opacity: 0.55; } to { opacity: 1; } }
-  .controls { display: flex; align-items: center; gap: 16px; }
-  .stake-input {
-    width: 90px;
+  .cell svg.symbol {
+    width: 74%;
+    height: 74%;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
+    transition: filter 0.2s ease;
+  }
+
+  .cell.drop-in svg.symbol {
+    animation: dropIn var(--drop-dur) cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes dropIn {
+    0%   { transform: translateY(-160%) scale(0.7); opacity: 0; }
+    60%  { opacity: 1; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  .cell.win-pulse {
+    animation: cellGlow var(--pulse-dur) ease-in-out 2;
+  }
+  .cell.win-pulse svg.symbol {
+    filter: drop-shadow(0 0 6px #ffd76a) drop-shadow(0 0 14px #ffb32e);
+  }
+  @keyframes cellGlow {
+    0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -3px 6px rgba(0,0,0,0.5), 0 0 0 rgba(255,190,60,0); }
+    50% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -3px 6px rgba(0,0,0,0.5), 0 0 18px 2px rgba(255,190,60,0.85); }
+  }
+
+  .cell.exploding svg.symbol {
+    animation: explode 320ms ease-in forwards;
+  }
+  @keyframes explode {
+    0%   { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.7); opacity: 0; }
+  }
+  .cell.exploding::after {
+    content: "";
+    position: absolute;
+    inset: -30%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 220, 140, 0.9), rgba(255, 170, 40, 0) 70%);
+    animation: burst 320ms ease-out forwards;
+    pointer-events: none;
+  }
+  @keyframes burst {
+    0% { opacity: 0.9; transform: scale(0.3); }
+    100% { opacity: 0; transform: scale(1.6); }
+  }
+
+  .grid-wrap.spinning .cell svg.symbol {
+    animation: shimmer 0.11s linear infinite;
+  }
+  @keyframes shimmer {
+    from { opacity: 0.5; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  /* ---------- Celebration overlays ---------- */
+  .fx-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: 16px;
+  }
+  .falling-coin {
+    position: absolute;
+    top: -12%;
+    width: 22px;
+    height: 22px;
+    animation-name: coinFall;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.7, 1);
+    animation-fill-mode: forwards;
+    filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.5));
+  }
+  @keyframes coinFall {
+    from { transform: translateY(0) rotate(0deg); opacity: 1; }
+    to   { transform: translateY(650%) rotate(540deg); opacity: 0; }
+  }
+
+  .win-counter {
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    transform: translate(-50%, -50%) scale(0.7);
+    font-size: clamp(1.6rem, 8vw, 2.6rem);
+    font-weight: 900;
+    color: #fff3c9;
+    text-shadow: 0 0 10px rgba(255, 190, 60, 0.9), 0 0 26px rgba(255, 140, 20, 0.7);
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 5;
+  }
+  .win-counter.show {
+    animation: counterPop var(--count-dur) ease-out forwards, counterFade 500ms ease-in var(--count-dur) forwards;
+  }
+  @keyframes counterPop {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    18%  { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+    100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+  @keyframes counterFade {
+    to { opacity: 0; transform: translate(-50%, -62%) scale(1); }
+  }
+
+  /* ---------- Controls ---------- */
+  .controls {
+    width: min(94vw, 480px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(6px, 2vw, 12px);
+  }
+  .toggle-group { display: flex; gap: 8px; }
+  .toggle-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
     padding: 8px 10px;
-    border-radius: 8px;
-    border: 1px solid #ffcc5544;
-    background: #1e1505;
-    color: #fde8b8;
-    font-size: 1rem;
-    text-align: center;
-  }
-  button {
-    padding: 10px 28px;
-    border-radius: 999px;
-    border: none;
-    background: linear-gradient(90deg, #ffcc55, #ff9900);
-    color: #1a1200;
-    font-weight: 800;
-    font-size: 0.95rem;
+    min-width: 52px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 204, 85, 0.25);
+    background: linear-gradient(160deg, #1e1608, #110b02);
+    color: #d8bd82;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     cursor: pointer;
   }
-  button:disabled { opacity: 0.45; cursor: not-allowed; }
-  .balance { font-size: 1.05rem; font-weight: 700; }
-  .balance span { color: #ffcc55; }
-  .result { min-height: 1.4em; font-size: 0.95rem; font-weight: 700; }
-  .result.win { color: #ffcc55; }
-  .result.lose { color: #8a7a54; }
-  .note { max-width: 340px; text-align: center; font-size: 0.7rem; color: #6b5f3e; line-height: 1.4; }
+  .toggle-btn svg { width: 18px; height: 18px; }
+  .toggle-btn.active {
+    color: #1a1200;
+    background: linear-gradient(180deg, #ffe9a8, #ffb32e);
+    border-color: #ffcc55;
+    box-shadow: 0 0 14px rgba(255, 179, 46, 0.6);
+  }
+
+  .bet-adjust {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px;
+    border-radius: 999px;
+    background: linear-gradient(160deg, #1e1608, #110b02);
+    border: 1px solid rgba(255, 204, 85, 0.25);
+  }
+  .bet-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(180deg, #3a2a0a, #211705);
+    color: #ffcc55;
+    font-size: 1.1rem;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .bet-btn:active { transform: scale(0.92); }
+  .bet-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .stake-display {
+    min-width: 56px;
+    text-align: center;
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #ffe9a8;
+  }
+  .stake-label {
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8a7852;
+    display: block;
+    margin-top: -2px;
+  }
+
+  .spin-btn {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: none;
+    flex-shrink: 0;
+    background: radial-gradient(circle at 35% 30%, #fff3c9, #ffcc55 45%, #b8760a 100%);
+    box-shadow: 0 0 0 3px rgba(20, 13, 2, 0.9), 0 0 22px rgba(255, 170, 40, 0.55), inset 0 -4px 8px rgba(0,0,0,0.25);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .spin-btn svg { width: 28px; height: 28px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.4)); }
+  .spin-btn:active { transform: scale(0.94); }
+  .spin-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .spin-btn.auto-armed { animation: autoPulse 1.1s ease-in-out infinite; }
+  @keyframes autoPulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(20,13,2,0.9), 0 0 22px rgba(255,170,40,0.55), inset 0 -4px 8px rgba(0,0,0,0.25); }
+    50% { box-shadow: 0 0 0 3px rgba(20,13,2,0.9), 0 0 34px rgba(255,170,40,0.95), inset 0 -4px 8px rgba(0,0,0,0.25); }
+  }
+
+  .result {
+    min-height: 1.3em;
+    font-size: clamp(0.8rem, 3vw, 0.92rem);
+    font-weight: 700;
+    text-align: center;
+  }
+  .result.win { color: #ffcc55; text-shadow: 0 0 8px rgba(255, 190, 60, 0.5); }
+  .result.lose { color: #7a6b48; }
+  .note { max-width: 380px; text-align: center; font-size: 0.68rem; color: #6b5f3e; line-height: 1.4; }
 </style>
 </head>
 <body>
-  <h1>Vault Rush</h1>
-  <div class="balance">Coins: <span id="balance">0</span></div>
-  <div class="cabinet">
-    <div class="grid" id="grid"></div>
+  <div class="brand">
+    <h1>Vault Rush</h1>
   </div>
+  <div class="balance">
+    <svg viewBox="0 0 64 64" aria-hidden="true"><use href="#sym-coin" /></svg>
+    <span>Coins: <span id="balance">0</span></span>
+  </div>
+
+  <div class="stage">
+    <div class="cabinet">
+      <div class="grid-wrap" id="gridWrap">
+        <div class="grid" id="grid"></div>
+        <div class="fx-layer" id="fxLayer"></div>
+        <div class="win-counter" id="winCounter">+0</div>
+      </div>
+    </div>
+  </div>
+
   <div class="controls">
-    <input class="stake-input" id="stake" type="number" min="1" step="1" value="10" />
-    <button id="spinBtn">Drop</button>
+    <div class="toggle-group">
+      <button class="toggle-btn" id="turboBtn" type="button" title="Turbo spin">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 2 3 14h7l-1 8 10-13h-7l1-7z"/></svg>
+        Turbo
+      </button>
+      <button class="toggle-btn" id="autoBtn" type="button" title="Auto play">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+        Auto
+      </button>
+    </div>
+
+    <div class="bet-adjust">
+      <button class="bet-btn" id="betDown" type="button" aria-label="Decrease bet">−</button>
+      <div>
+        <span class="stake-display" id="stakeDisplay">10</span>
+        <span class="stake-label">Bet</span>
+      </div>
+      <button class="bet-btn" id="betUp" type="button" aria-label="Increase bet">+</button>
+    </div>
+
+    <button class="spin-btn" id="spinBtn" type="button" aria-label="Drop">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#1a1200" d="M8 5v14l11-7z"/></svg>
+    </button>
   </div>
+
   <p class="result" id="result"></p>
   <p class="note">
     Self-hosted demo slot. Every drop's outcome is decided server-side by the wallet - this game only
     animates to whatever the server returned, it never picks its own result.
   </p>
 
+  <!-- Reusable symbol art: skeuomorphic gradients, no external assets. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <radialGradient id="g-gold" cx="35%" cy="28%" r="75%">
+        <stop offset="0%" stop-color="#fff6d1" />
+        <stop offset="35%" stop-color="#ffd76a" />
+        <stop offset="72%" stop-color="#c98a15" />
+        <stop offset="100%" stop-color="#6b4a06" />
+      </radialGradient>
+      <radialGradient id="g-emerald" cx="35%" cy="28%" r="75%">
+        <stop offset="0%" stop-color="#eafff1" />
+        <stop offset="35%" stop-color="#3be6a0" />
+        <stop offset="72%" stop-color="#0e8a57" />
+        <stop offset="100%" stop-color="#04351f" />
+      </radialGradient>
+      <radialGradient id="g-amethyst" cx="35%" cy="28%" r="75%">
+        <stop offset="0%" stop-color="#f8ecff" />
+        <stop offset="35%" stop-color="#c079ff" />
+        <stop offset="72%" stop-color="#7a26c9" />
+        <stop offset="100%" stop-color="#2c0a52" />
+      </radialGradient>
+      <radialGradient id="g-mega" cx="35%" cy="28%" r="75%">
+        <stop offset="0%" stop-color="#ffffff" />
+        <stop offset="35%" stop-color="#a9e4ff" />
+        <stop offset="70%" stop-color="#3f8fe0" />
+        <stop offset="100%" stop-color="#0a2a52" />
+      </radialGradient>
+      <linearGradient id="g-silver" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#ffffff" />
+        <stop offset="45%" stop-color="#c9d3dd" />
+        <stop offset="100%" stop-color="#5c6773" />
+      </linearGradient>
+
+      <!-- Coin -->
+      <symbol id="sym-coin" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r="27" fill="url(#g-gold)" stroke="#5c3f05" stroke-width="1.5" />
+        <circle cx="32" cy="32" r="20" fill="none" stroke="#fff2c4" stroke-width="1.5" opacity="0.55" />
+        <text x="32" y="39" text-anchor="middle" font-size="20" font-weight="900" fill="#7a5308" font-family="Georgia, serif">B</text>
+        <ellipse cx="23" cy="20" rx="9" ry="5" fill="#ffffff" opacity="0.35" />
+      </symbol>
+
+      <!-- Emerald gem -->
+      <symbol id="sym-emerald" viewBox="0 0 64 64">
+        <polygon points="32,6 50,22 44,58 20,58 14,22" fill="url(#g-emerald)" stroke="#043a22" stroke-width="1.5" />
+        <polygon points="32,6 50,22 32,26 14,22" fill="#ffffff" opacity="0.25" />
+        <polygon points="32,26 44,58 20,58" fill="#ffffff" opacity="0.08" />
+      </symbol>
+
+      <!-- Amethyst gem -->
+      <symbol id="sym-amethyst" viewBox="0 0 64 64">
+        <polygon points="32,4 48,24 40,60 24,60 16,24" fill="url(#g-amethyst)" stroke="#3a0f66" stroke-width="1.5" />
+        <polygon points="32,4 48,24 32,28 16,24" fill="#ffffff" opacity="0.3" />
+      </symbol>
+
+      <!-- Key -->
+      <symbol id="sym-key" viewBox="0 0 64 64">
+        <circle cx="24" cy="24" r="13" fill="url(#g-gold)" stroke="#5c3f05" stroke-width="1.5" />
+        <circle cx="24" cy="24" r="6" fill="#160f02" />
+        <rect x="30" y="30" width="7" height="26" rx="2" fill="url(#g-silver)" transform="rotate(45 33.5 43)" />
+        <rect x="38" y="42" width="10" height="5" rx="1.5" fill="url(#g-silver)" transform="rotate(45 43 44.5)" />
+      </symbol>
+
+      <!-- Ring -->
+      <symbol id="sym-ring" viewBox="0 0 64 64">
+        <circle cx="32" cy="40" r="16" fill="none" stroke="url(#g-silver)" stroke-width="6" />
+        <polygon points="32,10 42,24 32,30 22,24" fill="url(#g-amethyst)" stroke="#3a0f66" stroke-width="1.2" />
+        <polygon points="32,10 42,24 32,18" fill="#ffffff" opacity="0.35" />
+      </symbol>
+
+      <!-- Mega / jackpot gem (server win symbol) -->
+      <symbol id="sym-mega" viewBox="0 0 64 64">
+        <polygon points="32,3 54,20 46,60 18,60 10,20" fill="url(#g-mega)" stroke="#0a2a52" stroke-width="1.5" />
+        <polygon points="32,3 54,20 32,26 10,20" fill="#ffffff" opacity="0.4" />
+        <polygon points="32,26 46,60 18,60" fill="#ffffff" opacity="0.12" />
+      </symbol>
+    </defs>
+  </svg>
+
 <script>
-  const SYMBOLS = ["🪙", "💰", "🔑", "💍", "🏺"];
-  const WIN_SYMBOL = "💎";
+  const SYMBOL_IDS = ["sym-coin", "sym-emerald", "sym-amethyst", "sym-key", "sym-ring"];
+  const WIN_SYMBOL_ID = "sym-mega";
   const COLS = 6;
   const ROWS = 5;
   const WIN_COUNT = 8; // how many cells light up on a winning drop
 
+  const gridWrap = document.getElementById("gridWrap");
   const gridEl = document.getElementById("grid");
+  const fxLayer = document.getElementById("fxLayer");
+  const winCounterEl = document.getElementById("winCounter");
   const balanceEl = document.getElementById("balance");
   const resultEl = document.getElementById("result");
-  const stakeInput = document.getElementById("stake");
+  const stakeDisplay = document.getElementById("stakeDisplay");
+  const betDownBtn = document.getElementById("betDown");
+  const betUpBtn = document.getElementById("betUp");
   const spinBtn = document.getElementById("spinBtn");
+  const turboBtn = document.getElementById("turboBtn");
+  const autoBtn = document.getElementById("autoBtn");
+
+  function makeSymbolSvg(symbolId) {
+    return `<svg class="symbol" viewBox="0 0 64 64"><use href="#${symbolId}" /></svg>`;
+  }
 
   const cells = [];
   for (let i = 0; i < COLS * ROWS; i++) {
     const cell = document.createElement("div");
     cell.className = "cell";
-    cell.textContent = randomSymbol(SYMBOLS);
+    const symbolId = randomItem(SYMBOL_IDS);
+    cell.dataset.symbol = symbolId;
+    cell.innerHTML = makeSymbolSvg(symbolId);
     gridEl.appendChild(cell);
     cells.push(cell);
   }
@@ -137,16 +509,36 @@
   }
 
   let playerCoins = getInitialBalance();
+  let stake = 10;
   let spinning = false;
+  let turbo = false;
+  let autoPlay = false;
+
   updateUIMoney(playerCoins);
+  updateStakeDisplay();
 
   function updateUIMoney(coins) {
     playerCoins = coins;
     balanceEl.textContent = Math.floor(coins).toLocaleString();
   }
 
-  function randomSymbol(pool) {
+  function updateStakeDisplay() {
+    stakeDisplay.textContent = stake.toLocaleString();
+  }
+
+  function betStep(value) {
+    if (value >= 1000) return 100;
+    if (value >= 100) return 10;
+    return 1;
+  }
+
+  function randomItem(pool) {
     return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function cssMs(varName) {
+    const raw = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+    return parseFloat(raw) || 0;
   }
 
   function requestSpin(betAmount) {
@@ -164,18 +556,113 @@
     return new Set(indices.slice(0, WIN_COUNT));
   }
 
-  function landOutcome(isWin) {
-    const winSet = isWin ? pickWinIndices() : new Set();
+  function spawnCoinRain() {
+    const count = turbo ? 10 : 18;
+    for (let i = 0; i < count; i++) {
+      const coin = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      coin.setAttribute("viewBox", "0 0 64 64");
+      coin.classList.add("falling-coin");
+      coin.innerHTML = '<use href="#sym-coin" />';
+      coin.style.left = `${Math.random() * 96}%`;
+      const duration = 700 + Math.random() * 500;
+      const delay = Math.random() * 250;
+      coin.style.animationDuration = `${turbo ? duration * 0.45 : duration}ms`;
+      coin.style.animationDelay = `${turbo ? delay * 0.3 : delay}ms`;
+      fxLayer.appendChild(coin);
+      setTimeout(() => coin.remove(), duration + delay + 100);
+    }
+  }
+
+  function animateWinCounter(amount) {
+    winCounterEl.textContent = "+0";
+    winCounterEl.classList.remove("show");
+    // Force reflow so the animation restarts on consecutive wins.
+    void winCounterEl.offsetWidth;
+    winCounterEl.classList.add("show");
+
+    const duration = cssMs("--count-dur") || 900;
+    const start = performance.now();
+    function tick(now) {
+      const progress = Math.min(1, (now - start) / duration);
+      const current = Math.floor(amount * (1 - Math.pow(1 - progress, 3)));
+      winCounterEl.textContent = `+${current.toLocaleString()}`;
+      if (progress < 1) requestAnimationFrame(tick);
+      else winCounterEl.textContent = `+${amount.toLocaleString()}`;
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // Drops a fresh, non-winning grid: every cell falls in with a bounce.
+  function dropFreshGrid() {
+    cells.forEach((cell) => {
+      const symbolId = randomItem(SYMBOL_IDS);
+      cell.dataset.symbol = symbolId;
+      cell.classList.remove("win-pulse", "exploding");
+      cell.innerHTML = makeSymbolSvg(symbolId);
+      cell.classList.remove("drop-in");
+      void cell.offsetWidth;
+      cell.classList.add("drop-in");
+    });
+  }
+
+  // Winning cells pulse, explode, then cascade in a replacement symbol.
+  function playWinSequence(winSet, onDone) {
+    const pulseDur = cssMs("--pulse-dur") || 480;
+    const settleDelay = cssMs("--settle-delay") || 550;
+
     cells.forEach((cell, i) => {
-      cell.classList.remove("win");
-      cell.classList.add("tumble");
-      cell.textContent = winSet.has(i) ? WIN_SYMBOL : randomSymbol(SYMBOLS);
-      if (winSet.has(i)) cell.classList.add("win");
+      if (!winSet.has(i)) return;
+      cell.dataset.symbol = WIN_SYMBOL_ID;
+      cell.innerHTML = makeSymbolSvg(WIN_SYMBOL_ID);
+      cell.classList.add("win-pulse");
     });
-    // Restart the tumble animation on the next frame for future drops.
-    requestAnimationFrame(() => {
-      cells.forEach((cell) => cell.classList.remove("tumble"));
-    });
+
+    setTimeout(() => {
+      cells.forEach((cell, i) => {
+        if (!winSet.has(i)) return;
+        cell.classList.remove("win-pulse");
+        cell.classList.add("exploding");
+      });
+
+      setTimeout(() => {
+        cells.forEach((cell, i) => {
+          if (!winSet.has(i)) return;
+          cell.classList.remove("exploding");
+          const symbolId = randomItem(SYMBOL_IDS);
+          cell.dataset.symbol = symbolId;
+          cell.innerHTML = makeSymbolSvg(symbolId);
+          cell.classList.remove("drop-in");
+          void cell.offsetWidth;
+          cell.classList.add("drop-in");
+        });
+        if (onDone) onDone();
+      }, 320);
+    }, pulseDur * 2 + settleDelay * 0);
+  }
+
+  function landOutcome(isWin, winAmount) {
+    dropFreshGrid();
+
+    if (!isWin) return;
+
+    const winSet = pickWinIndices();
+    spawnCoinRain();
+    animateWinCounter(winAmount);
+    playWinSequence(winSet);
+  }
+
+  function maybeAutoContinue() {
+    if (!autoPlay) return;
+    if (stake > playerCoins) {
+      setAutoPlay(false);
+      resultEl.textContent = "Auto-play stopped: not enough coins.";
+      resultEl.className = "result lose";
+      return;
+    }
+    const delay = turbo ? 300 : 650;
+    setTimeout(() => {
+      if (autoPlay && !spinning) doSpin();
+    }, delay);
   }
 
   window.addEventListener("message", (event) => {
@@ -185,8 +672,8 @@
       const win = Number(event.data.win) || 0;
       const multiplier = Number(event.data.multiplier) || 0;
 
-      gridEl.classList.remove("spinning");
-      landOutcome(win > 0);
+      gridWrap.classList.remove("spinning");
+      landOutcome(win > 0, win);
 
       if (win > 0) {
         resultEl.textContent = `Vault cracked! +${win} coins (${multiplier}x)`;
@@ -199,23 +686,25 @@
       updateUIMoney(event.data.balanceAfter);
       spinning = false;
       spinBtn.disabled = false;
+      maybeAutoContinue();
     }
 
     if (event.data.type === "CASINO_SPIN_ERROR") {
-      gridEl.classList.remove("spinning");
+      gridWrap.classList.remove("spinning");
       resultEl.textContent = event.data.message || "Round failed.";
       resultEl.className = "result lose";
       spinning = false;
       spinBtn.disabled = false;
+      setAutoPlay(false);
     }
   });
 
-  spinBtn.addEventListener("click", () => {
+  function doSpin() {
     if (spinning) return;
-    const stake = Math.max(1, Math.floor(Number(stakeInput.value) || 0));
     if (stake > playerCoins) {
       resultEl.textContent = "Not enough coins.";
       resultEl.className = "result lose";
+      setAutoPlay(false);
       return;
     }
 
@@ -223,9 +712,39 @@
     spinBtn.disabled = true;
     resultEl.textContent = "";
     resultEl.className = "result";
-    gridEl.classList.add("spinning");
+    winCounterEl.classList.remove("show");
+    gridWrap.classList.add("spinning");
 
     requestSpin(stake);
+  }
+
+  spinBtn.addEventListener("click", doSpin);
+
+  betDownBtn.addEventListener("click", () => {
+    stake = Math.max(1, stake - betStep(stake));
+    updateStakeDisplay();
+  });
+  betUpBtn.addEventListener("click", () => {
+    const next = stake + betStep(stake);
+    stake = Math.min(next, Math.max(1, playerCoins));
+    updateStakeDisplay();
+  });
+
+  turboBtn.addEventListener("click", () => {
+    turbo = !turbo;
+    turboBtn.classList.toggle("active", turbo);
+    document.documentElement.classList.toggle("turbo", turbo);
+  });
+
+  function setAutoPlay(on) {
+    autoPlay = on;
+    autoBtn.classList.toggle("active", autoPlay);
+    spinBtn.classList.toggle("auto-armed", autoPlay);
+  }
+
+  autoBtn.addEventListener("click", () => {
+    setAutoPlay(!autoPlay);
+    if (autoPlay && !spinning) doSpin();
   });
 </script>
 </body>
