@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AccountIdBadge } from "@/components/dashboard/AccountIdBadge";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -26,6 +27,7 @@ interface ProfileRow {
   username: string;
   phone: string | null;
   avatar_url: string | null;
+  account_id: string;
 }
 
 function ProfilePage() {
@@ -45,7 +47,7 @@ function ProfilePage() {
     setEmail(user.email ?? "");
     supabase
       .from("profiles")
-      .select("username, phone, avatar_url")
+      .select("username, phone, avatar_url, account_id")
       .eq("id", user.id)
       .single()
       .then(({ data }) => {
@@ -168,6 +170,9 @@ function ProfilePage() {
           </Avatar>
           <div>
             <p className="font-semibold text-foreground">{profile?.username}</p>
+            {profile?.account_id && (
+              <AccountIdBadge accountId={profile.account_id} className="mt-1" />
+            )}
             <input
               ref={fileInputRef}
               type="file"

@@ -12,6 +12,7 @@ export interface DownlineProfile {
   id: string;
   username: string;
   email: string;
+  accountId: string;
   parentId: string | null;
   role: HierarchyTier | "player" | "unknown";
   balance: number;
@@ -72,7 +73,10 @@ export async function fetchDownline(rootId: string): Promise<DownlineProfile[]> 
 
   const [{ data: profiles, error: profilesError }, { data: wallets, error: walletsError }, roles] =
     await Promise.all([
-      supabase.from("profiles").select("id, username, email, parent_id, created_at").in("id", ids),
+      supabase
+        .from("profiles")
+        .select("id, username, email, account_id, parent_id, created_at")
+        .in("id", ids),
       supabase.from("wallets").select("user_id, available_balance").in("user_id", ids),
       rolesByUserId(ids),
     ]);
@@ -87,11 +91,24 @@ export async function fetchDownline(rootId: string): Promise<DownlineProfile[]> 
     id: p.id as string,
     username: p.username as string,
     email: p.email as string,
+    accountId: p.account_id as string,
     parentId: p.parent_id as string | null,
     role: roles.get(p.id as string) ?? "unknown",
     balance: balanceByUserId.get(p.id as string) ?? 0,
     createdAt: p.created_at as string,
   }));
+}
+
+// The logged-in caller's own account_id, for the "your UID" badge shown at
+// the top of each dashboard view.
+export async function fetchOwnAccountId(userId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("account_id")
+    .eq("id", userId)
+    .single();
+  if (error) throw error;
+  return (data?.account_id as string) ?? null;
 }
 
 export async function fetchLedger(userId: string, limit = 50): Promise<LedgerEntry[]> {

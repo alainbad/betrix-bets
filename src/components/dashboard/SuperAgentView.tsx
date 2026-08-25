@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import {
   fetchDownline,
   fetchBranchTurnover,
+  fetchOwnAccountId,
   type DownlineProfile,
   type BranchTurnover,
 } from "@/lib/agent-hierarchy";
@@ -21,6 +22,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { AccountIdBadge } from "@/components/dashboard/AccountIdBadge";
+import { IdentifierTransferModal } from "@/components/dashboard/IdentifierTransferModal";
 
 export function SuperAgentView() {
   const { user } = useAuth();
@@ -32,10 +35,9 @@ export function SuperAgentView() {
     totalPayout: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [transferTarget, setTransferTarget] = useState<{
-    agent: DownlineProfile;
-    mode: "allocate" | "reclaim";
-  } | null>(null);
+  const [ownAccountId, setOwnAccountId] = useState<string | null>(null);
+  const [allocateTarget, setAllocateTarget] = useState<DownlineProfile | null>(null);
+  const [reclaimTarget, setReclaimTarget] = useState<DownlineProfile | null>(null);
 
   async function reload() {
     if (!user) return;
@@ -55,14 +57,22 @@ export function SuperAgentView() {
     void reload();
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+    fetchOwnAccountId(user.id)
+      .then(setOwnAccountId)
+      .catch(() => setOwnAccountId(null));
+  }, [user]);
+
   const net = turnover.totalPayout - turnover.totalStaked;
 
   return (
     <main className="min-h-screen bg-background">
       <div className="border-b border-border bg-betrix-surface">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Super agent
+            {ownAccountId && <AccountIdBadge accountId={ownAccountId} />}
           </p>
           <h1 className="text-2xl font-black tracking-tight text-foreground">Branch console</h1>
         </div>
@@ -100,15 +110,31 @@ export function SuperAgentView() {
             void reload();
             void refreshWallet();
           }}
-          onTransfer={(agent, mode) => setTransferTarget({ agent, mode })}
+          onAllocate={setAllocateTarget}
+          onReclaim={setReclaimTarget}
         />
       </div>
 
-      <TransferModal
-        target={transferTarget}
-        onClose={() => setTransferTarget(null)}
+      <IdentifierTransferModal
+        open={allocateTarget !== null}
+        title={allocateTarget ? `Allocate to ${allocateTarget.username}` : "Allocate"}
+        actionLabel="Allocate"
+        amountLabel="Coins to allocate"
+        rpcName="transfer_agent_to_agent"
+        initialIdentifier={allocateTarget?.accountId}
+        onClose={() => setAllocateTarget(null)}
         onDone={() => {
-          setTransferTarget(null);
+          setAllocateTarget(null);
+          void reload();
+          void refreshWallet();
+        }}
+      />
+
+      <ReclaimModal
+        target={reclaimTarget}
+        onClose={() => setReclaimTarget(null)}
+        onDone={() => {
+          setReclaimTarget(null);
           void reload();
           void refreshWallet();
         }}
@@ -150,12 +176,14 @@ function SubAgentManagement({
   subAgents,
   loading,
   onChanged,
-  onTransfer,
+  onAllocate,
+  onReclaim,
 }: {
   subAgents: DownlineProfile[];
   loading: boolean;
   onChanged: () => void;
-  onTransfer: (agent: DownlineProfile, mode: "allocate" | "reclaim") => void;
+  onAllocate: (agent: DownlineProfile) => void;
+  onReclaim: (agent: DownlineProfile) => void;
 }) {
   const [newEmail, setNewEmail] = useState("");
   const [creating, setCreating] = useState(false);
@@ -208,10 +236,11 @@ function SubAgentManagement({
       </form>
 
       <div className="overflow-x-auto rounded-2xl border border-border bg-card">
-        <table className="w-full min-w-[44rem] text-sm">
+        <table className="w-full min-w-[46rem] text-sm">
           <thead className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-4 py-3 font-semibold">Sub-Agent</th>
+              <th className="px-4 py-3 font-semibold">Account ID</th>
               <th className="px-4 py-3 text-right font-semibold">Balance</th>
               <th className="px-4 py-3 text-right font-semibold">Actions</th>
             </tr>
@@ -219,14 +248,14 @@ function SubAgentManagement({
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={3} className="px-4 py-6 text-center text-muted-foreground">
+                <td colSpan={4} className="px-4 py-6 text-center text-muted-foreground">
                   Loading…
                 </td>
               </tr>
             )}
             {!loading && subAgents.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-4 py-6 text-center text-muted-foreground">
+                <td colSpan={4} className="px-4 py-6 text-center text-muted-foreground">
                   No sub-agents yet.
                 </td>
               </tr>
@@ -240,15 +269,18 @@ function SubAgentManagement({
                   <p className="font-semibold text-foreground">{a.username}</p>
                   <p className="text-xs text-muted-foreground">{a.email}</p>
                 </td>
+                <td className="px-4 py-3">
+                  <AccountIdBadge accountId={a.accountId} />
+                </td>
                 <td className="px-4 py-3 text-right font-semibold text-foreground">
                   {formatCurrency(a.balance)}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end gap-2">
-                    <Button size="sm" variant="outline" onClick={() => onTransfer(a, "allocate")}>
+                    <Button size="sm" variant="outline" onClick={() => onAllocate(a)}>
                       <ArrowUpFromLine className="h-3.5 w-3.5" /> Allocate
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => onTransfer(a, "reclaim")}>
+                    <Button size="sm" variant="outline" onClick={() => onReclaim(a)}>
                       <ArrowDownToLine className="h-3.5 w-3.5" /> Reclaim
                     </Button>
                   </div>
@@ -262,12 +294,16 @@ function SubAgentManagement({
   );
 }
 
-function TransferModal({
+// Reclaim isn't part of the identifier-lookup feature - it always targets
+// an already-known, already-listed direct sub-agent row, so it keeps the
+// simple fixed-target modal (and reclaim_agent_balance's original
+// uuid-based signature, unchanged).
+function ReclaimModal({
   target,
   onClose,
   onDone,
 }: {
-  target: { agent: DownlineProfile; mode: "allocate" | "reclaim" } | null;
+  target: DownlineProfile | null;
   onClose: () => void;
   onDone: () => void;
 }) {
@@ -282,19 +318,16 @@ function TransferModal({
       return;
     }
     setSubmitting(true);
-    const rpc = target.mode === "allocate" ? "transfer_agent_to_agent" : "reclaim_agent_balance";
-    const param = target.mode === "allocate" ? "p_receiver_id" : "p_agent_id";
-    const { error } = await supabase.rpc(rpc, { [param]: target.agent.id, p_amount: coins });
+    const { error } = await supabase.rpc("reclaim_agent_balance", {
+      p_agent_id: target.id,
+      p_amount: coins,
+    });
     setSubmitting(false);
     if (error) {
       toast.error(error.message);
       return;
     }
-    toast.success(
-      `${target.mode === "allocate" ? "Allocated" : "Reclaimed"} ${coins.toLocaleString()} coins ${
-        target.mode === "allocate" ? "to" : "from"
-      } ${target.agent.username}`,
-    );
+    toast.success(`Reclaimed ${coins.toLocaleString()} coins from ${target.username}`);
     setAmount("");
     onDone();
   }
@@ -303,9 +336,7 @@ function TransferModal({
     <Dialog open={target !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            {target?.mode === "allocate" ? "Allocate to" : "Reclaim from"} {target?.agent.username}
-          </DialogTitle>
+          <DialogTitle>Reclaim from {target?.username}</DialogTitle>
         </DialogHeader>
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
