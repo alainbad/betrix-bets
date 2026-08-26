@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { ArrowLeft, ShieldAlert, ShieldCheck } from "lucide-react";
+import { ArrowLeft, KeyRound, ShieldAlert, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import {
@@ -22,6 +22,7 @@ import { AccountIdBadge } from "@/components/dashboard/AccountIdBadge";
 import { CopyBadge } from "@/components/dashboard/CopyBadge";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { SuspendUserDialog } from "@/components/dashboard/SuspendUserDialog";
+import { AdminResetPasswordDialog } from "@/components/dashboard/AdminResetPasswordDialog";
 
 export const Route = createFileRoute("/dashboard/users/$accountId")({
   head: () => ({
@@ -46,6 +47,7 @@ function UserDetailPage() {
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [rounds, setRounds] = useState<CasinoRoundHistoryItem[]>([]);
   const [suspendOpen, setSuspendOpen] = useState(false);
+  const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -180,20 +182,27 @@ function UserDetailPage() {
                 <p className="text-lg font-black text-foreground">
                   {formatCurrency(profile.balance)}
                 </p>
-                {profile.status === "suspended" ? (
-                  <Button size="sm" variant="outline" disabled={busy} onClick={handleReactivate}>
-                    <ShieldCheck className="h-3.5 w-3.5" /> Reactivate
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    disabled={profile.role === "ultra_admin"}
-                    onClick={() => setSuspendOpen(true)}
-                  >
-                    <ShieldAlert className="h-3.5 w-3.5" /> Suspend user
-                  </Button>
-                )}
+                <div className="flex flex-wrap justify-end gap-2">
+                  {tier === "ultra_admin" && (
+                    <Button size="sm" variant="outline" onClick={() => setResetPasswordOpen(true)}>
+                      <KeyRound className="h-3.5 w-3.5" /> Reset password
+                    </Button>
+                  )}
+                  {profile.status === "suspended" ? (
+                    <Button size="sm" variant="outline" disabled={busy} onClick={handleReactivate}>
+                      <ShieldCheck className="h-3.5 w-3.5" /> Reactivate
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      disabled={profile.role === "ultra_admin"}
+                      onClick={() => setSuspendOpen(true)}
+                    >
+                      <ShieldAlert className="h-3.5 w-3.5" /> Suspend user
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -220,6 +229,13 @@ function UserDetailPage() {
                 setSuspendOpen(false);
                 void reload();
               }}
+            />
+
+            <AdminResetPasswordDialog
+              open={resetPasswordOpen}
+              targetUsername={profile.username}
+              targetAccountId={profile.accountId}
+              onClose={() => setResetPasswordOpen(false)}
             />
           </>
         )}

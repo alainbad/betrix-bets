@@ -283,8 +283,6 @@ function SubAgentManagement({
                   <Link
                     to="/dashboard/users/$accountId"
                     params={{ accountId: a.accountId }}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="flex items-center gap-2 font-semibold text-foreground hover:text-primary hover:underline"
                   >
                     {a.username}
