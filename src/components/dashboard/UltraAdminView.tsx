@@ -130,7 +130,7 @@ export function UltraAdminView() {
               <ShieldCheck className="h-3.5 w-3.5" /> Central mint
             </span>
           </div>
-          <nav className="mt-6 flex gap-1 overflow-x-auto">
+          <nav className="mt-6 flex flex-wrap gap-1">
             {TABS.map((t) => (
               <button
                 key={t}
