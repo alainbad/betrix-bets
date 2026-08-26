@@ -16,7 +16,8 @@ type TransferRpc =
   | "mint_super_agent_balance"
   | "transfer_agent_to_agent"
   | "transfer_agent_to_player"
-  | "cashout_player_to_agent";
+  | "cashout_player_to_agent"
+  | "ultra_admin_topup_wallet";
 
 interface AccountPreview {
   user_id: string;
