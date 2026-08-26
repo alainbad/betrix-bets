@@ -27,6 +27,10 @@ export function MasterCodeSettings() {
       toast.error(error.message);
       return;
     }
+    if (!data) {
+      setStatus({ configured: false, updatedAt: null });
+      return;
+    }
     const result = data as { configured: boolean; updated_at: string | null };
     setStatus({ configured: result.configured, updatedAt: result.updated_at });
   }
