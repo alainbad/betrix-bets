@@ -21,6 +21,7 @@ interface TierAccount {
   email: string;
   accountId: string;
   balance: number;
+  status: string;
   createdAt: string;
 }
 
@@ -49,7 +50,10 @@ async function fetchAccountsWithRole(role: "super_agent" | "agent"): Promise<Tie
 
   const [{ data: profiles, error: profilesError }, { data: wallets, error: walletsError }] =
     await Promise.all([
-      supabase.from("profiles").select("id, username, email, account_id, created_at").in("id", ids),
+      supabase
+        .from("profiles")
+        .select("id, username, email, account_id, status, created_at")
+        .in("id", ids),
       supabase.from("wallets").select("user_id, available_balance").in("user_id", ids),
     ]);
   if (profilesError) throw profilesError;
@@ -65,6 +69,7 @@ async function fetchAccountsWithRole(role: "super_agent" | "agent"): Promise<Tie
     email: p.email as string,
     accountId: p.account_id as string,
     balance: balanceByUserId.get(p.id as string) ?? 0,
+    status: p.status as string,
     createdAt: p.created_at as string,
   }));
 }
@@ -321,7 +326,16 @@ function SuperAgentManagement({
                 className="border-b border-border/60 last:border-0 hover:bg-betrix-surface-elevated"
               >
                 <td className="px-4 py-3">
-                  <p className="font-semibold text-foreground">{a.username}</p>
+                  <Link
+                    to="/dashboard/users/$accountId"
+                    params={{ accountId: a.accountId }}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 font-semibold text-foreground hover:text-primary hover:underline"
+                  >
+                    {a.username}
+                    <StatusBadge status={a.status} />
+                  </Link>
                   <p className="text-xs text-muted-foreground">{a.email}</p>
                 </td>
                 <td className="px-4 py-3">
