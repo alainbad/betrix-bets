@@ -5,6 +5,7 @@
 // via the policies in 20260825040000_*).
 
 import { supabase } from "./supabase";
+import type { CasinoRoundHistoryItem } from "./wallet-context";
 
 export type HierarchyTier = "ultra_admin" | "super_agent" | "agent";
 
@@ -16,7 +17,13 @@ export interface DownlineProfile {
   parentId: string | null;
   role: HierarchyTier | "player" | "unknown";
   balance: number;
+  status: string;
   createdAt: string;
+}
+
+export interface ProfileDetail extends DownlineProfile {
+  phone: string | null;
+  avatarUrl: string | null;
 }
 
 export interface LedgerEntry {
@@ -75,7 +82,7 @@ export async function fetchDownline(rootId: string): Promise<DownlineProfile[]> 
     await Promise.all([
       supabase
         .from("profiles")
-        .select("id, username, email, account_id, parent_id, created_at")
+        .select("id, username, email, account_id, parent_id, status, created_at")
         .in("id", ids),
       supabase.from("wallets").select("user_id, available_balance").in("user_id", ids),
       rolesByUserId(ids),
@@ -95,6 +102,7 @@ export async function fetchDownline(rootId: string): Promise<DownlineProfile[]> 
     parentId: p.parent_id as string | null,
     role: roles.get(p.id as string) ?? "unknown",
     balance: balanceByUserId.get(p.id as string) ?? 0,
+    status: p.status as string,
     createdAt: p.created_at as string,
   }));
 }
@@ -112,7 +120,7 @@ export async function fetchDownline(rootId: string): Promise<DownlineProfile[]> 
 export async function fetchAllProfiles(): Promise<DownlineProfile[]> {
   const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
-    .select("id, username, email, account_id, parent_id, created_at")
+    .select("id, username, email, account_id, parent_id, status, created_at")
     .order("created_at", { ascending: false });
   if (profilesError) throw profilesError;
 
@@ -137,7 +145,71 @@ export async function fetchAllProfiles(): Promise<DownlineProfile[]> {
     parentId: p.parent_id as string | null,
     role: roles.get(p.id as string) ?? "unknown",
     balance: balanceByUserId.get(p.id as string) ?? 0,
+    status: p.status as string,
     createdAt: p.created_at as string,
+  }));
+}
+
+// Full detail for one account, looked up by its account_id (the value that
+// shows up in every dashboard URL/badge) - the profile-detail page's single
+// source of data. Relies on the same RLS visibility as fetchAllProfiles/
+// fetchDownline (ultra_admin sees everyone, super_agent/agent see their own
+// downline), so a caller outside that scope simply gets no row back rather
+// than an error - the page renders that as "not found".
+export async function fetchProfileByAccountId(accountId: string): Promise<ProfileDetail | null> {
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, username, email, account_id, parent_id, status, phone, avatar_url, created_at")
+    .eq("account_id", accountId.toUpperCase())
+    .maybeSingle();
+  if (profileError) throw profileError;
+  if (!profile) return null;
+
+  const [{ data: wallet }, roles] = await Promise.all([
+    supabase
+      .from("wallets")
+      .select("available_balance")
+      .eq("user_id", profile.id as string)
+      .maybeSingle(),
+    rolesByUserId([profile.id as string]),
+  ]);
+
+  return {
+    id: profile.id as string,
+    username: profile.username as string,
+    email: profile.email as string,
+    accountId: profile.account_id as string,
+    parentId: profile.parent_id as string | null,
+    role: roles.get(profile.id as string) ?? "unknown",
+    balance: Number(wallet?.available_balance ?? 0),
+    status: profile.status as string,
+    phone: profile.phone as string | null,
+    avatarUrl: profile.avatar_url as string | null,
+    createdAt: profile.created_at as string,
+  };
+}
+
+// A target account's casino round history (wins/losses/pushes) - the same
+// shape wallet-store.tsx fetches for the logged-in player's own history,
+// generalized to any account the caller's RLS grant reaches.
+export async function fetchCasinoRounds(
+  userId: string,
+  limit = 50,
+): Promise<CasinoRoundHistoryItem[]> {
+  const { data, error } = await supabase
+    .from("casino_rounds")
+    .select("id, game_id, stake, outcome, payout, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    gameId: row.game_id as string,
+    stake: Number(row.stake),
+    outcome: row.outcome === "win" || row.outcome === "push" ? row.outcome : "lose",
+    payout: Number(row.payout),
+    createdAt: row.created_at as string,
   }));
 }
 

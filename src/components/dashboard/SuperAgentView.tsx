@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ArrowDownToLine, ArrowUpFromLine, Coins, TrendingUp, UserPlus, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { AccountIdBadge } from "@/components/dashboard/AccountIdBadge";
 import { IdentifierTransferModal } from "@/components/dashboard/IdentifierTransferModal";
+import { StatusBadge } from "@/components/dashboard/StatusBadge";
 
 export function SuperAgentView() {
   const { user } = useAuth();
@@ -266,7 +268,16 @@ function SubAgentManagement({
                 className="border-b border-border/60 last:border-0 hover:bg-betrix-surface-elevated"
               >
                 <td className="px-4 py-3">
-                  <p className="font-semibold text-foreground">{a.username}</p>
+                  <Link
+                    to="/dashboard/users/$accountId"
+                    params={{ accountId: a.accountId }}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 font-semibold text-foreground hover:text-primary hover:underline"
+                  >
+                    {a.username}
+                    <StatusBadge status={a.status} />
+                  </Link>
                   <p className="text-xs text-muted-foreground">{a.email}</p>
                 </td>
                 <td className="px-4 py-3">

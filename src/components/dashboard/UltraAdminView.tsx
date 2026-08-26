@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Coins, ShieldCheck, UserPlus, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
@@ -11,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AccountIdBadge } from "@/components/dashboard/AccountIdBadge";
 import { IdentifierTransferModal } from "@/components/dashboard/IdentifierTransferModal";
+import { MasterCodeSettings } from "@/components/dashboard/MasterCodeSettings";
+import { StatusBadge } from "@/components/dashboard/StatusBadge";
 
 interface TierAccount {
   id: string;
@@ -193,22 +196,26 @@ function Overview({
   loading: boolean;
 }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
-      <Metric
-        icon={<Coins className="h-4 w-4" />}
-        label="Total platform float"
-        value={loading ? "…" : formatCurrency(platformFloat)}
-      />
-      <Metric
-        icon={<Users className="h-4 w-4" />}
-        label="Total players"
-        value={loading ? "…" : playerCount.toLocaleString()}
-      />
-      <Metric
-        icon={<UserPlus className="h-4 w-4" />}
-        label="Active agents"
-        value={loading ? "…" : activeAgents.toLocaleString()}
-      />
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Metric
+          icon={<Coins className="h-4 w-4" />}
+          label="Total platform float"
+          value={loading ? "…" : formatCurrency(platformFloat)}
+        />
+        <Metric
+          icon={<Users className="h-4 w-4" />}
+          label="Total players"
+          value={loading ? "…" : playerCount.toLocaleString()}
+        />
+        <Metric
+          icon={<UserPlus className="h-4 w-4" />}
+          label="Active agents"
+          value={loading ? "…" : activeAgents.toLocaleString()}
+        />
+      </div>
+
+      <MasterCodeSettings />
     </div>
   );
 }
@@ -458,7 +465,16 @@ function AllUsersManagement() {
                 className="border-b border-border/60 last:border-0 hover:bg-betrix-surface-elevated"
               >
                 <td className="px-4 py-3">
-                  <p className="font-semibold text-foreground">{r.username}</p>
+                  <Link
+                    to="/dashboard/users/$accountId"
+                    params={{ accountId: r.accountId }}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 font-semibold text-foreground hover:text-primary hover:underline"
+                  >
+                    {r.username}
+                    <StatusBadge status={r.status} />
+                  </Link>
                   <p className="text-xs text-muted-foreground">{r.email}</p>
                 </td>
                 <td className="px-4 py-3">

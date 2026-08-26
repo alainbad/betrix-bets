@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ArrowDownToLine, ArrowUpFromLine, Coins, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
@@ -17,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AccountIdBadge } from "@/components/dashboard/AccountIdBadge";
 import { IdentifierTransferModal } from "@/components/dashboard/IdentifierTransferModal";
+import { StatusBadge } from "@/components/dashboard/StatusBadge";
 
 export function AgentView() {
   const { user } = useAuth();
@@ -212,7 +214,16 @@ function PlayerManagement({
                 className="border-b border-border/60 last:border-0 hover:bg-betrix-surface-elevated"
               >
                 <td className="px-4 py-3">
-                  <p className="font-semibold text-foreground">{p.username}</p>
+                  <Link
+                    to="/dashboard/users/$accountId"
+                    params={{ accountId: p.accountId }}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 font-semibold text-foreground hover:text-primary hover:underline"
+                  >
+                    {p.username}
+                    <StatusBadge status={p.status} />
+                  </Link>
                   <p className="text-xs text-muted-foreground">{p.email}</p>
                 </td>
                 <td className="px-4 py-3">
