@@ -5,7 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+interface RegisterSearch {
+  ref?: string | undefined;
+}
+
 export const Route = createFileRoute("/register")({
+  validateSearch: (search: Record<string, unknown>): RegisterSearch => ({
+    ref: typeof search["ref"] === "string" ? search["ref"] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Create account — TheBetrix" },
@@ -22,9 +29,13 @@ export const Route = createFileRoute("/register")({
 function RegisterPage() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const { ref } = Route.useSearch();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // Prefilled from a shared referral link (?ref=CODE), but always editable -
+  // the field is mandatory either way, this just saves re-typing it.
+  const [referralCode, setReferralCode] = useState(ref ?? "");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmationSent, setConfirmationSent] = useState(false);
@@ -33,7 +44,7 @@ function RegisterPage() {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
-    const result = await signUp(email, password, username);
+    const result = await signUp(email, password, username, referralCode.trim());
     setSubmitting(false);
     if (result.error) {
       setError(result.error);
@@ -107,6 +118,20 @@ function RegisterPage() {
               required
               minLength={6}
             />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="referralCode">Agent referral code</Label>
+            <Input
+              id="referralCode"
+              value={referralCode}
+              onChange={(e) => setReferralCode(e.target.value)}
+              placeholder="REF-XXXXXX"
+              autoComplete="off"
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              Get this code from the agent who referred you - it's required to sign up.
+            </p>
           </div>
 
           {error && <p className="text-sm font-medium text-destructive">{error}</p>}

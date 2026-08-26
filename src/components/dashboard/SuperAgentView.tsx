@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ArrowDownToLine, ArrowUpFromLine, Coins, TrendingUp, UserPlus, Users } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
@@ -8,6 +9,7 @@ import {
   fetchDownline,
   fetchBranchTurnover,
   fetchOwnAccountId,
+  fetchOwnReferralCode,
   type DownlineProfile,
   type BranchTurnover,
 } from "@/lib/agent-hierarchy";
@@ -23,7 +25,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { AccountIdBadge } from "@/components/dashboard/AccountIdBadge";
+import { CopyBadge } from "@/components/dashboard/CopyBadge";
 import { IdentifierTransferModal } from "@/components/dashboard/IdentifierTransferModal";
+import { StatusBadge } from "@/components/dashboard/StatusBadge";
 
 export function SuperAgentView() {
   const { user } = useAuth();
@@ -36,6 +40,7 @@ export function SuperAgentView() {
   });
   const [loading, setLoading] = useState(true);
   const [ownAccountId, setOwnAccountId] = useState<string | null>(null);
+  const [ownReferralCode, setOwnReferralCode] = useState<string | null>(null);
   const [allocateTarget, setAllocateTarget] = useState<DownlineProfile | null>(null);
   const [reclaimTarget, setReclaimTarget] = useState<DownlineProfile | null>(null);
 
@@ -62,6 +67,9 @@ export function SuperAgentView() {
     fetchOwnAccountId(user.id)
       .then(setOwnAccountId)
       .catch(() => setOwnAccountId(null));
+    fetchOwnReferralCode(user.id)
+      .then(setOwnReferralCode)
+      .catch(() => setOwnReferralCode(null));
   }, [user]);
 
   const net = turnover.totalPayout - turnover.totalStaked;
@@ -75,6 +83,12 @@ export function SuperAgentView() {
             {ownAccountId && <AccountIdBadge accountId={ownAccountId} />}
           </p>
           <h1 className="text-2xl font-black tracking-tight text-foreground">Branch console</h1>
+          {ownReferralCode && (
+            <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              Your referral code - share it so new signups land under you:
+              <CopyBadge value={ownReferralCode} title="Copy referral code" />
+            </p>
+          )}
         </div>
       </div>
 
@@ -266,7 +280,16 @@ function SubAgentManagement({
                 className="border-b border-border/60 last:border-0 hover:bg-betrix-surface-elevated"
               >
                 <td className="px-4 py-3">
-                  <p className="font-semibold text-foreground">{a.username}</p>
+                  <Link
+                    to="/dashboard/users/$accountId"
+                    params={{ accountId: a.accountId }}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 font-semibold text-foreground hover:text-primary hover:underline"
+                  >
+                    {a.username}
+                    <StatusBadge status={a.status} />
+                  </Link>
                   <p className="text-xs text-muted-foreground">{a.email}</p>
                 </td>
                 <td className="px-4 py-3">
