@@ -2,12 +2,15 @@ import { Link } from "@tanstack/react-router";
 import { User, Wallet } from "lucide-react";
 import { useWallet } from "@/lib/wallet-store";
 import { useAuth } from "@/lib/auth-context";
+import { useProfile } from "@/lib/profile-store";
 import { formatCurrency } from "@/lib/format";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import betrixLogo from "@/assets/betrix-mark.png";
 
 export function Header() {
   const { balance } = useWallet();
   const { user, loading } = useAuth();
+  const { avatarUrl, username } = useProfile();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -55,10 +58,19 @@ export function Header() {
 
           <Link
             to={user ? "/account" : "/login"}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-accent hover:text-accent-foreground sm:h-10 sm:w-10"
+            className="inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-accent hover:text-accent-foreground sm:h-10 sm:w-10"
             aria-label="Account"
           >
-            <User className="h-4 w-4 sm:h-5 sm:w-5" />
+            {user && avatarUrl ? (
+              <Avatar className="h-full w-full">
+                <AvatarImage src={avatarUrl} alt={username ?? "avatar"} />
+                <AvatarFallback className="bg-transparent">
+                  <User className="h-4 w-4 sm:h-5 sm:w-5" />
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <User className="h-4 w-4 sm:h-5 sm:w-5" />
+            )}
           </Link>
         </div>
       </div>
