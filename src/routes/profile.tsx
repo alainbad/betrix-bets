@@ -5,6 +5,7 @@ import { ShieldCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import { detectHierarchyTier } from "@/lib/agent-hierarchy";
+import { useProfile } from "@/lib/profile-store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,7 @@ interface ProfileRow {
 
 function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
+  const { refresh: refreshProfile } = useProfile();
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -101,6 +103,7 @@ function ProfilePage() {
     }
     setProfile((prev) => (prev ? { ...prev, avatar_url: avatarUrl } : prev));
     setStatus("Photo updated.");
+    void refreshProfile();
   }
 
   async function handlePhoneSubmit(e: FormEvent) {
