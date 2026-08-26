@@ -371,6 +371,7 @@ function AllUsersManagement() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [actingOnId, setActingOnId] = useState<string | null>(null);
+  const [topupTarget, setTopupTarget] = useState<DownlineProfile | null>(null);
 
   async function reload() {
     setLoading(true);
@@ -391,9 +392,13 @@ function AllUsersManagement() {
     `${r.username} ${r.email} ${r.accountId}`.toLowerCase().includes(query.toLowerCase()),
   );
 
-  async function handleSetRole(target: DownlineProfile, role: "super_agent" | "agent") {
-    const label = role === "super_agent" ? "Super Agent" : "Agent";
-    if (!window.confirm(`Make ${target.username} a ${label}? This can't be undone here.`)) {
+  async function handleSetRole(target: DownlineProfile, role: "super_agent" | "agent" | "player") {
+    const label = role === "super_agent" ? "Super Agent" : role === "agent" ? "Agent" : "Player";
+    const confirmMessage =
+      role === "player"
+        ? `Make ${target.username} a Player again? This removes their ${ROLE_LABEL[target.role]} role - you can re-promote them any time.`
+        : `Make ${target.username} a ${label}? You can undo this later with "Make Player".`;
+    if (!window.confirm(confirmMessage)) {
       return;
     }
     setActingOnId(target.id);
@@ -466,34 +471,61 @@ function AllUsersManagement() {
                   {formatDateTime(r.createdAt)}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  {r.role === "player" ? (
-                    <div className="flex justify-end gap-2">
+                  <div className="flex flex-wrap justify-end gap-2">
+                    {r.role === "player" && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={actingOnId === r.id}
+                          onClick={() => void handleSetRole(r, "super_agent")}
+                        >
+                          Make Super Agent
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={actingOnId === r.id}
+                          onClick={() => void handleSetRole(r, "agent")}
+                        >
+                          Make Agent
+                        </Button>
+                      </>
+                    )}
+                    {(r.role === "super_agent" || r.role === "agent") && (
                       <Button
                         size="sm"
                         variant="outline"
                         disabled={actingOnId === r.id}
-                        onClick={() => void handleSetRole(r, "super_agent")}
+                        onClick={() => void handleSetRole(r, "player")}
                       >
-                        Make Super Agent
+                        Make Player
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={actingOnId === r.id}
-                        onClick={() => void handleSetRole(r, "agent")}
-                      >
-                        Make Agent
-                      </Button>
-                    </div>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">—</span>
-                  )}
+                    )}
+                    <Button size="sm" variant="outline" onClick={() => setTopupTarget(r)}>
+                      Top Up
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <IdentifierTransferModal
+        open={topupTarget !== null}
+        title={topupTarget ? `Top up ${topupTarget.username}` : "Top up"}
+        actionLabel="Top Up"
+        amountLabel="Coins to add"
+        rpcName="ultra_admin_topup_wallet"
+        initialIdentifier={topupTarget?.accountId}
+        onClose={() => setTopupTarget(null)}
+        onDone={() => {
+          setTopupTarget(null);
+          void reload();
+        }}
+      />
     </div>
   );
 }
