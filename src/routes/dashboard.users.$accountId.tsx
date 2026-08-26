@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { AccountIdBadge } from "@/components/dashboard/AccountIdBadge";
+import { CopyBadge } from "@/components/dashboard/CopyBadge";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { SuspendUserDialog } from "@/components/dashboard/SuspendUserDialog";
 
@@ -165,6 +166,9 @@ function UserDetailPage() {
                     <span className="rounded-full border border-border bg-secondary px-2.5 py-1 text-xs font-semibold text-foreground">
                       {ROLE_LABEL[profile.role]}
                     </span>
+                    {profile.referralCode && (
+                      <CopyBadge value={profile.referralCode} title="Copy referral code" />
+                    )}
                   </div>
                 </div>
               </div>

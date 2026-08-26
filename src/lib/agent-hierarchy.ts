@@ -24,6 +24,7 @@ export interface DownlineProfile {
 export interface ProfileDetail extends DownlineProfile {
   phone: string | null;
   avatarUrl: string | null;
+  referralCode: string | null;
 }
 
 export interface LedgerEntry {
@@ -159,7 +160,9 @@ export async function fetchAllProfiles(): Promise<DownlineProfile[]> {
 export async function fetchProfileByAccountId(accountId: string): Promise<ProfileDetail | null> {
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id, username, email, account_id, parent_id, status, phone, avatar_url, created_at")
+    .select(
+      "id, username, email, account_id, parent_id, status, phone, avatar_url, referral_code, created_at",
+    )
     .eq("account_id", accountId.toUpperCase())
     .maybeSingle();
   if (profileError) throw profileError;
@@ -185,6 +188,7 @@ export async function fetchProfileByAccountId(accountId: string): Promise<Profil
     status: profile.status as string,
     phone: profile.phone as string | null,
     avatarUrl: profile.avatar_url as string | null,
+    referralCode: profile.referral_code as string | null,
     createdAt: profile.created_at as string,
   };
 }
@@ -223,6 +227,20 @@ export async function fetchOwnAccountId(userId: string): Promise<string | null> 
     .single();
   if (error) throw error;
   return (data?.account_id as string) ?? null;
+}
+
+// The logged-in super_agent/agent's own referral code, for the "share this
+// with new signups" copy pill on their dashboard. Null for tiers that don't
+// get one (player, ultra_admin) - generate_agent_referral_code only ever
+// sets this column for super_agent/agent.
+export async function fetchOwnReferralCode(userId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("referral_code")
+    .eq("id", userId)
+    .single();
+  if (error) throw error;
+  return (data?.referral_code as string) ?? null;
 }
 
 export async function fetchLedger(userId: string, limit = 50): Promise<LedgerEntry[]> {

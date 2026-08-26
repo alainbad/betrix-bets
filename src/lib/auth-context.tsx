@@ -14,7 +14,12 @@ interface AuthContextValue {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, username: string) => Promise<SignUpResult>;
+  signUp: (
+    email: string,
+    password: string,
+    username: string,
+    referralCode: string,
+  ) => Promise<SignUpResult>;
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<AuthResult>;
@@ -40,11 +45,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  async function signUp(email: string, password: string, username: string): Promise<SignUpResult> {
+  async function signUp(
+    email: string,
+    password: string,
+    username: string,
+    referralCode: string,
+  ): Promise<SignUpResult> {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { username } },
+      options: { data: { username, referral_code: referralCode } },
     });
     if (error) return { error: error.message, needsEmailConfirmation: false };
     return { error: null, needsEmailConfirmation: !data.session };

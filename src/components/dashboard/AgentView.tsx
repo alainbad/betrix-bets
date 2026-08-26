@@ -9,6 +9,7 @@ import {
   fetchDownline,
   fetchLedger,
   fetchOwnAccountId,
+  fetchOwnReferralCode,
   type DownlineProfile,
   type LedgerEntry,
 } from "@/lib/agent-hierarchy";
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AccountIdBadge } from "@/components/dashboard/AccountIdBadge";
+import { CopyBadge } from "@/components/dashboard/CopyBadge";
 import { IdentifierTransferModal } from "@/components/dashboard/IdentifierTransferModal";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 
@@ -27,6 +29,7 @@ export function AgentView() {
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [ownAccountId, setOwnAccountId] = useState<string | null>(null);
+  const [ownReferralCode, setOwnReferralCode] = useState<string | null>(null);
   const [action, setAction] = useState<{
     player: DownlineProfile;
     mode: "topup" | "cashout";
@@ -55,6 +58,9 @@ export function AgentView() {
     fetchOwnAccountId(user.id)
       .then(setOwnAccountId)
       .catch(() => setOwnAccountId(null));
+    fetchOwnReferralCode(user.id)
+      .then(setOwnReferralCode)
+      .catch(() => setOwnReferralCode(null));
   }, [user]);
 
   return (
@@ -66,6 +72,12 @@ export function AgentView() {
             {ownAccountId && <AccountIdBadge accountId={ownAccountId} />}
           </p>
           <h1 className="text-2xl font-black tracking-tight text-foreground">Cashier console</h1>
+          {ownReferralCode && (
+            <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              Your referral code - share it so new signups land under you:
+              <CopyBadge value={ownReferralCode} title="Copy referral code" />
+            </p>
+          )}
         </div>
       </div>
 
