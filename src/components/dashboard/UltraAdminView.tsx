@@ -367,6 +367,7 @@ const ROLE_LABEL: Record<DownlineProfile["role"], string> = {
 // this same list, since every super_agent/agent already shows up here with
 // their role and balance (no separate report view needed on top of it).
 function AllUsersManagement() {
+  const { user } = useAuth();
   const [rows, setRows] = useState<DownlineProfile[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -503,7 +504,7 @@ function AllUsersManagement() {
                       </Button>
                     )}
                     <Button size="sm" variant="outline" onClick={() => setTopupTarget(r)}>
-                      Top Up
+                      {r.id === user?.id ? "Mint" : "Top Up"}
                     </Button>
                   </div>
                 </td>
@@ -515,9 +516,15 @@ function AllUsersManagement() {
 
       <IdentifierTransferModal
         open={topupTarget !== null}
-        title={topupTarget ? `Top up ${topupTarget.username}` : "Top up"}
-        actionLabel="Top Up"
-        amountLabel="Coins to add"
+        title={
+          topupTarget
+            ? topupTarget.id === user?.id
+              ? `Mint balance for ${topupTarget.username} (you)`
+              : `Top up ${topupTarget.username}`
+            : "Top up"
+        }
+        actionLabel={topupTarget?.id === user?.id ? "Mint" : "Top Up"}
+        amountLabel={topupTarget?.id === user?.id ? "Coins to mint" : "Coins to add"}
         rpcName="ultra_admin_topup_wallet"
         initialIdentifier={topupTarget?.accountId}
         onClose={() => setTopupTarget(null)}
