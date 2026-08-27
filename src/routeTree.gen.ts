@@ -19,6 +19,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DashboardUsersAccountIdRouteImport } from './routes/dashboard.users.$accountId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -71,6 +72,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardUsersAccountIdRoute = DashboardUsersAccountIdRouteImport.update({
   id: '/users/$accountId',
   path: '/users/$accountId',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/users/$accountId': typeof DashboardUsersAccountIdRoute
 }
 export interface FileRoutesByTo {
@@ -95,12 +102,12 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/casino': typeof CasinoRoute
-  '/dashboard': typeof DashboardRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/dashboard': typeof DashboardIndexRoute
   '/dashboard/users/$accountId': typeof DashboardUsersAccountIdRoute
 }
 export interface FileRoutesById {
@@ -115,6 +122,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/users/$accountId': typeof DashboardUsersAccountIdRoute
 }
 export interface FileRouteTypes {
@@ -130,6 +138,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/register'
     | '/reset-password'
+    | '/dashboard/'
     | '/dashboard/users/$accountId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -137,12 +146,12 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/casino'
-    | '/dashboard'
     | '/forgot-password'
     | '/login'
     | '/profile'
     | '/register'
     | '/reset-password'
+    | '/dashboard'
     | '/dashboard/users/$accountId'
   id:
     | '__root__'
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/register'
     | '/reset-password'
+    | '/dashboard/'
     | '/dashboard/users/$accountId'
   fileRoutesById: FileRoutesById
 }
@@ -244,6 +254,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/users/$accountId': {
       id: '/dashboard/users/$accountId'
       path: '/users/$accountId'
@@ -255,10 +272,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface DashboardRouteChildren {
+  DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardUsersAccountIdRoute: typeof DashboardUsersAccountIdRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardIndexRoute: DashboardIndexRoute,
   DashboardUsersAccountIdRoute: DashboardUsersAccountIdRoute,
 }
 
