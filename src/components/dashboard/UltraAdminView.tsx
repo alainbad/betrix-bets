@@ -121,9 +121,10 @@ export function UltraAdminView() {
   }, [user]);
 
   return (
-    <main className="min-h-screen bg-background">
-      <div className="border-b border-border bg-betrix-surface">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <main className="admin-casino-bg min-h-screen">
+      <div className="relative overflow-hidden border-b border-border bg-betrix-surface/70 backdrop-blur-md">
+        <div className="admin-header-shimmer" aria-hidden="true" />
+        <div className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
@@ -134,7 +135,7 @@ export function UltraAdminView() {
                 Platform mint &amp; oversight
               </h1>
             </div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary">
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary shadow-[0_0_20px_-4px] shadow-primary/50">
               <ShieldCheck className="h-3.5 w-3.5" /> Central mint
             </span>
           </div>
