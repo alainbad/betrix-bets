@@ -64,9 +64,10 @@ export function AgentView() {
   }, [user]);
 
   return (
-    <main className="min-h-screen bg-background">
-      <div className="border-b border-border bg-betrix-surface">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <main className="admin-casino-bg min-h-screen">
+      <div className="relative overflow-hidden border-b border-border bg-betrix-surface/70 backdrop-blur-md">
+        <div className="admin-header-shimmer" aria-hidden="true" />
+        <div className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Agent
             {ownAccountId && <AccountIdBadge accountId={ownAccountId} />}
