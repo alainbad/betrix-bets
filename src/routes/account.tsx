@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { LogOut, TrendingUp, UserCog, Wallet } from "lucide-react";
+import { LayoutDashboard, LogOut, TrendingUp, UserCog, Wallet } from "lucide-react";
 import { useWallet } from "@/lib/wallet-store";
 import { useAuth } from "@/lib/auth-context";
+import { detectHierarchyTier } from "@/lib/agent-hierarchy";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -32,6 +34,14 @@ function AccountPage() {
   const { user, loading, signOut } = useAuth();
   const totalStaked = rounds.reduce((sum, r) => sum + r.stake, 0);
   const totalWon = rounds.reduce((sum, r) => sum + r.payout, 0);
+  const [hasDashboard, setHasDashboard] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    detectHierarchyTier(user.id)
+      .then((tier) => setHasDashboard(tier !== null))
+      .catch(() => setHasDashboard(false));
+  }, [user]);
 
   if (!loading && !user) {
     return (
@@ -65,7 +75,14 @@ function AccountPage() {
             </p>
           </div>
           {user && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              {hasDashboard && (
+                <Link to="/dashboard">
+                  <Button size="sm" className="gap-2">
+                    <LayoutDashboard className="h-4 w-4" /> Dashboard
+                  </Button>
+                </Link>
+              )}
               <Link to="/profile">
                 <Button variant="outline" size="sm" className="gap-2">
                   <UserCog className="h-4 w-4" /> Profile
