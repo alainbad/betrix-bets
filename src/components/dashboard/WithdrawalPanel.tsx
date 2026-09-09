@@ -148,6 +148,25 @@ export function WithdrawalPanel({
       setBusy(false);
     }
   }
+  async function confirmReceived(id: string) {
+    if (
+      !window.confirm(
+        "Confirm you've received this cash out? This closes the request - no further action needed.",
+      )
+    )
+      return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.rpc("confirm_withdrawal_received", { p_request_id: id });
+      if (error) throw error;
+      await Promise.all([load(), refresh()]);
+      toast.success("Cash out confirmed received. Request closed.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to confirm receipt");
+    } finally {
+      setBusy(false);
+    }
+  }
   if (!user) return null;
   return (
     <section className="mx-auto my-6 max-w-7xl rounded-2xl border border-border bg-card p-5 sm:p-6">
@@ -264,6 +283,15 @@ export function WithdrawalPanel({
                             </Button>
                           )}
                         </>
+                      )}
+                      {tier === "player" && w.status === "ultra_approved_ready_payout" && (
+                        <Button
+                          size="sm"
+                          disabled={busy}
+                          onClick={() => void confirmReceived(w.id)}
+                        >
+                          Received
+                        </Button>
                       )}
                       {tier === "player" && PENDING_STATUSES.includes(w.status) && (
                         <Button
