@@ -18,6 +18,7 @@ export interface DownlineProfile {
   role: HierarchyTier | "player" | "unknown";
   balance: number;
   status: string;
+  referralCode: string | null;
   createdAt: string;
 }
 
@@ -81,7 +82,7 @@ export async function fetchDownline(rootId: string): Promise<DownlineProfile[]> 
     await Promise.all([
       supabase
         .from("profiles")
-        .select("id, username, email, account_id, parent_id, status, created_at")
+        .select("id, username, email, account_id, parent_id, status, referral_code, created_at")
         .in("id", ids),
       supabase.from("wallets").select("user_id, available_balance").in("user_id", ids),
       rolesByUserId(ids),
@@ -102,6 +103,7 @@ export async function fetchDownline(rootId: string): Promise<DownlineProfile[]> 
     role: roles.get(p.id as string) ?? "unknown",
     balance: balanceByUserId.get(p.id as string) ?? 0,
     status: p.status as string,
+    referralCode: p.referral_code as string | null,
     createdAt: p.created_at as string,
   }));
 }
@@ -119,7 +121,7 @@ export async function fetchDownline(rootId: string): Promise<DownlineProfile[]> 
 export async function fetchAllProfiles(): Promise<DownlineProfile[]> {
   const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
-    .select("id, username, email, account_id, parent_id, status, created_at")
+    .select("id, username, email, account_id, parent_id, status, referral_code, created_at")
     .order("created_at", { ascending: false });
   if (profilesError) throw profilesError;
 
@@ -145,6 +147,7 @@ export async function fetchAllProfiles(): Promise<DownlineProfile[]> {
     role: roles.get(p.id as string) ?? "unknown",
     balance: balanceByUserId.get(p.id as string) ?? 0,
     status: p.status as string,
+    referralCode: p.referral_code as string | null,
     createdAt: p.created_at as string,
   }));
 }

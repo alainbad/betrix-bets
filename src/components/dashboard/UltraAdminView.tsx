@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AccountIdBadge } from "@/components/dashboard/AccountIdBadge";
+import { CopyBadge } from "@/components/dashboard/CopyBadge";
 import { IdentifierTransferModal } from "@/components/dashboard/IdentifierTransferModal";
 import { MasterCodeSettings } from "@/components/dashboard/MasterCodeSettings";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
@@ -36,7 +37,7 @@ interface LedgerRow {
   createdAt: string;
 }
 
-const TABS = ["Overview", "All Users", "Transactions"] as const;
+const TABS = ["Overview", "Agents", "Players", "All Users", "Transactions"] as const;
 type Tab = (typeof TABS)[number];
 
 async function fetchAccountsWithRole(role: "agent"): Promise<TierAccount[]> {
@@ -165,6 +166,8 @@ export function UltraAdminView() {
             loading={loading}
           />
         )}
+        {tab === "Agents" && <AgentsManagement />}
+        {tab === "Players" && <PlayersManagement />}
         {tab === "All Users" && <AllUsersManagement />}
         {tab === "Transactions" && <GlobalTransactions />}
       </div>
@@ -228,6 +231,320 @@ const ROLE_LABEL: Record<DownlineProfile["role"], string> = {
   player: "Player",
   unknown: "Unknown",
 };
+
+// Agents only, with their referral code front and center - the ultra_admin
+// couldn't otherwise see an agent's code without logging in as that agent.
+function AgentsManagement() {
+  const [rows, setRows] = useState<DownlineProfile[]>([]);
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [actingOnId, setActingOnId] = useState<string | null>(null);
+  const [topupTarget, setTopupTarget] = useState<DownlineProfile | null>(null);
+
+  async function reload() {
+    setLoading(true);
+    try {
+      setRows((await fetchAllProfiles()).filter((p) => p.role === "agent"));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to load agents");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void reload();
+  }, []);
+
+  const filtered = rows.filter((r) =>
+    `${r.username} ${r.email} ${r.accountId}`.toLowerCase().includes(query.toLowerCase()),
+  );
+
+  async function handleDemote(target: DownlineProfile) {
+    if (
+      !window.confirm(
+        `Make ${target.username} a Player again? This removes their Agent role - you can re-promote them any time.`,
+      )
+    ) {
+      return;
+    }
+    setActingOnId(target.id);
+    const { error } = await supabase.rpc("ultra_admin_set_hierarchy_role", {
+      p_target_identifier: target.accountId,
+      p_role: "player",
+    });
+    setActingOnId(null);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`${target.username} is now a Player`);
+    void reload();
+  }
+
+  return (
+    <div className="space-y-4">
+      <Input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search by username, email or account ID"
+        className="max-w-sm"
+      />
+
+      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+        <table className="w-full min-w-[58rem] text-sm">
+          <thead className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
+            <tr>
+              <th className="px-4 py-3 font-semibold">Agent</th>
+              <th className="px-4 py-3 font-semibold">Account ID</th>
+              <th className="px-4 py-3 font-semibold">Referral code</th>
+              <th className="px-4 py-3 text-right font-semibold">Balance</th>
+              <th className="px-4 py-3 text-right font-semibold">Joined</th>
+              <th className="px-4 py-3 text-right font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
+              <tr>
+                <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
+                  Loading…
+                </td>
+              </tr>
+            )}
+            {!loading && filtered.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
+                  No agents yet.
+                </td>
+              </tr>
+            )}
+            {filtered.map((r) => (
+              <tr
+                key={r.id}
+                className="border-b border-border/60 last:border-0 hover:bg-betrix-surface-elevated"
+              >
+                <td className="px-4 py-3">
+                  <Link
+                    to="/dashboard/users/$accountId"
+                    params={{ accountId: r.accountId }}
+                    className="flex items-center gap-2 font-semibold text-foreground hover:text-primary hover:underline"
+                  >
+                    {r.username}
+                    <StatusBadge status={r.status} />
+                  </Link>
+                  <p className="text-xs text-muted-foreground">{r.email}</p>
+                </td>
+                <td className="px-4 py-3">
+                  <AccountIdBadge accountId={r.accountId} />
+                </td>
+                <td className="px-4 py-3">
+                  {r.referralCode ? (
+                    <CopyBadge value={r.referralCode} title="Copy referral code" />
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-right font-semibold text-foreground">
+                  {formatCurrency(r.balance)}
+                </td>
+                <td className="px-4 py-3 text-right text-muted-foreground">
+                  {formatDateTime(r.createdAt)}
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={actingOnId === r.id}
+                      onClick={() => void handleDemote(r)}
+                    >
+                      Make Player
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setTopupTarget(r)}>
+                      Top Up
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <IdentifierTransferModal
+        open={topupTarget !== null}
+        title={topupTarget ? `Top up ${topupTarget.username}` : "Top up"}
+        actionLabel="Top Up"
+        amountLabel="Coins to add"
+        rpcName="ultra_admin_topup_wallet"
+        initialIdentifier={topupTarget?.accountId}
+        onClose={() => setTopupTarget(null)}
+        onDone={() => {
+          setTopupTarget(null);
+          void reload();
+        }}
+      />
+    </div>
+  );
+}
+
+// Players only, with the agent they're assigned to (if any) so the
+// ultra_admin can see the downline shape without cross-referencing the
+// Agents tab by hand.
+function PlayersManagement() {
+  const [rows, setRows] = useState<DownlineProfile[]>([]);
+  const [agentUsernameById, setAgentUsernameById] = useState<Map<string, string>>(new Map());
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [actingOnId, setActingOnId] = useState<string | null>(null);
+  const [topupTarget, setTopupTarget] = useState<DownlineProfile | null>(null);
+
+  async function reload() {
+    setLoading(true);
+    try {
+      const all = await fetchAllProfiles();
+      setRows(all.filter((p) => p.role === "player"));
+      setAgentUsernameById(
+        new Map(all.filter((p) => p.role === "agent").map((a) => [a.id, a.username])),
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to load players");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void reload();
+  }, []);
+
+  const filtered = rows.filter((r) =>
+    `${r.username} ${r.email} ${r.accountId}`.toLowerCase().includes(query.toLowerCase()),
+  );
+
+  async function handlePromote(target: DownlineProfile) {
+    if (
+      !window.confirm(
+        `Make ${target.username} an Agent? You can undo this later with "Make Player".`,
+      )
+    ) {
+      return;
+    }
+    setActingOnId(target.id);
+    const { error } = await supabase.rpc("ultra_admin_set_hierarchy_role", {
+      p_target_identifier: target.accountId,
+      p_role: "agent",
+    });
+    setActingOnId(null);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`${target.username} is now an Agent`);
+    void reload();
+  }
+
+  return (
+    <div className="space-y-4">
+      <Input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search by username, email or account ID"
+        className="max-w-sm"
+      />
+
+      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+        <table className="w-full min-w-[58rem] text-sm">
+          <thead className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
+            <tr>
+              <th className="px-4 py-3 font-semibold">Player</th>
+              <th className="px-4 py-3 font-semibold">Account ID</th>
+              <th className="px-4 py-3 font-semibold">Agent</th>
+              <th className="px-4 py-3 text-right font-semibold">Balance</th>
+              <th className="px-4 py-3 text-right font-semibold">Joined</th>
+              <th className="px-4 py-3 text-right font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
+              <tr>
+                <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
+                  Loading…
+                </td>
+              </tr>
+            )}
+            {!loading && filtered.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
+                  No players yet.
+                </td>
+              </tr>
+            )}
+            {filtered.map((r) => (
+              <tr
+                key={r.id}
+                className="border-b border-border/60 last:border-0 hover:bg-betrix-surface-elevated"
+              >
+                <td className="px-4 py-3">
+                  <Link
+                    to="/dashboard/users/$accountId"
+                    params={{ accountId: r.accountId }}
+                    className="flex items-center gap-2 font-semibold text-foreground hover:text-primary hover:underline"
+                  >
+                    {r.username}
+                    <StatusBadge status={r.status} />
+                  </Link>
+                  <p className="text-xs text-muted-foreground">{r.email}</p>
+                </td>
+                <td className="px-4 py-3">
+                  <AccountIdBadge accountId={r.accountId} />
+                </td>
+                <td className="px-4 py-3 text-foreground">
+                  {r.parentId ? (agentUsernameById.get(r.parentId) ?? "Unknown") : "Unassigned"}
+                </td>
+                <td className="px-4 py-3 text-right font-semibold text-foreground">
+                  {formatCurrency(r.balance)}
+                </td>
+                <td className="px-4 py-3 text-right text-muted-foreground">
+                  {formatDateTime(r.createdAt)}
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={actingOnId === r.id}
+                      onClick={() => void handlePromote(r)}
+                    >
+                      Make Agent
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setTopupTarget(r)}>
+                      Top Up
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <IdentifierTransferModal
+        open={topupTarget !== null}
+        title={topupTarget ? `Top up ${topupTarget.username}` : "Top up"}
+        actionLabel="Top Up"
+        amountLabel="Coins to add"
+        rpcName="ultra_admin_topup_wallet"
+        initialIdentifier={topupTarget?.accountId}
+        onClose={() => setTopupTarget(null)}
+        onDone={() => {
+          setTopupTarget(null);
+          void reload();
+        }}
+      />
+    </div>
+  );
+}
 
 // Every account on the platform, with one-click promotion into the
 // hierarchy - the "report for all agents" the ultra_admin also asked for is
