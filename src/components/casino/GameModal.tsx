@@ -31,7 +31,7 @@ export function GameModal({
 
   useEffect(() => {
     const iframe = iframeRef.current;
-    if (!iframe || preview) return;
+    if (!iframe || preview || game.demoOnly) return;
     const update = (n: number) => {
       onBalanceUpdate(n);
       void refresh();
@@ -39,11 +39,13 @@ export function GameModal({
     if (game.id.startsWith("velvet-"))
       return setupVelvetBridge(game.id, iframe, update, (message) => toast.error(message));
     return setupGameBridge(game.id, iframe, update, (message) => toast.error(message));
-  }, [game.id, onBalanceUpdate, preview, refresh]);
+  }, [game.demoOnly, game.id, onBalanceUpdate, preview, refresh]);
 
-  const gameUrl = game.id.startsWith("velvet-")
-    ? `${game.path}?preview=1${preview ? "" : "&wallet=1"}`
-    : `${game.path}?coins=${Math.floor(balance)}`;
+  const gameUrl = game.demoOnly
+    ? `${game.path}?preview=1`
+    : game.id.startsWith("velvet-")
+      ? `${game.path}?preview=1${preview ? "" : "&wallet=1"}`
+      : `${game.path}?coins=${Math.floor(balance)}`;
 
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -84,7 +86,7 @@ export function GameModal({
       <div className="flex w-full max-w-7xl items-center justify-between pb-3 text-white">
         <h2 className="text-xl font-bold">
           {game.name}
-          {preview ? " · Practice preview" : ""}
+          {game.demoOnly ? " · Demo, virtual credits only" : preview ? " · Practice preview" : ""}
         </h2>
         <button
           onClick={onClose}

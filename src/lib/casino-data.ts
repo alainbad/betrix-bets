@@ -17,6 +17,13 @@ export interface Html5CasinoGame {
   // in-house games. This field isn't read by the engine yet; it's here for
   // when per-game payout curves are worth building.
   maxWinMultiplier: number;
+  // True for a game whose client bundle never speaks the CASINO_SPIN_*
+  // postMessage protocol at all (checked at integration time, not just
+  // assumed) - it tracks its own internal demo balance and can never move
+  // real wallet credits. GameModal skips attaching a wallet bridge and
+  // always loads it in preview mode, and the catalogue only shows a single
+  // "Play demo" action instead of the real-money Preview/Play pair.
+  demoOnly?: boolean;
 }
 
 export const CASINO_CATEGORIES: { id: CasinoCategory | "all"; label: string }[] = [
@@ -75,6 +82,17 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     thumbnail: "/games/velvet/assets/thunder-room.png",
     tagline: "Lightning strikes and a growing storm of free-spin multipliers.",
     maxWinMultiplier: 0,
+  },
+  {
+    id: "sugar-spark",
+    name: "Sugar Spark",
+    provider: "Betrix Originals",
+    category: "slots",
+    path: "/games/sugar-spark/sugar.html",
+    thumbnail: "/games/sugar-spark/assets/sugar-room.png",
+    tagline: "7×7 candy clusters that light up spots and grow to 128× the more you hit them.",
+    maxWinMultiplier: 5000,
+    demoOnly: true,
   },
 ];
 
