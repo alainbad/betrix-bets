@@ -75,8 +75,20 @@ function CasinoPage() {
   }
 
   return (
-    <main className="casino-watermark min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
+    <main className="relative min-h-screen overflow-hidden bg-background px-4 py-8 sm:px-6 lg:px-8">
+      {/* Real casino floor (tables + slot machines) as a faint, fixed-position
+          watermark behind the page - heavily scrimmed so it reads as
+          atmosphere, never competing with the game cards on top of it. */}
+      <div
+        className="pointer-events-none fixed inset-0 bg-cover bg-top opacity-[0.16]"
+        style={{ backgroundImage: `url(${heroCasino})` }}
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none fixed inset-0 bg-gradient-to-b from-background/60 via-background/90 to-background"
+        aria-hidden="true"
+      />
+      <div className="relative mx-auto max-w-7xl">
         <header className="mb-8">
           <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-bold uppercase tracking-widest text-muted-foreground">
             <Dices className="h-3 w-3" /> Free-to-play · virtual coins only
