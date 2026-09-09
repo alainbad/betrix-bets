@@ -76,16 +76,22 @@ function CasinoPage() {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-background px-4 py-8 sm:px-6 lg:px-8">
-      {/* Real casino floor (tables + slot machines) as a faint, fixed-position
-          watermark behind the page - heavily scrimmed so it reads as
-          atmosphere, never competing with the game cards on top of it. */}
+      {/* Real casino floor (tables + slot machines) as a watermark behind the
+          page - scrimmed just enough to keep the game cards on top of it
+          legible. Deliberately position:absolute (scoped to this <main>,
+          which is position:relative), not position:fixed: a fixed,
+          full-viewport layer keeps painting as you scroll past the end of
+          the page content, and since it doesn't share a stacking context
+          with the page's static-positioned <footer>, it paints over that
+          footer instead of behind it. Scoping the layer to main's own box
+          makes that overlap impossible regardless of stacking order. */}
       <div
-        className="pointer-events-none fixed inset-0 bg-cover bg-top opacity-[0.16]"
+        className="pointer-events-none absolute inset-0 bg-cover bg-top opacity-[0.32]"
         style={{ backgroundImage: `url(${heroCasino})` }}
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none fixed inset-0 bg-gradient-to-b from-background/60 via-background/90 to-background"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/30 via-background/55 to-background/80"
         aria-hidden="true"
       />
       <div className="relative mx-auto max-w-7xl">
