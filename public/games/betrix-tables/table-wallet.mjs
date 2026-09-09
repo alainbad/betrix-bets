@@ -1,0 +1,6 @@
+export const linked=new URLSearchParams(location.search).get('wallet')==='1'&&parent!==window;
+let balanceAfter=0,version=0;const pending=new Map();
+window.addEventListener('message',event=>{if(event.source!==parent||event.origin!==location.origin||event.data?.type!=='VELVET_RESULT')return;const item=pending.get(event.data.requestId);if(!item)return;clearTimeout(item.timer);pending.delete(event.data.requestId);if(event.data.error)item.reject(new Error(event.data.error));else{balanceAfter=Number(event.data.payload.balanceAfter);version=event.data.payload.version;item.resolve(event.data.payload);}});
+export function request(action,input={}){const requestId=crypto.randomUUID();return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{pending.delete(requestId);reject(new Error('Connection interrupted. Close and reopen the game to restore your wallet and bonus.'));},90000);pending.set(requestId,{resolve,reject,timer});parent.postMessage({type:'VELVET_REQUEST',requestId,action,version,...input},location.origin);});}
+export const walletBalance=()=>balanceAfter;
+export async function connect(){if(!linked)return null;document.querySelector('#reset')?.removeAttribute('title');if(document.querySelector('#reset'))document.querySelector('#reset').hidden=true;document.querySelectorAll('.member-access').forEach(e=>e.hidden=true);return request('init');}

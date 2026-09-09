@@ -65,8 +65,17 @@ Deno.serve(async (req: Request) => {
     }
     if (body.version !== session.version)
       throw new Error("Game state changed in another window. Reopen the game to resume.");
+    // Blackjack/baccarat validate stakes against the live balance before
+    // settling (e.g. can this hand afford a double/split) - the other games
+    // don't need it, so it's only fetched for those two to avoid an extra
+    // round trip on every spin.
+    const balance =
+      game === "velvet-blackjack" || game === "velvet-baccarat"
+        ? Number((await rest("wallets?select=available_balance&user_id=eq." + user.id))[0]
+            ?.available_balance || 0)
+        : 0;
     // Browser may supply only intent. It never supplies a payout, board or feature state.
-    const round = resolveRound(game, body, session.state);
+    const round = resolveRound(game, body, session.state, balance);
     const response = await rest("rpc/settle_velvet_round", {
       p_user: user.id,
       p_request: body.requestId,
