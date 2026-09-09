@@ -150,9 +150,10 @@ function AccountPage() {
             </table>
           </div>
         )}
-      </div>
 
-      <WithdrawalPanel tier="player" />
+        <h2 className="mb-4 mt-10 text-xl font-bold text-foreground">Cash out</h2>
+        <WithdrawalPanel tier="player" />
+      </div>
     </main>
   );
 }
