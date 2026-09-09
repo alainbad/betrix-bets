@@ -4,6 +4,18 @@ export const WHEEL = [
 ];
 export const REDS = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
 export const color = (n) => (n === 0 ? "green" : REDS.has(n) ? "red" : "black");
+// A corner (square) bet covers the 4 numbers meeting at one grid intersection.
+// The table lays numbers out bottom-to-top per column as 3c-2,3c-1,3c (see
+// roulette.js), so a valid 2x2 block's lowest number is 1-32 and never a
+// multiple of 3 (that would be the top of a column, with no cell above-right
+// to complete the square). isValidCornerBet is the single source of truth
+// for that geometry - reused by round.mjs's server-side bet validation.
+export function isValidCornerBet(key) {
+  const m = /^corner:([1-9][0-9]?)$/.exec(key);
+  if (!m) return false;
+  const base = Number(m[1]);
+  return base <= 32 && base % 3 !== 0;
+}
 export function betReturn(n, key, amount) {
   if (key.startsWith("n:")) return n === Number(key.slice(2)) ? amount * 36 : 0;
   if (n === 0) return 0;
@@ -20,6 +32,10 @@ export function betReturn(n, key, amount) {
   } else if (key.startsWith("column:")) {
     hit = ((n - 1) % 3) + 1 === Number(key.slice(7));
     mult = 3;
+  } else if (key.startsWith("corner:")) {
+    const base = Number(key.slice(7));
+    hit = n === base || n === base + 1 || n === base + 3 || n === base + 4;
+    mult = 9;
   }
   return hit ? amount * mult : 0;
 }
