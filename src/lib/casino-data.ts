@@ -33,11 +33,50 @@ export const CASINO_CATEGORIES: { id: CasinoCategory | "all"; label: string }[] 
 // CASINO_SPIN_RESULT), so adding a game is just dropping a new folder in
 // here and registering it below; nothing else needs to change.
 //
-// Empty while the site is between in-house games and the Plurance
-// aggregator integration - the game files themselves are still in
-// public/games/ (demo-slot, neon-reels, vault-rush) and the wallet RPC
-// they call is untouched, just nothing is listed here to launch them.
-export const CASINO_GAMES: Html5CasinoGame[] = [];
+// Velvet games use their dedicated Edge Function and game-specific rules.
+// maxWinMultiplier is not used for their settlement.
+export const CASINO_GAMES: Html5CasinoGame[] = [
+  {
+    id: "velvet-vault",
+    name: "Midnight Vault",
+    provider: "Velvet Originals",
+    category: "slots",
+    path: "/games/velvet/vault.html",
+    thumbnail: "/games/velvet/assets/vault-room.png",
+    tagline: "Expanding wilds. Three safes. One unforgettable heist.",
+    maxWinMultiplier: 0,
+  },
+  {
+    id: "velvet-roulette",
+    name: "Royale Roulette",
+    provider: "Velvet Originals",
+    category: "table",
+    path: "/games/velvet/roulette.html",
+    thumbnail: "/games/velvet/assets/roulette-cover.png",
+    tagline: "A classic single-zero wheel, with a private-table atmosphere.",
+    maxWinMultiplier: 36,
+  },
+  {
+    id: "velvet-candy",
+    name: "Candy Cascade",
+    provider: "Velvet Originals",
+    category: "slots",
+    path: "/games/velvet/candy.html",
+    thumbnail: "/games/velvet/assets/candy-room.png",
+    tagline: "Sweet tumbles, sparkling stars and sugar multipliers.",
+    maxWinMultiplier: 0,
+  },
+  {
+    id: "velvet-thunder",
+    name: "Temple of Thunder",
+    provider: "Velvet Originals",
+    category: "slots",
+    path: "/games/velvet/thunder.html",
+    thumbnail: "/games/velvet/assets/thunder-room.png",
+    tagline: "Lightning strikes and a growing storm of free-spin multipliers.",
+    maxWinMultiplier: 0,
+  },
+];
 
 export function getGameById(id: string): Html5CasinoGame | undefined {
   return CASINO_GAMES.find((g) => g.id === id);

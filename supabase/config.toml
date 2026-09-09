@@ -33,3 +33,8 @@ enabled = true
 
 [storage]
 enabled = true
+
+[functions.velvet-round]
+# The handler verifies every user token through Supabase Auth before any DB access.
+# This supports both legacy and asymmetric signing keys.
+verify_jwt = false

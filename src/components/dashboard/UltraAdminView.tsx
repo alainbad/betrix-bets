@@ -14,6 +14,7 @@ import { AccountIdBadge } from "@/components/dashboard/AccountIdBadge";
 import { IdentifierTransferModal } from "@/components/dashboard/IdentifierTransferModal";
 import { MasterCodeSettings } from "@/components/dashboard/MasterCodeSettings";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
+import { WithdrawalPanel } from "@/components/dashboard/WithdrawalPanel";
 
 interface TierAccount {
   id: string;
@@ -173,6 +174,8 @@ export function UltraAdminView() {
         )}
         {tab === "Transactions" && <GlobalTransactions />}
       </div>
+
+      <WithdrawalPanel tier="ultra_admin" />
     </main>
   );
 }

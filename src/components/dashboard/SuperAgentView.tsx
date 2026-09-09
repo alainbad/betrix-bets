@@ -27,6 +27,7 @@ import {
 import { AccountIdBadge } from "@/components/dashboard/AccountIdBadge";
 import { CopyBadge } from "@/components/dashboard/CopyBadge";
 import { IdentifierTransferModal } from "@/components/dashboard/IdentifierTransferModal";
+import { WithdrawalPanel } from "@/components/dashboard/WithdrawalPanel";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 
 export function SuperAgentView() {
@@ -153,6 +154,8 @@ export function SuperAgentView() {
           void refreshWallet();
         }}
       />
+
+      <WithdrawalPanel tier="super_agent" />
     </main>
   );
 }

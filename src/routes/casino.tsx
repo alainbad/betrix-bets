@@ -9,6 +9,7 @@ import {
   type Html5CasinoGame,
 } from "@/lib/casino-data";
 import { GameModal } from "@/components/casino/GameModal";
+import { useAuth } from "@/lib/auth-context";
 import { useWallet } from "@/lib/wallet-store";
 import { cn } from "@/lib/utils";
 import heroCasino from "@/assets/hero-casino.jpg";
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/casino")({
       { property: "og:title", content: "TheBetrix — Free-to-Play Social Casino" },
       {
         property: "og:description",
-        content: "Slots, instant wins and table games played with virtual coins. No real money, no cash-out.",
+        content: "Four original games played with virtual coins. No real money, no cash-out.",
       },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "TheBetrix" },
@@ -43,6 +44,8 @@ export const Route = createFileRoute("/casino")({
 
 function CasinoPage() {
   const { balance, refresh } = useWallet();
+  const { user } = useAuth();
+  const [preview, setPreview] = useState(false);
   const [category, setCategory] = useState<CasinoCategory | "all">("all");
   const [query, setQuery] = useState("");
   const [activeGame, setActiveGame] = useState<Html5CasinoGame | null>(null);
@@ -55,7 +58,13 @@ function CasinoPage() {
         `${g.name} ${g.provider}`.toLowerCase().includes(query.toLowerCase())),
   );
 
-  function openGame(game: Html5CasinoGame) {
+  function openGame(game: Html5CasinoGame, practice = false) {
+    if (!practice && !user) {
+      toast.error("Sign in to play with your Betrix wallet.");
+      return;
+    }
+
+    setPreview(practice);
     setLiveBalance(balance);
     setActiveGame(game);
   }
@@ -108,60 +117,61 @@ function CasinoPage() {
           </label>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {games.map((game) => (
-            <button
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {games.map((game, index) => (
+            <article
               key={game.id}
-              type="button"
-              onClick={() => {
-                if (!balance) {
-                  toast.error("You need a virtual coin balance to play.");
-                  return;
-                }
-                openGame(game);
-              }}
-              className="group relative overflow-hidden rounded-2xl border border-border bg-card text-left transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10"
+              className="group overflow-hidden rounded-2xl border border-border bg-card shadow-lg"
             >
-              <div className="relative aspect-[4/5] overflow-hidden">
+              <button
+                type="button"
+                onClick={() => openGame(game)}
+                className="relative block aspect-[16/10] w-full overflow-hidden text-left"
+                aria-label={`Play ${game.name}`}
+              >
                 <img
                   src={game.thumbnail ?? heroCasino}
-                  alt={`${game.name} by ${game.provider}`}
-                  loading="lazy"
-                  width={800}
-                  height={1000}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  alt={game.name}
+                  width={1672}
+                  height={941}
+                  loading={index < 2 ? "eager" : "lazy"}
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/55 to-transparent" />
-                <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                  <div className="absolute inset-0 bg-background/45" />
-                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary px-5 py-2 text-xs font-black uppercase tracking-widest text-primary-foreground shadow-lg">
-                    Play
-                  </span>
-                </div>
-
-                <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-background/85 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent backdrop-blur-sm">
-                  <Sparkles className="h-3 w-3" />
-                  Free play
+                <span className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent" />
+                <span className="absolute left-6 top-5 rounded-full border border-white/25 bg-black/35 px-3 py-1 text-xs uppercase tracking-widest text-white">
+                  0{index + 1} / {game.category}
                 </span>
-
-                <div className="absolute inset-x-0 bottom-0 p-3">
-                  <p className="truncate text-sm font-black leading-tight text-foreground">
-                    {game.name}
+                <div className="absolute bottom-6 left-6 right-6 text-white">
+                  <p className="mb-2 text-xs uppercase tracking-[.25em] text-amber-200">
+                    Velvet Originals
                   </p>
-                  <p className="mt-0.5 truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                    {game.provider}
-                  </p>
+                  <h2 className="font-serif text-4xl sm:text-5xl">{game.name}</h2>
+                </div>
+              </button>
+              <div className="flex flex-wrap items-center justify-between gap-4 p-5">
+                <p className="max-w-xs text-sm text-muted-foreground">{game.tagline}</p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => openGame(game, true)}
+                    className="rounded-lg border border-border px-4 py-2 text-sm font-semibold hover:bg-secondary"
+                  >
+                    ▷ Preview
+                  </button>
+                  <button
+                    onClick={() => openGame(game)}
+                    className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+                  >
+                    Play game →
+                  </button>
                 </div>
               </div>
-            </button>
+            </article>
           ))}
         </div>
 
         {games.length === 0 && (
           <p className="rounded-2xl border border-dashed border-border p-12 text-center text-sm text-muted-foreground">
-            {CASINO_GAMES.length === 0
-              ? "New games coming soon."
-              : "No games match that search."}
+            {CASINO_GAMES.length === 0 ? "New games coming soon." : "No games match that search."}
           </p>
         )}
       </div>
@@ -169,6 +179,7 @@ function CasinoPage() {
       {activeGame && (
         <GameModal
           game={activeGame}
+          preview={preview}
           balance={liveBalance}
           onClose={closeGame}
           onBalanceUpdate={setLiveBalance}

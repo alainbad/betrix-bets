@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { WithdrawalPanel } from "@/components/dashboard/WithdrawalPanel";
 
 export const Route = createFileRoute("/account")({
   head: () => ({
@@ -133,6 +134,8 @@ function AccountPage() {
           </div>
         )}
       </div>
+
+      <WithdrawalPanel tier="player" />
     </main>
   );
 }

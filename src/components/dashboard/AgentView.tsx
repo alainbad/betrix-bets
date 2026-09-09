@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { AccountIdBadge } from "@/components/dashboard/AccountIdBadge";
 import { CopyBadge } from "@/components/dashboard/CopyBadge";
 import { IdentifierTransferModal } from "@/components/dashboard/IdentifierTransferModal";
+import { WithdrawalPanel } from "@/components/dashboard/WithdrawalPanel";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 
 export function AgentView() {
@@ -130,6 +131,8 @@ export function AgentView() {
           void refreshWallet();
         }}
       />
+
+      <WithdrawalPanel tier="agent" />
     </main>
   );
 }
