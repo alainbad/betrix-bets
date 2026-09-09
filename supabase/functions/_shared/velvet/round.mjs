@@ -10,12 +10,22 @@ import {
   scatterCount,
 } from "./cascade-engine.mjs";
 import { resolveSpin as resolveSugarSpin } from "./sugar-engine.mjs";
+import { resolveSpin as resolvePawSpin } from "./paw-engine.mjs";
+import { spin as resolveBassSpin } from "./bass-engine.mjs";
+import {
+  NUMBERS as WHEEL_NUMBERS,
+  outcome as wheelOutcome,
+  settle as settleWheel,
+} from "./grand-engine.mjs";
 export const IDS = [
   "velvet-vault",
   "velvet-roulette",
   "velvet-candy",
   "velvet-thunder",
   "velvet-sugar",
+  "velvet-paw",
+  "velvet-bass",
+  "velvet-grand",
 ];
 const requireValue = (ok, message) => {
   if (!ok) throw new Error(message);
@@ -109,6 +119,58 @@ export function resolveRound(game, input, state = null) {
         total: spin.total,
       },
       state: next,
+    };
+  }
+  if (game === "velvet-paw") {
+    const pawInFeature = state?.kind === "paw" && state.remaining > 0;
+    const pawStake = pawInFeature ? state.stake : input.stake;
+    requireValue([10, 20, 50, 100, 200, 500].includes(pawStake), "Invalid stake");
+    const spin = resolvePawSpin(pawStake, pawInFeature ? state : null);
+    const nextRaw = spin.next && spin.next.remaining > 0 ? spin.next : null;
+    const next = nextRaw ? { kind: "paw", stake: pawStake, ...nextRaw } : null;
+    return {
+      stake: pawInFeature ? 0 : pawStake,
+      payout: spin.total / 100,
+      result: spin,
+      state: next,
+    };
+  }
+  if (game === "velvet-bass") {
+    const bassInFeature = state?.kind === "bass" && state.remaining > 0;
+    const bassStake = bassInFeature ? state.stake : input.stake;
+    requireValue([10, 20, 50, 100, 200, 500].includes(bassStake), "Invalid stake");
+    const spin = resolveBassSpin(bassStake, bassInFeature ? state : null);
+    const nextRaw = spin.next && spin.next.remaining > 0 ? spin.next : null;
+    const next = nextRaw ? { kind: "bass", stake: bassStake, ...nextRaw } : null;
+    return {
+      stake: bassInFeature ? 0 : bassStake,
+      payout: spin.total / 100,
+      result: spin,
+      state: next,
+    };
+  }
+  if (game === "velvet-grand") {
+    requireValue(
+      input.bets && typeof input.bets === "object" && !Array.isArray(input.bets),
+      "Invalid bets",
+    );
+    const entries = Object.entries(input.bets);
+    requireValue(entries.length > 0 && entries.length <= 6, "Place 1-6 bets");
+    const bets = {};
+    for (const [k, v] of entries) {
+      const n = Number(k),
+        amt = Number(v);
+      requireValue(WHEEL_NUMBERS.includes(n), "Invalid number");
+      requireValue(Number.isInteger(amt) && amt > 0, "Invalid bet amount");
+      bets[n] = amt;
+    }
+    const result = wheelOutcome();
+    const settled = settleWheel(bets, result);
+    return {
+      stake: settled.stake,
+      payout: settled.payout,
+      result: { ...result, ...settled, bets },
+      state: null,
     };
   }
   requireValue([10, 20, 50, 100, 200, 500].includes(stake), "Invalid stake");
