@@ -191,6 +191,74 @@
     );
   }
 
+  /* Admin/agent-hierarchy dashboards: a dark VIP-lounge photo backdrop,
+     scrimmed heavily for text contrast (this surface handles real account
+     data and money movement, so legibility always wins over mood), with the
+     brand's green/amber glows layered on top so it still reads as
+     TheBetrix rather than a generic stock photo. background-attachment:
+     fixed gives a subtle parallax as the page scrolls. */
+  .admin-casino-bg {
+    position: relative;
+    background-image:
+      radial-gradient(60% 45% at 12% -8%, oklch(0.72 0.22 145 / 0.16) 0%, transparent 60%),
+      radial-gradient(50% 40% at 100% 0%, oklch(0.7 0.18 85 / 0.14) 0%, transparent 55%),
+      linear-gradient(
+        180deg,
+        oklch(0.1 0.02 260 / 0.94) 0%,
+        oklch(0.1 0.02 260 / 0.97) 45%,
+        oklch(0.145 0.02 260) 100%
+      ),
+      url("https://d8j0ntlcm91z4.cloudfront.net/user_3DkeurSw3C3f2d4GEv4r3LiDKVN/hf_20260827_193515_77298ab8-935b-4a96-adf8-4ed8e56da400.png");
+    background-size: cover, cover, cover, cover;
+    background-position: top left, top right, top center, top center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+
+  @media (max-width: 768px) {
+    /* background-attachment: fixed is unreliable/janky on mobile browsers */
+    .admin-casino-bg {
+      background-attachment: scroll;
+    }
+  }
+
+  /* Diagonal light sweep across the dashboard header, reusing
+     casino-shimmer (defined below) rather than a new keyframe. Purely
+     decorative (aria-hidden), absolutely positioned within a `relative`
+     header so it doesn't affect layout. */
+  .admin-header-shimmer {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  .admin-header-shimmer::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: 0;
+    width: 40%;
+    height: 200%;
+    background: linear-gradient(
+      100deg,
+      transparent 0%,
+      oklch(0.72 0.22 145 / 0.16) 45%,
+      oklch(0.95 0 0 / 0.06) 50%,
+      oklch(0.7 0.18 85 / 0.14) 55%,
+      transparent 100%
+    );
+    animation: casino-shimmer 6s ease-in-out infinite;
+    animation-delay: 1.2s;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .admin-header-shimmer::after {
+      animation: none;
+      display: none;
+    }
+  }
+
   .odds-button {
     @apply relative inline-flex items-center justify-center rounded-lg border border-border bg-secondary px-3 py-2 text-sm font-semibold text-foreground transition-all hover:border-primary hover:text-primary focus-visible:ring-2 focus-visible:ring-ring;
   }
