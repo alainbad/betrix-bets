@@ -33,13 +33,13 @@ export const CASINO_CATEGORIES: { id: CasinoCategory | "all"; label: string }[] 
 // CASINO_SPIN_RESULT), so adding a game is just dropping a new folder in
 // here and registering it below; nothing else needs to change.
 //
-// Velvet games use their dedicated Edge Function and game-specific rules.
+// Betrix Originals games use their dedicated Edge Function and game-specific rules.
 // maxWinMultiplier is not used for their settlement.
 export const CASINO_GAMES: Html5CasinoGame[] = [
   {
     id: "velvet-vault",
     name: "Midnight Vault",
-    provider: "Velvet Originals",
+    provider: "Betrix Originals",
     category: "slots",
     path: "/games/velvet/vault.html",
     thumbnail: "/games/velvet/assets/vault-room.png",
@@ -49,7 +49,7 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
   {
     id: "velvet-roulette",
     name: "Royale Roulette",
-    provider: "Velvet Originals",
+    provider: "Betrix Originals",
     category: "table",
     path: "/games/velvet/roulette.html",
     thumbnail: "/games/velvet/assets/roulette-cover.png",
@@ -59,7 +59,7 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
   {
     id: "velvet-candy",
     name: "Candy Cascade",
-    provider: "Velvet Originals",
+    provider: "Betrix Originals",
     category: "slots",
     path: "/games/velvet/candy.html",
     thumbnail: "/games/velvet/assets/candy-room.png",
@@ -69,7 +69,7 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
   {
     id: "velvet-thunder",
     name: "Temple of Thunder",
-    provider: "Velvet Originals",
+    provider: "Betrix Originals",
     category: "slots",
     path: "/games/velvet/thunder.html",
     thumbnail: "/games/velvet/assets/thunder-room.png",

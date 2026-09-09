@@ -143,7 +143,7 @@ function CasinoPage() {
                 </span>
                 <div className="absolute bottom-6 left-6 right-6 text-white">
                   <p className="mb-2 text-xs uppercase tracking-[.25em] text-amber-200">
-                    Velvet Originals
+                    {game.provider}
                   </p>
                   <h2 className="font-serif text-4xl sm:text-5xl">{game.name}</h2>
                 </div>
