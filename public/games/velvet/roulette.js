@@ -124,6 +124,20 @@ for (let row = 0; row < 3; row++) {
   b.style.gridRow = row + 1;
   b.style.gridColumn = 14;
 }
+// Corner (square) bets: one hot spot at each interior intersection of 4
+// numbers, covering {base, base+1, base+3, base+4}. Spans the same 2x2 grid
+// area as those 4 number cells so it sits centered on their shared corner -
+// see isValidCornerBet in roulette-engine.mjs for the base-number geometry.
+for (let c = 0; c < 11; c++) {
+  for (let r = 0; r < 2; r++) {
+    const base = (c + 1) * 3 - (r + 1);
+    $("#board").insertAdjacentHTML("beforeend", cell("corner:" + base, "", "corner"));
+    const b = $("#board").lastElementChild;
+    b.style.gridRow = `${r + 1} / ${r + 3}`;
+    b.style.gridColumn = `${c + 2} / ${c + 4}`;
+    b.setAttribute("aria-label", `Corner bet on ${base}, ${base + 1}, ${base + 3}, ${base + 4}`);
+  }
+}
 $("#dozens").innerHTML = [1, 2, 3]
   .map((n) => cell("dozen:" + n, ["1st 12", "2nd 12", "3rd 12"][n - 1]))
   .join("");
@@ -146,6 +160,10 @@ $("#chips").innerHTML = [10, 25, 50, 100, 500]
 function total() {
   return bets.reduce((a, b) => a + b.amount, 0);
 }
+function cornerNumbers(key) {
+  const base = Number(key.slice(7));
+  return `${base}, ${base + 1}, ${base + 3}, ${base + 4}`;
+}
 function ui() {
   $("#balance").textContent = fmt(balance);
   $("#total-bet").textContent = fmt(total());
@@ -162,9 +180,12 @@ function ui() {
     const value = bets.filter((x) => x.key === b.dataset.bet).reduce((a, x) => a + x.amount, 0);
     b.classList.toggle("selected", value > 0);
     b.dataset.chips = value;
+    const suffix = value ? ", " + value + " credits placed" : "";
     b.setAttribute(
       "aria-label",
-      `Bet ${b.dataset.bet.replace("n:", "number ")}${value ? ", " + value + " credits placed" : ""}`,
+      b.dataset.bet.startsWith("corner:")
+        ? `Corner bet on ${cornerNumbers(b.dataset.bet)}${suffix}`
+        : `Bet ${b.dataset.bet.replace("n:", "number ")}${suffix}`,
     );
   });
   $$(".chip").forEach((b) => {

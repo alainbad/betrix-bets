@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { resolveRound, publicState } from "../supabase/functions/_shared/velvet/round.mjs";
-import { settle } from "../supabase/functions/_shared/velvet/roulette-engine.mjs";
+import { settle, isValidCornerBet } from "../supabase/functions/_shared/velvet/roulette-engine.mjs";
 import {
   evaluateBoard,
   roundMultiplier,
@@ -39,6 +39,38 @@ test("roulette pays zero correctly and validates bet instructions", () => {
     assert.equal(r.payout, settle(r.result.number, bets));
     assert.equal(r.stake, 60);
   }
+});
+test("roulette corner bets cover the right 4 numbers and validate correctly", () => {
+  // Every valid corner base 1-32 that isn't a column top (multiple of 3),
+  // matching the table's bottom-to-top per-column layout (3c-2,3c-1,3c).
+  const validBases = [];
+  for (let base = 1; base <= 32; base++) if (base % 3 !== 0) validBases.push(base);
+  assert.equal(validBases.length, 22);
+  for (const base of validBases) {
+    assert.ok(isValidCornerBet("corner:" + base));
+    const covered = [base, base + 1, base + 3, base + 4];
+    for (const n of covered) assert.equal(settle(n, [{ key: "corner:" + base, amount: 10 }]), 90);
+    for (let n = 0; n <= 36; n++)
+      if (!covered.includes(n)) assert.equal(settle(n, [{ key: "corner:" + base, amount: 10 }]), 0);
+  }
+  for (const bad of [
+    "corner:3",
+    "corner:0",
+    "corner:33",
+    "corner:-1",
+    "corner:1.5",
+    "corner:",
+    "corner:abc",
+  ])
+    assert.ok(!isValidCornerBet(bad), bad);
+  const r = resolveRound("velvet-roulette", {
+    action: "spin",
+    bets: [{ key: "corner:1", amount: 50 }],
+  });
+  assert.equal(r.stake, 50);
+  assert.throws(() =>
+    resolveRound("velvet-roulette", { action: "spin", bets: [{ key: "corner:3", amount: 50 }] }),
+  );
 });
 test("vault bonus preserves choices across reload and hides unopened values", () => {
   let state = {

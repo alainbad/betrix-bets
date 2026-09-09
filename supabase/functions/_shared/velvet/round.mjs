@@ -1,5 +1,5 @@
 import { rand, makeGrid, evaluate, bonusPrizes } from "./vault-engine.mjs";
-import { WHEEL, settle } from "./roulette-engine.mjs";
+import { WHEEL, settle, isValidCornerBet } from "./roulette-engine.mjs";
 import {
   CONFIG,
   makeBoard,
@@ -57,7 +57,8 @@ export function resolveRound(game, input, state = null) {
         typeof b.key === "string" &&
           (/^(red|black|odd|even|low|high)$/.test(b.key) ||
             /^n:([0-9]|[12][0-9]|3[0-6])$/.test(b.key) ||
-            /^(dozen|column):[1-3]$/.test(b.key)),
+            /^(dozen|column):[1-3]$/.test(b.key) ||
+            isValidCornerBet(b.key)),
         "Invalid roulette bet",
       );
       requireValue([10, 25, 50, 100, 500].includes(b.amount), "Invalid chip");
