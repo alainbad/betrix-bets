@@ -28,7 +28,21 @@ const labels: Record<string, string> = {
   ultra_approved_ready_payout: "Ready to settle",
   completed: "Completed",
   rejected: "Rejected",
+  cancelled: "Cancelled by player",
 };
+const PENDING_STATUSES = [
+  "pending_agent_review",
+  "agent_approved_pending_ultra",
+  "ultra_approved_ready_payout",
+];
+// The player doesn't need to know which internal review stage a request is
+// at - just whether it's still pending, or how it concluded.
+function playerStatusLabel(status: string): string {
+  if (status === "completed") return "Approved";
+  if (status === "rejected") return "Rejected";
+  if (status === "cancelled") return "Cancelled";
+  return "Pending";
+}
 type Withdrawal = {
   id: string;
   player_id: string;
@@ -115,6 +129,25 @@ export function WithdrawalPanel({
       setBusy(false);
     }
   }
+  async function cancelRequest(id: string) {
+    if (
+      !window.confirm(
+        "Cancel this cash out request? Your reserved credits will be returned to your available balance.",
+      )
+    )
+      return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.rpc("cancel_withdrawal_request", { p_request_id: id });
+      if (error) throw error;
+      await Promise.all([load(), refresh()]);
+      toast.success("Request cancelled — credits returned to your balance");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to cancel request");
+    } finally {
+      setBusy(false);
+    }
+  }
   if (!user) return null;
   return (
     <section className="mx-auto my-6 max-w-7xl rounded-2xl border border-border bg-card p-5 sm:p-6">
@@ -175,7 +208,9 @@ export function WithdrawalPanel({
                     <div className="text-xs text-muted-foreground">{w.player?.account_id}</div>
                   </TableCell>
                   <TableCell>{format(w.amount)}</TableCell>
-                  <TableCell>{labels[w.status]}</TableCell>
+                  <TableCell>
+                    {tier === "player" ? playerStatusLabel(w.status) : labels[w.status]}
+                  </TableCell>
                   <TableCell>
                     {w.ultra_note || w.agent_note || "—"}
                     <div className="text-xs text-muted-foreground">
@@ -217,7 +252,7 @@ export function WithdrawalPanel({
                               Settle
                             </Button>
                           )}
-                          {!["completed", "rejected"].includes(w.status) && (
+                          {!["completed", "rejected", "cancelled"].includes(w.status) && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -229,6 +264,16 @@ export function WithdrawalPanel({
                             </Button>
                           )}
                         </>
+                      )}
+                      {tier === "player" && PENDING_STATUSES.includes(w.status) && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={busy}
+                          onClick={() => void cancelRequest(w.id)}
+                        >
+                          Cancel request
+                        </Button>
                       )}
                     </div>
                   </TableCell>
