@@ -9,7 +9,14 @@ import {
   roundMultiplier,
   scatterCount,
 } from "./cascade-engine.mjs";
-export const IDS = ["velvet-vault", "velvet-roulette", "velvet-candy", "velvet-thunder"];
+import { resolveSpin as resolveSugarSpin } from "./sugar-engine.mjs";
+export const IDS = [
+  "velvet-vault",
+  "velvet-roulette",
+  "velvet-candy",
+  "velvet-thunder",
+  "velvet-sugar",
+];
 const requireValue = (ok, message) => {
   if (!ok) throw new Error(message);
 };
@@ -71,6 +78,37 @@ export function resolveRound(game, input, state = null) {
       payout: settle(number, input.bets),
       result: { number, bets: input.bets },
       state: null,
+    };
+  }
+  if (game === "velvet-sugar") {
+    const sugarInFeature = state?.kind === "sugar";
+    const sugarStake = sugarInFeature ? state.stake : input.stake;
+    requireValue([10, 20, 50, 100, 200, 500].includes(sugarStake), "Invalid stake");
+    const priorMarks = sugarInFeature ? state.marks : Array(49).fill(0);
+    const spin = resolveSugarSpin(sugarStake, priorMarks);
+    let next = null;
+    if (sugarInFeature && state.remaining > 1) {
+      next = {
+        kind: "sugar",
+        stake: sugarStake,
+        remaining: state.remaining - 1,
+        total: state.total + spin.total,
+        marks: spin.marks,
+      };
+    } else if (!sugarInFeature && spin.scatters >= 4) {
+      next = { kind: "sugar", stake: sugarStake, remaining: 10, total: 0, marks: spin.marks };
+    }
+    return {
+      stake: sugarInFeature ? 0 : sugarStake,
+      payout: spin.total / 100,
+      result: {
+        initial: spin.initial,
+        steps: spin.steps,
+        scatters: spin.scatters,
+        marks: spin.marks,
+        total: spin.total,
+      },
+      state: next,
     };
   }
   requireValue([10, 20, 50, 100, 200, 500].includes(stake), "Invalid stake");

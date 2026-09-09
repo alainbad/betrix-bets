@@ -84,7 +84,7 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     maxWinMultiplier: 0,
   },
   {
-    id: "sugar-spark",
+    id: "velvet-sugar",
     name: "Sugar Spark",
     provider: "Betrix Originals",
     category: "slots",
@@ -92,7 +92,6 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     thumbnail: "/games/sugar-spark/assets/sugar-room.png",
     tagline: "7×7 candy clusters that light up spots and grow to 128× the more you hit them.",
     maxWinMultiplier: 5000,
-    demoOnly: true,
   },
 ];
 
