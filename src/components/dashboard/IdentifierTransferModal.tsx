@@ -13,11 +13,7 @@ import {
 } from "@/components/ui/dialog";
 
 type TransferRpc =
-  | "mint_super_agent_balance"
-  | "transfer_agent_to_agent"
-  | "transfer_agent_to_player"
-  | "cashout_player_to_agent"
-  | "ultra_admin_topup_wallet";
+  "transfer_agent_to_player" | "cashout_player_to_agent" | "ultra_admin_topup_wallet";
 
 interface AccountPreview {
   user_id: string;
@@ -25,8 +21,8 @@ interface AccountPreview {
   role: string;
 }
 
-// Shared by the Ultra Admin mint modal, the Super Agent allocate modal, and
-// the Agent top-up/cash-out modals: a single "UID, email, or phone" field
+// Shared by the Ultra Admin top-up modal and the Agent top-up/cash-out
+// modals: a single "UID, email, or phone" field
 // that debounces a call to preview_account so the operator can see who
 // they're about to move coins to/from before confirming, then submits the
 // same string straight through to whichever RPC's p_target_identifier -

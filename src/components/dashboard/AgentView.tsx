@@ -22,6 +22,7 @@ import { CopyBadge } from "@/components/dashboard/CopyBadge";
 import { IdentifierTransferModal } from "@/components/dashboard/IdentifierTransferModal";
 import { WithdrawalPanel } from "@/components/dashboard/WithdrawalPanel";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
+import { NotificationBell } from "@/components/dashboard/NotificationBell";
 
 export function AgentView() {
   const { user } = useAuth();
@@ -67,18 +68,21 @@ export function AgentView() {
   return (
     <main className="min-h-screen bg-background">
       <div className="border-b border-border bg-betrix-surface">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Agent
-            {ownAccountId && <AccountIdBadge accountId={ownAccountId} />}
-          </p>
-          <h1 className="text-2xl font-black tracking-tight text-foreground">Cashier console</h1>
-          {ownReferralCode && (
-            <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              Your referral code - share it so new signups land under you:
-              <CopyBadge value={ownReferralCode} title="Copy referral code" />
+        <div className="mx-auto flex max-w-7xl items-start justify-between gap-4 px-4 py-6 sm:px-6 lg:px-8">
+          <div>
+            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Agent
+              {ownAccountId && <AccountIdBadge accountId={ownAccountId} />}
             </p>
-          )}
+            <h1 className="text-2xl font-black tracking-tight text-foreground">Cashier console</h1>
+            {ownReferralCode && (
+              <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                Your referral code - share it so new signups land under you:
+                <CopyBadge value={ownReferralCode} title="Copy referral code" />
+              </p>
+            )}
+          </div>
+          {user && <NotificationBell agentId={user.id} />}
         </div>
       </div>
 

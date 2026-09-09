@@ -1,13 +1,13 @@
-// Shared types + data access for the 3-tier agent hierarchy dashboard
-// (ultra_admin -> super_agent -> agent -> player). All balance mutations go
-// through the SECURITY DEFINER RPCs in supabase/migrations/20260825050000_*
-// - nothing here writes to wallets/profiles directly, only reads (RLS-gated
-// via the policies in 20260825040000_*).
+// Shared types + data access for the agent hierarchy dashboard
+// (ultra_admin -> agent -> player). All balance mutations go through the
+// SECURITY DEFINER RPCs in supabase/migrations/20260825050000_* - nothing
+// here writes to wallets/profiles directly, only reads (RLS-gated via the
+// policies in 20260825040000_*).
 
 import { supabase } from "./supabase";
 import type { CasinoRoundHistoryItem } from "./wallet-context";
 
-export type HierarchyTier = "ultra_admin" | "super_agent" | "agent";
+export type HierarchyTier = "ultra_admin" | "agent";
 
 export interface DownlineProfile {
   id: string;
@@ -39,16 +39,14 @@ export interface LedgerEntry {
 }
 
 // Checked in this order because a lower tier can never also hold a higher
-// one (promote_to_super_agent/promote_to_agent both refuse to grant a tier
-// role to an account that already has one).
+// one (ultra_admin_set_hierarchy_role refuses to grant a tier role to an
+// account that already has one).
 export async function detectHierarchyTier(userId: string): Promise<HierarchyTier | null> {
-  const [ultra, superAgent, agent] = await Promise.all([
+  const [ultra, agent] = await Promise.all([
     supabase.rpc("is_ultra_admin", { _user_id: userId }),
-    supabase.rpc("is_super_agent", { _user_id: userId }),
     supabase.rpc("is_agent_tier", { _user_id: userId }),
   ]);
   if (ultra.data === true) return "ultra_admin";
-  if (superAgent.data === true) return "super_agent";
   if (agent.data === true) return "agent";
   return null;
 }
@@ -59,7 +57,7 @@ async function rolesByUserId(userIds: string[]): Promise<Map<string, DownlinePro
     .from("user_roles")
     .select("user_id, role")
     .in("user_id", userIds)
-    .in("role", ["ultra_admin", "super_agent", "agent", "player"]);
+    .in("role", ["ultra_admin", "agent", "player"]);
   if (error) throw error;
   const map = new Map<string, DownlineProfile["role"]>();
   for (const row of data ?? []) {
@@ -111,7 +109,7 @@ export async function fetchDownline(rootId: string): Promise<DownlineProfile[]> 
 // Every profile on the platform, regardless of hierarchy position. Unlike
 // fetchDownline (which walks the parent_id tree from a root), this has no
 // root to scope from - a plain player who signed up outside the agent
-// network, or an agent/super_agent who hasn't claimed anyone yet, has no
+// network, or an agent who hasn't claimed anyone yet, has no
 // path back to the ultra_admin in that tree at all, so a downline query
 // would never surface them. Relies on the ultra_admin's blanket RLS grant
 // (see "profiles select own or admin" in
@@ -154,7 +152,7 @@ export async function fetchAllProfiles(): Promise<DownlineProfile[]> {
 // Full detail for one account, looked up by its account_id (the value that
 // shows up in every dashboard URL/badge) - the profile-detail page's single
 // source of data. Relies on the same RLS visibility as fetchAllProfiles/
-// fetchDownline (ultra_admin sees everyone, super_agent/agent see their own
+// fetchDownline (ultra_admin sees everyone, agent sees their own
 // downline), so a caller outside that scope simply gets no row back rather
 // than an error - the page renders that as "not found".
 export async function fetchProfileByAccountId(accountId: string): Promise<ProfileDetail | null> {
@@ -229,10 +227,10 @@ export async function fetchOwnAccountId(userId: string): Promise<string | null> 
   return (data?.account_id as string) ?? null;
 }
 
-// The logged-in super_agent/agent's own referral code, for the "share this
+// The logged-in agent's own referral code, for the "share this
 // with new signups" copy pill on their dashboard. Null for tiers that don't
 // get one (player, ultra_admin) - generate_agent_referral_code only ever
-// sets this column for super_agent/agent.
+// sets this column for agent.
 export async function fetchOwnReferralCode(userId: string): Promise<string | null> {
   const { data, error } = await supabase
     .from("profiles")

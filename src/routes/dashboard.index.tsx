@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
 import { detectHierarchyTier, type HierarchyTier } from "@/lib/agent-hierarchy";
 import { UltraAdminView } from "@/components/dashboard/UltraAdminView";
-import { SuperAgentView } from "@/components/dashboard/SuperAgentView";
 import { AgentView } from "@/components/dashboard/AgentView";
 
 export const Route = createFileRoute("/dashboard/")({
@@ -42,7 +41,7 @@ function DashboardPage() {
         <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center">
           <h1 className="text-xl font-bold text-foreground">Access denied</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            This dashboard is restricted to the agent hierarchy (ultra_admin, super_agent, agent).
+            This dashboard is restricted to the agent hierarchy (ultra_admin, agent).
           </p>
         </div>
       </main>
@@ -50,6 +49,5 @@ function DashboardPage() {
   }
 
   if (tier === "ultra_admin") return <UltraAdminView />;
-  if (tier === "super_agent") return <SuperAgentView />;
   return <AgentView />;
 }

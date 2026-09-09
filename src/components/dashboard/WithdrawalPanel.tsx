@@ -44,7 +44,7 @@ type Withdrawal = {
 export function WithdrawalPanel({
   tier = "player",
 }: {
-  tier?: "player" | "agent" | "super_agent" | "ultra_admin";
+  tier?: "player" | "agent" | "ultra_admin";
 }) {
   const { user } = useAuth(),
     { refresh } = useWallet();
@@ -90,7 +90,7 @@ export function WithdrawalPanel({
     try {
       const action = modal.action;
       let args: Record<string, unknown> = { p_request_id: modal.id };
-      if (action === "player_request_withdrawal") {
+      if (action === "player_request_withdrawal" || action === "player_request_topup") {
         const raw = String(form.get("amount"));
         if (!/^\d+(\.\d{1,2})?$/.test(raw) || Number(raw) <= 0)
           throw new Error("Enter a positive credit amount with up to two decimals");
@@ -102,7 +102,11 @@ export function WithdrawalPanel({
       if (error) throw error;
       setModal(null);
       await Promise.all([load(), refresh()]);
-      toast.success("Credit request updated");
+      toast.success(
+        action === "player_request_topup"
+          ? "Top-up request sent to your agent"
+          : "Credit request updated",
+      );
     } catch (e) {
       toast.error(
         e instanceof Error ? e.message : (e as { message?: string }).message || "Request failed",
@@ -129,12 +133,21 @@ export function WithdrawalPanel({
             Refresh
           </Button>
           {tier === "player" && (
-            <Button
-              disabled={!!error || loading}
-              onClick={() => setModal({ action: "player_request_withdrawal" })}
-            >
-              New request
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                disabled={!!error || loading}
+                onClick={() => setModal({ action: "player_request_topup" })}
+              >
+                Top up request
+              </Button>
+              <Button
+                disabled={!!error || loading}
+                onClick={() => setModal({ action: "player_request_withdrawal" })}
+              >
+                Cash out request
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -238,16 +251,20 @@ export function WithdrawalPanel({
           <DialogHeader>
             <DialogTitle>
               {modal?.action === "player_request_withdrawal"
-                ? "Request test credits"
-                : "Review credit request"}
+                ? "Request a cash out"
+                : modal?.action === "player_request_topup"
+                  ? "Request a top up"
+                  : "Review credit request"}
             </DialogTitle>
             <DialogDescription>
-              Requested credits stay reserved until settlement or rejection. Rejected requests
-              return their credits.
+              {modal?.action === "player_request_topup"
+                ? "Your agent will get a notification and can add credits from their dashboard."
+                : "Requested credits stay reserved until settlement or rejection. Rejected requests return their credits."}
             </DialogDescription>
           </DialogHeader>
           <form className="space-y-4" onSubmit={submit}>
-            {modal?.action === "player_request_withdrawal" ? (
+            {modal?.action === "player_request_withdrawal" ||
+            modal?.action === "player_request_topup" ? (
               <label className="block text-sm">
                 Amount
                 <Input name="amount" required inputMode="decimal" placeholder="0.00" />
