@@ -124,6 +124,26 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     tagline: "A 40-segment prize wheel with a spotlight number and a surprise boost each spin.",
     maxWinMultiplier: 250,
   },
+  {
+    id: "velvet-blackjack",
+    name: "Blackjack Royale",
+    provider: "Betrix Originals",
+    category: "table",
+    path: "/games/betrix-tables/blackjack.html",
+    thumbnail: "/games/betrix-tables/assets/table-room.png",
+    tagline: "Hit, stand, double or split at your private table.",
+    maxWinMultiplier: 2.5,
+  },
+  {
+    id: "velvet-baccarat",
+    name: "Mega Baccarat",
+    provider: "Betrix Originals",
+    category: "table",
+    path: "/games/betrix-tables/baccarat.html",
+    thumbnail: "/games/betrix-tables/assets/table-room.png",
+    tagline: "Classic punto banco with a surprise mega multiplier.",
+    maxWinMultiplier: 41,
+  },
 ];
 
 export function getGameById(id: string): Html5CasinoGame | undefined {

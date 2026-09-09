@@ -19,7 +19,7 @@ export function setupVelvetBridge(
     if (
       typeof requestId !== "string" ||
       !/^[a-f0-9-]{36}$/i.test(requestId) ||
-      !["init", "spin", "pick"].includes(action)
+      !["init", "spin", "pick", "deal", "hit", "stand", "double", "split"].includes(action)
     )
       return;
     const reply = (value: object) => {

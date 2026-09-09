@@ -17,6 +17,7 @@ import {
   outcome as wheelOutcome,
   settle as settleWheel,
 } from "./grand-engine.mjs";
+import { tableRound, tablePublic } from "./table-round.mjs";
 export const IDS = [
   "velvet-vault",
   "velvet-roulette",
@@ -26,17 +27,22 @@ export const IDS = [
   "velvet-paw",
   "velvet-bass",
   "velvet-grand",
+  "velvet-blackjack",
+  "velvet-baccarat",
 ];
 const requireValue = (ok, message) => {
   if (!ok) throw new Error(message);
 };
 export function publicState(state) {
   if (!state) return null;
+  if (state.kind === "blackjack" || state.kind === "baccarat") return tablePublic(state);
   const { prizes, ...rest } = state;
   return rest;
 }
-export function resolveRound(game, input, state = null) {
+export function resolveRound(game, input, state = null, balance = 0) {
   requireValue(IDS.includes(game), "Unknown game");
+  if (game === "velvet-blackjack" || game === "velvet-baccarat")
+    return tableRound(game, input, state, balance);
   if (game === "velvet-vault" && state?.kind === "vault") {
     requireValue(input.action === "pick", "Finish your vault bonus first");
     const index = input.index;
