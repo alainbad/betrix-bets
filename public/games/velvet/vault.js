@@ -120,7 +120,7 @@ async function animateReels(final) {
       const anim = strip.animate(
         [{ transform: "translateY(0)" }, { transform: `translateY(-${17 * height}px)` }],
         {
-          duration: reduced ? 1 : turbo ? 560 + c * 100 : 1700 + c * 260,
+          duration: reduced ? 1 : turbo ? 430 + c * 75 : 1100 + c * 190,
           easing: "cubic-bezier(.16,.65,.12,1)",
           fill: "forwards",
         },
