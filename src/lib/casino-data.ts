@@ -93,6 +93,37 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     tagline: "7×7 candy clusters that light up spots and grow to 128× the more you hit them.",
     maxWinMultiplier: 5000,
   },
+  {
+    id: "velvet-paw",
+    name: "Paw Palace",
+    provider: "Betrix Originals",
+    category: "slots",
+    path: "/games/paw-palace/paw.html",
+    thumbnail: "/games/paw-palace/assets/paw-room.png",
+    tagline:
+      "Six changing reels, up to 117,649 ways, and doghouse wilds that stick for the feature.",
+    maxWinMultiplier: 5000,
+  },
+  {
+    id: "velvet-bass",
+    name: "Bass Harbour",
+    provider: "Betrix Originals",
+    category: "slots",
+    path: "/games/bass-harbour/bass.html",
+    thumbnail: "/games/bass-harbour/assets/bass-room.png",
+    tagline: "10 lines of angler wilds collecting cash fish at a growing multiplier level.",
+    maxWinMultiplier: 5000,
+  },
+  {
+    id: "velvet-grand",
+    name: "Grand Spin",
+    provider: "Betrix Originals",
+    category: "instant",
+    path: "/games/grand-spin/grand.html",
+    thumbnail: "/games/grand-spin/assets/grand-room.png",
+    tagline: "A 40-segment prize wheel with a spotlight number and a surprise boost each spin.",
+    maxWinMultiplier: 250,
+  },
 ];
 
 export function getGameById(id: string): Html5CasinoGame | undefined {

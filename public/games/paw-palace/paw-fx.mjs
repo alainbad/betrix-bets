@@ -1,0 +1,353 @@
+// Original real-time effects. Decorative randomness never enters game outcomes.
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+export function dropMotion(distance, height, theme, turbo = false, column = 0, row = 0) {
+  const speed = turbo ? 0.48 : 1,
+    travel = Math.max(1, distance) * height,
+    bounce = theme === "candy" ? Math.min(13, height * 0.15) : Math.min(6, height * 0.075);
+  return {
+    duration: Math.round((400 + Math.sqrt(distance) * 85) * speed),
+    delay: Math.round((column * 49 + row * 11) * speed),
+    frames: [
+      {
+        transform: `translateY(${-travel}px) scale(.94,1.07)`,
+        opacity: 0,
+        offset: 0,
+        easing: "cubic-bezier(.45,0,.85,.55)",
+      },
+      { transform: "translateY(0) scale(1,1)", opacity: 1, offset: 0.71 },
+      {
+        transform: `translateY(${bounce * 0.3}px) scale(${theme === "candy" ? 1.13 : 1.045},${theme === "candy" ? 0.85 : 0.94})`,
+        opacity: 1,
+        offset: 0.79,
+      },
+      { transform: `translateY(${-bounce}px) scale(.97,1.035)`, opacity: 1, offset: 0.9 },
+      { transform: "translateY(0) scale(1,1)", opacity: 1, offset: 1 },
+    ],
+  };
+}
+export class SlotFX {
+  constructor(theme) {
+    this.theme = theme;
+    this.reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    this.particles = [];
+    this.bolts = [];
+    this.rings = [];
+    this.labels = [];
+    this.flights = [];
+    this.raf = 0;
+    this.last = 0;
+    this.canvas = document.createElement("canvas");
+    this.canvas.className = "slot-fx-canvas";
+    this.canvas.setAttribute("aria-hidden", "true");
+    document.body.append(this.canvas);
+    this.ctx = this.canvas.getContext("2d");
+    this.resize = () => {
+      this.dpr = Math.min(devicePixelRatio || 1, 2);
+      this.w = innerWidth;
+      this.h = innerHeight;
+      this.canvas.width = this.w * this.dpr;
+      this.canvas.height = this.h * this.dpr;
+      this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    };
+    this.resize();
+    window.addEventListener("resize", this.resize);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) this.clear();
+    });
+    window.addEventListener("pagehide", () => this.clear());
+  }
+  clear() {
+    this.particles = [];
+    this.bolts = [];
+    this.rings = [];
+    this.labels = [];
+    this.flights = [];
+    cancelAnimationFrame(this.raf);
+    this.raf = 0;
+    this.ctx.clearRect(0, 0, this.w, this.h);
+  }
+  point(el) {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height };
+  }
+  run() {
+    if (!this.raf && !this.reduced) {
+      this.last = performance.now();
+      this.raf = requestAnimationFrame((t) => this.frame(t));
+    }
+  }
+  burst(point, count = 18, power = 1) {
+    if (this.reduced) return;
+    const colors =
+      this.theme === "candy"
+        ? ["#fff2a0", "#ff89cf", "#ffdafa", "#a6f7ff", "#fff5df"]
+        : this.theme === "thunder"
+          ? ["#ecfaff", "#a6e4ff", "#62acff", "#f4da99"]
+          : ["#ffe8a1", "#ecc06d", "#fff8dc"];
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2,
+        v = (1.2 + Math.random() * 3.5) * power;
+      this.particles.push({
+        x: point.x,
+        y: point.y,
+        vx: Math.cos(a) * v,
+        vy: Math.sin(a) * v - 1.3,
+        life: 0,
+        ttl: 450 + Math.random() * 550,
+        size: (this.theme === "thunder" ? 1.3 : 2.6) + Math.random() * 3.5,
+        color: colors[i % colors.length],
+        angle: Math.random() * 6.3,
+        turn: (Math.random() - 0.5) * 0.16,
+        star: this.theme !== "thunder" && i % 3 !== 0,
+        gravity: this.theme === "candy" ? 0.045 : 0.027,
+      });
+    }
+    this.particles = this.particles.slice(-480);
+    this.run();
+  }
+  ring(p, large = false) {
+    if (this.reduced) return;
+    this.rings.push({
+      x: p.x,
+      y: p.y,
+      r: large ? 14 : 5,
+      max: large ? 95 : Math.min(p.w || 65, 65) * 0.72,
+      life: 0,
+      ttl: large ? 600 : 420,
+      color: this.theme === "candy" ? "#ffc5ec" : this.theme === "thunder" ? "#a6dcff" : "#ffdb90",
+    });
+    this.run();
+  }
+  land(el, special = false) {
+    if (this.reduced) return;
+    const p = this.point(el);
+    p.y += p.h * 0.3;
+    this.burst(p, special ? 12 : 5, 0.45);
+    if (special) this.ring(p);
+  }
+  bolt(from, to, delay = 0) {
+    if (this.reduced) return;
+    const points = [from],
+      steps = 11;
+    for (let i = 1; i < steps; i++) {
+      const k = i / steps;
+      points.push({
+        x: from.x + (to.x - from.x) * k + (Math.random() - 0.5) * 38,
+        y: from.y + (to.y - from.y) * k + (Math.random() - 0.5) * 9,
+      });
+    }
+    points.push(to);
+    this.bolts.push({ points, life: -delay, ttl: 430, color: "#92d4ff" });
+    this.run();
+  }
+  match(elements, frame) {
+    if (this.reduced) return;
+    const pts = elements.map((el) => this.point(el));
+    if (this.theme === "thunder" && pts.length) {
+      const r = frame.getBoundingClientRect(),
+        origin = { x: r.right - r.width * 0.12, y: Math.max(0, r.top - 65) },
+        hub = pts[Math.floor(pts.length / 2)];
+      this.bolt(origin, hub);
+      pts.forEach((p, i) => {
+        if (p !== hub) this.bolt(hub, p, 35 + i * 9);
+      });
+    }
+    for (const p of pts) {
+      this.burst(p, this.theme === "candy" ? 15 : 17);
+      this.ring(p);
+    }
+  }
+  label(elements, text) {
+    if (this.reduced || !elements.length) return;
+    const pts = elements.map((el) => this.point(el));
+    const x = pts.reduce((s, p) => s + p.x, 0) / pts.length,
+      y = pts.reduce((s, p) => s + p.y, 0) / pts.length;
+    this.labels.push({
+      x,
+      y,
+      text,
+      life: 0,
+      ttl: 1100,
+      color: this.theme === "candy" ? "#fff1b0" : "#e2f6ff",
+    });
+    this.run();
+  }
+  absorb(el, target, value, turbo = false) {
+    if (this.reduced) return Promise.resolve();
+    const from = this.point(el),
+      to = this.point(target),
+      ttl = turbo ? 330 : 700;
+    this.flights.push({
+      from,
+      to,
+      control: { x: (from.x + to.x) / 2 + 50, y: Math.min(from.y, to.y) - 75 },
+      value,
+      life: 0,
+      ttl,
+    });
+    this.run();
+    return new Promise((resolve) => setTimeout(resolve, ttl));
+  }
+  celebrate(frame) {
+    if (this.reduced) return;
+    const r = frame.getBoundingClientRect();
+    for (let i = 0; i < 5; i++) {
+      this.burst({ x: r.left + r.width * (0.12 + i * 0.19), y: r.top + r.height * 0.55 }, 28, 1.9);
+    }
+  }
+  star(c, x, y, size, angle) {
+    c.save();
+    c.translate(x, y);
+    c.rotate(angle);
+    c.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI) / 5,
+        r = i % 2 ? size * 0.42 : size;
+      c.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    c.closePath();
+    c.fill();
+    c.restore();
+  }
+  frame(now) {
+    this.raf = -1;
+    const dt = Math.min(now - this.last, 40),
+      step = dt / 16.667;
+    this.last = now;
+    const c = this.ctx;
+    c.clearRect(0, 0, this.w, this.h);
+    c.globalCompositeOperation = "lighter";
+    for (const b of this.bolts) {
+      b.life += dt;
+      if (b.life < 0) continue;
+      const alpha = Math.pow(Math.max(0, 1 - b.life / b.ttl), 1.6);
+      c.beginPath();
+      b.points.forEach((p, i) => (i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y)));
+      c.lineJoin = "round";
+      c.lineCap = "round";
+      c.globalAlpha = alpha * 0.3;
+      c.strokeStyle = b.color;
+      c.lineWidth = 11;
+      c.shadowColor = b.color;
+      c.shadowBlur = 18;
+      c.stroke();
+      c.globalAlpha = alpha;
+      c.lineWidth = 2.4;
+      c.strokeStyle = "#effbff";
+      c.shadowBlur = 7;
+      c.stroke();
+    }
+    c.shadowBlur = 0;
+    for (const r of this.rings) {
+      r.life += dt;
+      const p = clamp(r.life / r.ttl, 0, 1);
+      c.globalAlpha = (1 - p) * 0.7;
+      c.strokeStyle = r.color;
+      c.lineWidth = 2.2 * (1 - p) + 0.3;
+      c.beginPath();
+      c.ellipse(
+        r.x,
+        r.y,
+        r.r + (r.max - r.r) * p,
+        (r.r + (r.max - r.r) * p) * 0.68,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      c.stroke();
+    }
+    for (const p of this.particles) {
+      p.life += dt;
+      p.x += p.vx * step;
+      p.y += p.vy * step;
+      p.vy += p.gravity * step;
+      p.vx *= Math.pow(0.99, step);
+      p.angle += p.turn * step;
+      c.globalAlpha = Math.pow(Math.max(0, 1 - p.life / p.ttl), 1.25);
+      c.fillStyle = p.color;
+      if (p.star) this.star(c, p.x, p.y, p.size, p.angle);
+      else {
+        c.beginPath();
+        c.arc(p.x, p.y, p.size * 0.48, 0, Math.PI * 2);
+        c.fill();
+      }
+    }
+    for (const f of this.flights) {
+      f.life += dt;
+      const p = clamp(f.life / f.ttl, 0, 1),
+        e = 1 - Math.pow(1 - p, 2),
+        x = (1 - e) ** 2 * f.from.x + 2 * (1 - e) * e * f.control.x + e ** 2 * f.to.x,
+        y = (1 - e) ** 2 * f.from.y + 2 * (1 - e) * e * f.control.y + e ** 2 * f.to.y;
+      c.globalAlpha = 1;
+      c.fillStyle = this.theme === "candy" ? "#ffc4e9" : "#bfe7ff";
+      c.shadowColor = c.fillStyle;
+      c.shadowBlur = 18;
+      c.beginPath();
+      c.arc(x, y, 10 * (1 - p) + 5, 0, Math.PI * 2);
+      c.fill();
+      c.shadowBlur = 0;
+      if (Math.random() < 0.5)
+        this.particles.push({
+          x,
+          y,
+          vx: Math.random() - 0.5,
+          vy: 1,
+          life: 0,
+          ttl: 300,
+          size: 3,
+          color: c.fillStyle,
+          angle: 0,
+          turn: 0.03,
+          star: this.theme === "candy",
+          gravity: 0,
+        });
+      c.globalCompositeOperation = "source-over";
+      c.font = "800 22px Manrope,Arial";
+      c.textAlign = "center";
+      c.lineWidth = 4;
+      c.strokeStyle = "#17203d";
+      c.strokeText(f.value + "×", x, y - 18);
+      c.fillStyle = "#fff4c2";
+      c.fillText(f.value + "×", x, y - 18);
+      c.globalCompositeOperation = "lighter";
+      if (p >= 1) {
+        this.burst(f.to, 16, 0.75);
+        this.ring(f.to);
+      }
+    }
+    c.globalCompositeOperation = "source-over";
+    for (const l of this.labels) {
+      l.life += dt;
+      const p = clamp(l.life / l.ttl, 0, 1);
+      c.globalAlpha = Math.min(1, p * 8) * (1 - p * 0.8);
+      c.textAlign = "center";
+      c.font = `800 ${innerWidth < 560 ? 22 : 30}px ${this.theme === "candy" ? "Fredoka" : "Cinzel"},Georgia`;
+      c.shadowColor = "#151426";
+      c.shadowBlur = 10;
+      c.strokeStyle = "#23223ecc";
+      c.lineWidth = 4;
+      c.strokeText(l.text, l.x, l.y - p * 48);
+      c.fillStyle = l.color;
+      c.fillText(l.text, l.x, l.y - p * 48);
+    }
+    c.shadowBlur = 0;
+    c.globalAlpha = 1;
+    this.particles = this.particles.filter((p) => p.life < p.ttl);
+    this.bolts = this.bolts.filter((p) => p.life < p.ttl);
+    this.rings = this.rings.filter((p) => p.life < p.ttl);
+    this.labels = this.labels.filter((p) => p.life < p.ttl);
+    this.flights = this.flights.filter((p) => p.life < p.ttl);
+    if (
+      this.particles.length ||
+      this.bolts.length ||
+      this.rings.length ||
+      this.labels.length ||
+      this.flights.length
+    )
+      this.raf = requestAnimationFrame((t) => this.frame(t));
+    else {
+      this.raf = 0;
+      c.clearRect(0, 0, this.w, this.h);
+    }
+  }
+}
