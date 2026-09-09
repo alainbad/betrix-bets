@@ -36,10 +36,10 @@ interface LedgerRow {
   createdAt: string;
 }
 
-const TABS = ["Overview", "All Users", "Super Agents", "Transactions"] as const;
+const TABS = ["Overview", "All Users", "Transactions"] as const;
 type Tab = (typeof TABS)[number];
 
-async function fetchAccountsWithRole(role: "super_agent" | "agent"): Promise<TierAccount[]> {
+async function fetchAccountsWithRole(role: "agent"): Promise<TierAccount[]> {
   const { data: roleRows, error: roleError } = await supabase
     .from("user_roles")
     .select("user_id")
@@ -78,7 +78,6 @@ async function fetchAccountsWithRole(role: "super_agent" | "agent"): Promise<Tie
 export function UltraAdminView() {
   const { user } = useAuth();
   const [tab, setTab] = useState<Tab>("Overview");
-  const [superAgents, setSuperAgents] = useState<TierAccount[]>([]);
   const [agents, setAgents] = useState<TierAccount[]>([]);
   const [playerCount, setPlayerCount] = useState(0);
   const [platformFloat, setPlatformFloat] = useState(0);
@@ -88,8 +87,7 @@ export function UltraAdminView() {
   async function reload() {
     setLoading(true);
     try {
-      const [sa, ag, playersRes, walletsRes] = await Promise.all([
-        fetchAccountsWithRole("super_agent"),
+      const [ag, playersRes, walletsRes] = await Promise.all([
         fetchAccountsWithRole("agent"),
         supabase
           .from("user_roles")
@@ -97,7 +95,6 @@ export function UltraAdminView() {
           .eq("role", "player"),
         supabase.from("wallets").select("available_balance"),
       ]);
-      setSuperAgents(sa);
       setAgents(ag);
       setPlayerCount(playersRes.count ?? 0);
       setPlatformFloat(
@@ -164,14 +161,11 @@ export function UltraAdminView() {
           <Overview
             platformFloat={platformFloat}
             playerCount={playerCount}
-            activeAgents={superAgents.length + agents.length}
+            activeAgents={agents.length}
             loading={loading}
           />
         )}
         {tab === "All Users" && <AllUsersManagement />}
-        {tab === "Super Agents" && (
-          <SuperAgentManagement superAgents={superAgents} loading={loading} onChanged={reload} />
-        )}
         {tab === "Transactions" && <GlobalTransactions />}
       </div>
 
@@ -228,157 +222,8 @@ function Overview({
   );
 }
 
-function SuperAgentManagement({
-  superAgents,
-  loading,
-  onChanged,
-}: {
-  superAgents: TierAccount[];
-  loading: boolean;
-  onChanged: () => void;
-}) {
-  const [query, setQuery] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const [creating, setCreating] = useState(false);
-  const [mintTarget, setMintTarget] = useState<TierAccount | null>(null);
-
-  const rows = superAgents.filter((a) =>
-    `${a.username} ${a.email} ${a.accountId} ${a.id}`.toLowerCase().includes(query.toLowerCase()),
-  );
-
-  async function handleAddSuperAgent(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newEmail.trim()) {
-      toast.error("Enter the account's email");
-      return;
-    }
-    setCreating(true);
-    const { error } = await supabase.rpc("promote_to_super_agent", {
-      p_target_email: newEmail.trim(),
-    });
-    setCreating(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    toast.success(`${newEmail.trim()} promoted to super_agent`);
-    setNewEmail("");
-    onChanged();
-  }
-
-  return (
-    <div className="space-y-6">
-      <form
-        onSubmit={handleAddSuperAgent}
-        className="grid gap-3 rounded-2xl border border-border bg-card p-5 sm:grid-cols-[2fr_auto] sm:items-end"
-      >
-        <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Promote existing account to Super Agent (by email)
-          </label>
-          <Input
-            value={newEmail}
-            onChange={(e) => setNewEmail(e.target.value)}
-            type="email"
-            placeholder="investor@example.com"
-            className="mt-1"
-          />
-        </div>
-        <Button type="submit" disabled={creating}>
-          {creating ? "Promoting…" : "Add Super Agent"}
-        </Button>
-      </form>
-
-      <label className="relative flex max-w-sm items-center">
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by username, email or ID"
-        />
-      </label>
-
-      <div className="overflow-x-auto rounded-2xl border border-border bg-card">
-        <table className="w-full min-w-[46rem] text-sm">
-          <thead className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3 font-semibold">Super Agent</th>
-              <th className="px-4 py-3 font-semibold">Account ID</th>
-              <th className="px-4 py-3 text-right font-semibold">Balance</th>
-              <th className="px-4 py-3 text-right font-semibold">Joined</th>
-              <th className="px-4 py-3 text-right font-semibold">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (
-              <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
-                  Loading…
-                </td>
-              </tr>
-            )}
-            {!loading && rows.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
-                  No super agents yet.
-                </td>
-              </tr>
-            )}
-            {rows.map((a) => (
-              <tr
-                key={a.id}
-                className="border-b border-border/60 last:border-0 hover:bg-betrix-surface-elevated"
-              >
-                <td className="px-4 py-3">
-                  <Link
-                    to="/dashboard/users/$accountId"
-                    params={{ accountId: a.accountId }}
-                    className="flex items-center gap-2 font-semibold text-foreground hover:text-primary hover:underline"
-                  >
-                    {a.username}
-                    <StatusBadge status={a.status} />
-                  </Link>
-                  <p className="text-xs text-muted-foreground">{a.email}</p>
-                </td>
-                <td className="px-4 py-3">
-                  <AccountIdBadge accountId={a.accountId} />
-                </td>
-                <td className="px-4 py-3 text-right font-semibold text-foreground">
-                  {formatCurrency(a.balance)}
-                </td>
-                <td className="px-4 py-3 text-right text-muted-foreground">
-                  {formatDateTime(a.createdAt)}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <Button size="sm" variant="outline" onClick={() => setMintTarget(a)}>
-                    Mint balance
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <IdentifierTransferModal
-        open={mintTarget !== null}
-        title={mintTarget ? `Mint balance for ${mintTarget.username}` : "Mint balance"}
-        actionLabel="Mint"
-        amountLabel="Coins to mint"
-        rpcName="mint_super_agent_balance"
-        initialIdentifier={mintTarget?.accountId}
-        onClose={() => setMintTarget(null)}
-        onDone={() => {
-          setMintTarget(null);
-          onChanged();
-        }}
-      />
-    </div>
-  );
-}
-
 const ROLE_LABEL: Record<DownlineProfile["role"], string> = {
   ultra_admin: "Ultra Admin",
-  super_agent: "Super Agent",
   agent: "Agent",
   player: "Player",
   unknown: "Unknown",
@@ -386,7 +231,7 @@ const ROLE_LABEL: Record<DownlineProfile["role"], string> = {
 
 // Every account on the platform, with one-click promotion into the
 // hierarchy - the "report for all agents" the ultra_admin also asked for is
-// this same list, since every super_agent/agent already shows up here with
+// this same list, since every agent already shows up here with
 // their role and balance (no separate report view needed on top of it).
 function AllUsersManagement() {
   const { user } = useAuth();
@@ -415,8 +260,8 @@ function AllUsersManagement() {
     `${r.username} ${r.email} ${r.accountId}`.toLowerCase().includes(query.toLowerCase()),
   );
 
-  async function handleSetRole(target: DownlineProfile, role: "super_agent" | "agent" | "player") {
-    const label = role === "super_agent" ? "Super Agent" : role === "agent" ? "Agent" : "Player";
+  async function handleSetRole(target: DownlineProfile, role: "agent" | "player") {
+    const label = role === "agent" ? "Agent" : "Player";
     const confirmMessage =
       role === "player"
         ? `Make ${target.username} a Player again? This removes their ${ROLE_LABEL[target.role]} role - you can re-promote them any time.`
@@ -503,26 +348,16 @@ function AllUsersManagement() {
                 <td className="px-4 py-3 text-right">
                   <div className="flex flex-wrap justify-end gap-2">
                     {r.role === "player" && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={actingOnId === r.id}
-                          onClick={() => void handleSetRole(r, "super_agent")}
-                        >
-                          Make Super Agent
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={actingOnId === r.id}
-                          onClick={() => void handleSetRole(r, "agent")}
-                        >
-                          Make Agent
-                        </Button>
-                      </>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={actingOnId === r.id}
+                        onClick={() => void handleSetRole(r, "agent")}
+                      >
+                        Make Agent
+                      </Button>
                     )}
-                    {(r.role === "super_agent" || r.role === "agent") && (
+                    {r.role === "agent" && (
                       <Button
                         size="sm"
                         variant="outline"

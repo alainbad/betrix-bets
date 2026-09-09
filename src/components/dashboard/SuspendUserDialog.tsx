@@ -13,8 +13,8 @@ import {
 
 // The master-code confirmation gate for suspend_user - see
 // 20260827030000_user_suspension_master_code.sql. Every hierarchy tier
-// (ultra_admin/super_agent/agent) uses this same dialog; the RPC itself
-// enforces who's allowed to reach the target account.
+// (ultra_admin/agent) uses this same dialog; the RPC itself enforces who's
+// allowed to reach the target account.
 export function SuspendUserDialog({
   open,
   targetUsername,

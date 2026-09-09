@@ -12,7 +12,7 @@ interface MasterCodeStatus {
 }
 
 // ultra_admin-only: create or rotate the shared master code that gates
-// suspend_user for every hierarchy tier (see
+// suspend_user for ultra_admin and agent (see
 // 20260827030000_user_suspension_master_code.sql). Whoever holds this code
 // - not just whoever's logged in as ultra_admin at the time - can confirm a
 // suspension, so treat rotating it the same as changing a shared password.
@@ -80,7 +80,7 @@ export function MasterCodeSettings() {
         <p className="mt-1.5 text-xs text-muted-foreground">
           {status?.configured
             ? `Currently set - last updated ${status.updatedAt ? formatDateTime(status.updatedAt) : "unknown"}. Share this code only with staff trusted to suspend accounts.`
-            : "Not set yet - ultra_admin, super_agent and agent can't suspend anyone until a master code exists."}
+            : "Not set yet - ultra_admin and agent can't suspend anyone until a master code exists."}
         </p>
       </div>
       <Button type="submit" disabled={saving}>
