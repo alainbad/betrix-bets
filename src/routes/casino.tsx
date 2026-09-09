@@ -59,12 +59,12 @@ function CasinoPage() {
   );
 
   function openGame(game: Html5CasinoGame, practice = false) {
-    if (!practice && !user) {
+    if (!practice && !user && !game.demoOnly) {
       toast.error("Sign in to play with your Betrix wallet.");
       return;
     }
 
-    setPreview(practice);
+    setPreview(practice || !!game.demoOnly);
     setLiveBalance(balance);
     setActiveGame(game);
   }
@@ -163,18 +163,29 @@ function CasinoPage() {
               <div className="flex flex-wrap items-center justify-between gap-4 p-5">
                 <p className="max-w-xs text-sm text-muted-foreground">{game.tagline}</p>
                 <div className="flex gap-3">
-                  <button
-                    onClick={() => openGame(game, true)}
-                    className="rounded-lg border border-border px-4 py-2 text-sm font-semibold hover:bg-secondary"
-                  >
-                    ▷ Preview
-                  </button>
-                  <button
-                    onClick={() => openGame(game)}
-                    className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
-                  >
-                    Play game →
-                  </button>
+                  {game.demoOnly ? (
+                    <button
+                      onClick={() => openGame(game, true)}
+                      className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+                    >
+                      Play demo →
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => openGame(game, true)}
+                        className="rounded-lg border border-border px-4 py-2 text-sm font-semibold hover:bg-secondary"
+                      >
+                        ▷ Preview
+                      </button>
+                      <button
+                        onClick={() => openGame(game)}
+                        className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+                      >
+                        Play game →
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </article>
