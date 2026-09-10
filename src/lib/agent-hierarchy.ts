@@ -194,19 +194,28 @@ export async function fetchProfileByAccountId(accountId: string): Promise<Profil
   };
 }
 
+export interface DateRange {
+  from?: string;
+  to?: string;
+}
+
 // A target account's casino round history (wins/losses/pushes) - the same
 // shape wallet-store.tsx fetches for the logged-in player's own history,
-// generalized to any account the caller's RLS grant reaches.
+// generalized to any account the caller's RLS grant reaches. `range` narrows
+// to created_at >= from / <= to (both optional, ISO timestamps) - used by
+// the ultra_admin player report to scope totals to a time frame.
 export async function fetchCasinoRounds(
   userId: string,
   limit = 50,
+  range?: DateRange,
 ): Promise<CasinoRoundHistoryItem[]> {
-  const { data, error } = await supabase
+  let query = supabase
     .from("casino_rounds")
     .select("id, game_id, stake, outcome, payout, created_at")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(limit);
+    .eq("user_id", userId);
+  if (range?.from) query = query.gte("created_at", range.from);
+  if (range?.to) query = query.lte("created_at", range.to);
+  const { data, error } = await query.order("created_at", { ascending: false }).limit(limit);
   if (error) throw error;
   return (data ?? []).map((row) => ({
     id: row.id as string,
@@ -244,15 +253,20 @@ export async function fetchOwnReferralCode(userId: string): Promise<string | nul
   return (data?.referral_code as string) ?? null;
 }
 
-export async function fetchLedger(userId: string, limit = 50): Promise<LedgerEntry[]> {
-  const { data, error } = await supabase
+export async function fetchLedger(
+  userId: string,
+  limit = 50,
+  range?: DateRange,
+): Promise<LedgerEntry[]> {
+  let query = supabase
     .from("wallet_transactions")
     .select(
       "id, user_id, transaction_type, amount, balance_before, balance_after, reference_type, created_at",
     )
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(limit);
+    .eq("user_id", userId);
+  if (range?.from) query = query.gte("created_at", range.from);
+  if (range?.to) query = query.lte("created_at", range.to);
+  const { data, error } = await query.order("created_at", { ascending: false }).limit(limit);
   if (error) throw error;
   return (data ?? []).map((row) => ({
     id: row.id as string,
@@ -262,6 +276,40 @@ export async function fetchLedger(userId: string, limit = 50): Promise<LedgerEnt
     balanceBefore: Number(row.balance_before),
     balanceAfter: Number(row.balance_after),
     referenceType: row.reference_type as string | null,
+    createdAt: row.created_at as string,
+  }));
+}
+
+export interface WithdrawalHistoryEntry {
+  id: string;
+  amount: number;
+  status: string;
+  offlinePayoutReference: string | null;
+  createdAt: string;
+}
+
+// A player's cash-out request history, for the ultra_admin player report -
+// RLS on withdrawal_requests already lets an ultra_admin select any row
+// (see 20260908020000_withdrawal_review.sql), so this just filters to one
+// player and an optional time frame.
+export async function fetchWithdrawalsForPlayer(
+  playerId: string,
+  limit = 500,
+  range?: DateRange,
+): Promise<WithdrawalHistoryEntry[]> {
+  let query = supabase
+    .from("withdrawal_requests")
+    .select("id, amount, status, offline_payout_reference, created_at")
+    .eq("player_id", playerId);
+  if (range?.from) query = query.gte("created_at", range.from);
+  if (range?.to) query = query.lte("created_at", range.to);
+  const { data, error } = await query.order("created_at", { ascending: false }).limit(limit);
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    amount: Number(row.amount),
+    status: row.status as string,
+    offlinePayoutReference: row.offline_payout_reference as string | null,
     createdAt: row.created_at as string,
   }));
 }
