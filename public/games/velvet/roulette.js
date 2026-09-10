@@ -261,7 +261,7 @@ async function spin() {
     endWheel = startWheel + TAU * 2 + rand(628) / 100,
     target = -PI / 2 + index * step + endWheel,
     endBall = target - Math.ceil((target - startBall + TAU * 6) / TAU) * TAU,
-    duration = reduced ? 100 : 6200;
+    duration = reduced ? 100 : 4600;
   await new Promise((resolve) => {
     const t0 = performance.now();
     function tick(t) {

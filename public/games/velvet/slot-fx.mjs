@@ -5,8 +5,8 @@ export function dropMotion(distance, height, theme, turbo = false, column = 0, r
     travel = Math.max(1, distance) * height,
     bounce = theme === "candy" ? Math.min(13, height * 0.15) : Math.min(6, height * 0.075);
   return {
-    duration: Math.round((560 + Math.sqrt(distance) * 150) * speed),
-    delay: Math.round((column * 78 + row * 20) * speed),
+    duration: Math.round((400 + Math.sqrt(distance) * 85) * speed),
+    delay: Math.round((column * 49 + row * 11) * speed),
     frames: [
       {
         transform: `translateY(${-travel}px) scale(.94,1.07)`,
