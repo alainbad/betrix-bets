@@ -278,3 +278,25 @@
     animation: none !important;
   }
 }
+
+/* Player report export (PlayerReportDialog): printing/saving-as-PDF should
+   show only the report content, not the dashboard behind it or the dialog
+   chrome (time-frame picker, buttons). Everything is hidden by default and
+   only .report-print-area opts back in, positioned to fill the page. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .report-print-area,
+  .report-print-area * {
+    visibility: visible;
+  }
+  .report-print-area {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+  }
+  .report-no-print {
+    display: none !important;
+  }
+}

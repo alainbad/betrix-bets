@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { ArrowLeft, KeyRound, ShieldAlert, ShieldCheck } from "lucide-react";
+import { ArrowLeft, FileText, KeyRound, ShieldAlert, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import {
@@ -23,6 +23,7 @@ import { CopyBadge } from "@/components/dashboard/CopyBadge";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { SuspendUserDialog } from "@/components/dashboard/SuspendUserDialog";
 import { AdminResetPasswordDialog } from "@/components/dashboard/AdminResetPasswordDialog";
+import { PlayerReportDialog } from "@/components/dashboard/PlayerReportDialog";
 
 export const Route = createFileRoute("/dashboard/users/$accountId")({
   head: () => ({
@@ -47,6 +48,7 @@ function UserDetailPage() {
   const [rounds, setRounds] = useState<CasinoRoundHistoryItem[]>([]);
   const [suspendOpen, setSuspendOpen] = useState(false);
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -187,6 +189,11 @@ function UserDetailPage() {
                       <KeyRound className="h-3.5 w-3.5" /> Reset password
                     </Button>
                   )}
+                  {tier === "ultra_admin" && profile.role === "player" && (
+                    <Button size="sm" variant="outline" onClick={() => setReportOpen(true)}>
+                      <FileText className="h-3.5 w-3.5" /> Report
+                    </Button>
+                  )}
                   {profile.status === "suspended" ? (
                     <Button size="sm" variant="outline" disabled={busy} onClick={handleReactivate}>
                       <ShieldCheck className="h-3.5 w-3.5" /> Reactivate
@@ -235,6 +242,12 @@ function UserDetailPage() {
               targetUsername={profile.username}
               targetAccountId={profile.accountId}
               onClose={() => setResetPasswordOpen(false)}
+            />
+
+            <PlayerReportDialog
+              open={reportOpen}
+              profile={profile}
+              onClose={() => setReportOpen(false)}
             />
           </>
         )}
