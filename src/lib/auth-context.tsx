@@ -2,6 +2,10 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 
+// Shared with src/routes/auth.callback.tsx - see signInWithOAuth below for
+// why this travels via sessionStorage instead of a redirectTo query param.
+export const PENDING_REFERRAL_CLAIM_KEY = "betrix.pendingReferralClaim";
+
 interface AuthResult {
   error: string | null;
 }
@@ -75,22 +79,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // profile. So a referral code (required for brand-new signups) is
     // staked out as a short-lived claim first, validated up front, and
     // redeemed once back in the app with a live session - see
-    // src/routes/auth.callback.tsx.
-    let claimId: string | null = null;
+    // src/routes/auth.callback.tsx. The claim id travels via sessionStorage
+    // rather than a redirectTo query param: Supabase's redirect URL allow
+    // list is matched as an exact string, so a plain
+    // "<origin>/auth/callback" is what needs to be allow-listed, not one
+    // with a claim id appended - sessionStorage survives the round trip to
+    // the provider and back since it's scoped to the origin, not the page.
     if (referralCode) {
       const { data, error } = await supabase.rpc("create_pending_referral_claim", {
         _referral_code: referralCode,
       });
       if (error) return { error: error.message };
-      claimId = data as string;
+      sessionStorage.setItem(PENDING_REFERRAL_CLAIM_KEY, data as string);
     }
-
-    const redirectTo = new URL("/auth/callback", window.location.origin);
-    if (claimId) redirectTo.searchParams.set("claim", claimId);
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: redirectTo.toString() },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
     return { error: error?.message ?? null };
   }
