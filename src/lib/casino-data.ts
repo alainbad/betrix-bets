@@ -12,8 +12,6 @@ export interface Html5CasinoGame {
   thumbnail?: string;
   // Sub-genre shown next to the card's numbered badge, e.g. "Slots".
   badge: string;
-  // Small eyebrow tag in the top-right corner of the card image.
-  collection: string;
   // Amber eyebrow line under the image, above the game name.
   hook: string;
   // Short punchy line shown below the card image.
@@ -60,7 +58,6 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     path: "/games/velvet/vault.html",
     thumbnail: "/games/velvet/assets/vault-room.png",
     badge: "Slots",
-    collection: "The Heist Collection",
     hook: "The night is yours",
     description: "Find the master key. Crack the safe.",
     features: ["5 reels", "Expanding wilds", "Pick-a-safe bonus"],
@@ -74,7 +71,6 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     path: "/games/velvet/roulette.html",
     thumbnail: "/games/velvet/assets/roulette-cover.png",
     badge: "Table game",
-    collection: "Take your seat",
     hook: "The Velvet private table",
     description: "A classic table. A new spin.",
     features: ["Single zero", "Private table", "Multiple bets"],
@@ -88,7 +84,6 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     path: "/games/velvet/candy.html",
     thumbnail: "/games/velvet/assets/candy-room.png",
     badge: "Tumbling slots",
-    collection: "A little sweet, a little wild",
     hook: "Follow the sugar rush",
     description: "Sweet drops. Sparkling combinations.",
     features: ["Star bursts", "Sugar multipliers", "10 free spins"],
@@ -102,7 +97,6 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     path: "/games/velvet/thunder.html",
     thumbnail: "/games/velvet/assets/thunder-room.png",
     badge: "Tumbling slots",
-    collection: "Awaken the storm",
     hook: "Power beyond the clouds",
     description: "Summon lightning. Build your storm.",
     features: ["Lightning strikes", "Growing multipliers", "8 free spins"],
@@ -116,7 +110,6 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     path: "/games/sugar-spark/sugar.html",
     thumbnail: "/games/sugar-spark/assets/sugar-room.png",
     badge: "Cluster slots",
-    collection: "The candy afterparty",
     hook: "Every match leaves a spark",
     description: "Sweet spots. Bigger pops.",
     features: ["7×7 clusters", "Growing spots", "10 free spins"],
@@ -130,7 +123,6 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     path: "/games/paw-palace/paw.html",
     thumbnail: "/games/paw-palace/assets/paw-room-thumb.png",
     badge: "Dynamic ways",
-    collection: "Betrix Originals",
     hook: "Good dogs. Great surprises.",
     description: "Your next winning pack.",
     features: ["117,649 ways", "Sticky wilds", "Free spins"],
@@ -144,7 +136,6 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     path: "/games/bass-harbour/bass.html",
     thumbnail: "/games/bass-harbour/assets/bass-room.png",
     badge: "Fishing slots",
-    collection: "Betrix Originals",
     hook: "The next catch could be the one",
     description: "Cast your luck. Collect your catch.",
     features: ["10 paylines", "Cash fish", "Angler free spins"],
@@ -158,7 +149,6 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     path: "/games/grand-spin/grand.html",
     thumbnail: "/games/grand-spin/assets/grand-room-thumb.png",
     badge: "Wheel show",
-    collection: "Betrix Originals",
     hook: "Your moment on the wheel",
     description: "Pick your numbers. Make it grand.",
     features: ["40 segments", "Multiplier spotlight", "Wheel show"],
@@ -172,7 +162,6 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     path: "/games/betrix-tables/blackjack.html",
     thumbnail: "/games/betrix-tables/assets/table-room-thumb.png",
     badge: "Card table",
-    collection: "Betrix Originals",
     hook: "Your private table",
     description: "Take your seat.",
     features: ["Animated cards", "Table sounds", "Betrix Originals"],
@@ -186,7 +175,6 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     path: "/games/betrix-tables/baccarat.html",
     thumbnail: "/games/betrix-tables/assets/table-room-thumb.png",
     badge: "Card table",
-    collection: "Betrix Originals",
     hook: "Your private table",
     description: "Take your seat.",
     features: ["Animated cards", "Table sounds", "Betrix Originals"],
