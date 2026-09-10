@@ -135,16 +135,16 @@ function CasinoPage() {
           </label>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-4">
           {games.map((game, index) => (
             <article
               key={game.id}
-              className="group overflow-hidden rounded-2xl border border-border bg-card shadow-lg"
+              className="group overflow-hidden rounded-xl border border-border bg-card shadow-md transition-shadow hover:shadow-lg"
             >
               <button
                 type="button"
                 onClick={() => openGame(game)}
-                className="relative block aspect-[16/10] w-full overflow-hidden text-left"
+                className="relative block aspect-square w-full overflow-hidden text-left"
                 aria-label={`Play ${game.name}`}
               >
                 <img
@@ -152,47 +152,46 @@ function CasinoPage() {
                   alt={game.name}
                   width={1672}
                   height={941}
-                  loading={index < 2 ? "eager" : "lazy"}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  loading={index < 8 ? "eager" : "lazy"}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <span className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent" />
-                <span className="absolute left-6 top-5 rounded-full border border-white/25 bg-black/35 px-3 py-1 text-xs uppercase tracking-widest text-white">
-                  0{index + 1} / {game.category}
+                <span className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
+                <span className="absolute left-2 top-2 rounded-full border border-white/25 bg-black/40 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
+                  {game.category}
                 </span>
-                <div className="absolute bottom-6 left-6 right-6 text-white">
-                  <p className="mb-2 text-xs uppercase tracking-[.25em] text-amber-200">
+                <div className="absolute inset-x-0 bottom-0 p-2.5 text-white">
+                  <p className="truncate text-[10px] uppercase tracking-[.2em] text-amber-200">
                     {game.provider}
                   </p>
-                  <h2 className="font-serif text-4xl sm:text-5xl">{game.name}</h2>
+                  <h2 className="truncate text-sm font-bold leading-tight sm:text-base">
+                    {game.name}
+                  </h2>
                 </div>
               </button>
-              <div className="flex flex-wrap items-center justify-between gap-4 p-5">
-                <p className="max-w-xs text-sm text-muted-foreground">{game.tagline}</p>
-                <div className="flex gap-3">
-                  {game.demoOnly ? (
+              <div className="p-2.5">
+                {game.demoOnly ? (
+                  <button
+                    onClick={() => openGame(game, true)}
+                    className="w-full rounded-lg bg-primary py-1.5 text-xs font-bold text-primary-foreground"
+                  >
+                    Play demo
+                  </button>
+                ) : (
+                  <div className="flex gap-1.5">
                     <button
                       onClick={() => openGame(game, true)}
-                      className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+                      className="flex-1 rounded-lg border border-border py-1.5 text-xs font-semibold hover:bg-secondary"
                     >
-                      Play demo →
+                      Preview
                     </button>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => openGame(game, true)}
-                        className="rounded-lg border border-border px-4 py-2 text-sm font-semibold hover:bg-secondary"
-                      >
-                        ▷ Preview
-                      </button>
-                      <button
-                        onClick={() => openGame(game)}
-                        className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
-                      >
-                        Play game →
-                      </button>
-                    </>
-                  )}
-                </div>
+                    <button
+                      onClick={() => openGame(game)}
+                      className="flex-1 rounded-lg bg-primary py-1.5 text-xs font-bold text-primary-foreground"
+                    >
+                      Play
+                    </button>
+                  </div>
+                )}
               </div>
             </article>
           ))}
