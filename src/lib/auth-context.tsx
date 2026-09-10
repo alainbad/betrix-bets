@@ -21,6 +21,7 @@ interface AuthContextValue {
     referralCode: string,
   ) => Promise<SignUpResult>;
   signIn: (email: string, password: string) => Promise<AuthResult>;
+  signInWithOAuth: (provider: "google" | "apple", referralCode?: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<AuthResult>;
   updatePassword: (newPassword: string) => Promise<AuthResult>;
@@ -65,6 +66,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null };
   }
 
+  async function signInWithOAuth(
+    provider: "google" | "apple",
+    referralCode?: string,
+  ): Promise<AuthResult> {
+    // Google/Apple sign-in can't carry our own signup metadata into the new
+    // auth.users row - GoTrue creates it directly from the provider's
+    // profile. So a referral code (required for brand-new signups) is
+    // staked out as a short-lived claim first, validated up front, and
+    // redeemed once back in the app with a live session - see
+    // src/routes/auth.callback.tsx.
+    let claimId: string | null = null;
+    if (referralCode) {
+      const { data, error } = await supabase.rpc("create_pending_referral_claim", {
+        _referral_code: referralCode,
+      });
+      if (error) return { error: error.message };
+      claimId = data as string;
+    }
+
+    const redirectTo = new URL("/auth/callback", window.location.origin);
+    if (claimId) redirectTo.searchParams.set("claim", claimId);
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: redirectTo.toString() },
+    });
+    return { error: error?.message ?? null };
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
   }
@@ -92,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         signUp,
         signIn,
+        signInWithOAuth,
         signOut,
         sendPasswordReset,
         updatePassword,

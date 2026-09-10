@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { OAuthButtons } from "@/components/auth/OAuthButtons";
 
 interface RegisterSearch {
   ref?: string | undefined;
@@ -140,6 +141,10 @@ function RegisterPage() {
             {submitting ? "Creating account…" : "Create account"}
           </Button>
         </form>
+
+        <div className="mt-6">
+          <OAuthButtons referralCode={referralCode} onError={setError} />
+        </div>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{" "}

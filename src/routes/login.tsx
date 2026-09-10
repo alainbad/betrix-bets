@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { OAuthButtons } from "@/components/auth/OAuthButtons";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -81,6 +82,10 @@ function LoginPage() {
             {submitting ? "Logging in…" : "Log in"}
           </Button>
         </form>
+
+        <div className="mt-6">
+          <OAuthButtons onError={setError} />
+        </div>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Don't have an account?{" "}
