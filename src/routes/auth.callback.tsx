@@ -1,16 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useAuth } from "@/lib/auth-context";
+import { PENDING_REFERRAL_CLAIM_KEY, useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 
-interface CallbackSearch {
-  claim?: string | undefined;
-}
-
 export const Route = createFileRoute("/auth/callback")({
-  validateSearch: (search: Record<string, unknown>): CallbackSearch => ({
-    claim: typeof search["claim"] === "string" ? search["claim"] : undefined,
-  }),
   head: () => ({
     meta: [{ title: "Signing in — TheBetrix" }, { name: "robots", content: "noindex" }],
   }),
@@ -19,7 +12,6 @@ export const Route = createFileRoute("/auth/callback")({
 
 function AuthCallbackPage() {
   const { user, loading } = useAuth();
-  const { claim } = Route.useSearch();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const ran = useRef(false);
@@ -34,6 +26,12 @@ function AuthCallbackPage() {
     }
 
     (async () => {
+      // Read once and clear immediately - a claim is single-use and this
+      // must never linger to be picked up by an unrelated future sign-in
+      // in the same browser.
+      const claim = sessionStorage.getItem(PENDING_REFERRAL_CLAIM_KEY);
+      sessionStorage.removeItem(PENDING_REFERRAL_CLAIM_KEY);
+
       if (claim) {
         const { error: claimError } = await supabase.rpc("claim_pending_referral", {
           _claim_id: claim,
@@ -65,7 +63,7 @@ function AuthCallbackPage() {
 
       navigate({ to: "/account" });
     })();
-  }, [loading, user, claim, navigate]);
+  }, [loading, user, navigate]);
 
   if (error) {
     return (
