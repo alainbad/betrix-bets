@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Dices, Search, Sparkles } from "lucide-react";
+import { ArrowUpRight, Dices, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
   CASINO_CATEGORIES,
@@ -135,16 +135,16 @@ function CasinoPage() {
           </label>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {games.map((game, index) => (
             <article
               key={game.id}
-              className="group overflow-hidden rounded-xl border border-border bg-card shadow-md transition-shadow hover:shadow-lg"
+              className="group overflow-hidden rounded-2xl border border-border bg-card shadow-lg"
             >
               <button
                 type="button"
                 onClick={() => openGame(game)}
-                className="relative block aspect-square w-full overflow-hidden text-left"
+                className="relative block aspect-[16/10] w-full overflow-hidden text-left"
                 aria-label={`Play ${game.name}`}
               >
                 <img
@@ -152,46 +152,56 @@ function CasinoPage() {
                   alt={game.name}
                   width={1672}
                   height={941}
-                  loading={index < 8 ? "eager" : "lazy"}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading={index < 2 ? "eager" : "lazy"}
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <span className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
-                <span className="absolute left-2 top-2 rounded-full border border-white/25 bg-black/40 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
-                  {game.category}
+                <span className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent" />
+                <span className="absolute left-6 top-5 rounded-full border border-white/25 bg-black/35 px-3 py-1 text-xs uppercase tracking-widest text-white">
+                  0{index + 1} / {game.badge}
                 </span>
-                <div className="absolute inset-x-0 bottom-0 p-2.5 text-white">
-                  <p className="truncate text-[10px] uppercase tracking-[.2em] text-amber-200">
-                    {game.provider}
+                <span className="absolute right-6 top-5 text-right text-[10px] uppercase tracking-[.2em] text-white/70">
+                  {game.collection}
+                </span>
+                <span className="absolute bottom-6 right-6 flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-black/35 text-white transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                  <ArrowUpRight className="h-4 w-4" />
+                </span>
+                <div className="absolute bottom-6 left-6 right-20 text-white">
+                  <p className="mb-2 text-xs uppercase tracking-[.25em] text-amber-200">
+                    {game.hook}
                   </p>
-                  <h2 className="truncate text-sm font-bold leading-tight sm:text-base">
-                    {game.name}
-                  </h2>
+                  <h2 className="font-serif text-4xl sm:text-5xl">{game.name}</h2>
                 </div>
               </button>
-              <div className="p-2.5">
-                {game.demoOnly ? (
-                  <button
-                    onClick={() => openGame(game, true)}
-                    className="w-full rounded-lg bg-primary py-1.5 text-xs font-bold text-primary-foreground"
-                  >
-                    Play demo
-                  </button>
-                ) : (
-                  <div className="flex gap-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-4 p-5">
+                <div className="max-w-xs">
+                  <p className="text-sm text-foreground">{game.description}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{game.features.join(" · ")}</p>
+                </div>
+                <div className="flex gap-3">
+                  {game.demoOnly ? (
                     <button
                       onClick={() => openGame(game, true)}
-                      className="flex-1 rounded-lg border border-border py-1.5 text-xs font-semibold hover:bg-secondary"
+                      className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
                     >
-                      Preview
+                      Play demo →
                     </button>
-                    <button
-                      onClick={() => openGame(game)}
-                      className="flex-1 rounded-lg bg-primary py-1.5 text-xs font-bold text-primary-foreground"
-                    >
-                      Play
-                    </button>
-                  </div>
-                )}
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => openGame(game, true)}
+                        className="rounded-lg border border-border px-4 py-2 text-sm font-semibold hover:bg-secondary"
+                      >
+                        ▷ Preview
+                      </button>
+                      <button
+                        onClick={() => openGame(game)}
+                        className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+                      >
+                        Play game →
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             </article>
           ))}

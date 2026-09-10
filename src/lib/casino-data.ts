@@ -10,7 +10,16 @@ export interface Html5CasinoGame {
   // see GameModal.tsx and lib/game-bridge.ts.
   path: string;
   thumbnail?: string;
-  tagline: string;
+  // Sub-genre shown next to the card's numbered badge, e.g. "Slots".
+  badge: string;
+  // Small eyebrow tag in the top-right corner of the card image.
+  collection: string;
+  // Amber eyebrow line under the image, above the game name.
+  hook: string;
+  // Short punchy line shown below the card image.
+  description: string;
+  // 2-3 short feature bullets, joined with " · " below the description.
+  features: string[];
   // Informational only right now - the actual win multiplier is a single
   // global constant rolled server-side in play_html5_casino_round
   // (supabase/migrations/*_html5_casino_rtp_engine.sql), same as the native
@@ -50,7 +59,11 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     category: "slots",
     path: "/games/velvet/vault.html",
     thumbnail: "/games/velvet/assets/vault-room.png",
-    tagline: "Expanding wilds. Three safes. One unforgettable heist.",
+    badge: "Slots",
+    collection: "The Heist Collection",
+    hook: "The night is yours",
+    description: "Find the master key. Crack the safe.",
+    features: ["5 reels", "Expanding wilds", "Pick-a-safe bonus"],
     maxWinMultiplier: 0,
   },
   {
@@ -60,7 +73,11 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     category: "table",
     path: "/games/velvet/roulette.html",
     thumbnail: "/games/velvet/assets/roulette-cover.png",
-    tagline: "A classic single-zero wheel, with a private-table atmosphere.",
+    badge: "Table game",
+    collection: "Take your seat",
+    hook: "The Velvet private table",
+    description: "A classic table. A new spin.",
+    features: ["Single zero", "Private table", "Multiple bets"],
     maxWinMultiplier: 36,
   },
   {
@@ -70,7 +87,11 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     category: "slots",
     path: "/games/velvet/candy.html",
     thumbnail: "/games/velvet/assets/candy-room.png",
-    tagline: "Sweet tumbles, sparkling stars and sugar multipliers.",
+    badge: "Tumbling slots",
+    collection: "A little sweet, a little wild",
+    hook: "Follow the sugar rush",
+    description: "Sweet drops. Sparkling combinations.",
+    features: ["Star bursts", "Sugar multipliers", "10 free spins"],
     maxWinMultiplier: 0,
   },
   {
@@ -80,7 +101,11 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     category: "slots",
     path: "/games/velvet/thunder.html",
     thumbnail: "/games/velvet/assets/thunder-room.png",
-    tagline: "Lightning strikes and a growing storm of free-spin multipliers.",
+    badge: "Tumbling slots",
+    collection: "Awaken the storm",
+    hook: "Power beyond the clouds",
+    description: "Summon lightning. Build your storm.",
+    features: ["Lightning strikes", "Growing multipliers", "8 free spins"],
     maxWinMultiplier: 0,
   },
   {
@@ -90,7 +115,11 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     category: "slots",
     path: "/games/sugar-spark/sugar.html",
     thumbnail: "/games/sugar-spark/assets/sugar-room.png",
-    tagline: "7×7 candy clusters that light up spots and grow to 128× the more you hit them.",
+    badge: "Cluster slots",
+    collection: "The candy afterparty",
+    hook: "Every match leaves a spark",
+    description: "Sweet spots. Bigger pops.",
+    features: ["7×7 clusters", "Growing spots", "10 free spins"],
     maxWinMultiplier: 5000,
   },
   {
@@ -100,8 +129,11 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     category: "slots",
     path: "/games/paw-palace/paw.html",
     thumbnail: "/games/paw-palace/assets/paw-room-thumb.png",
-    tagline:
-      "Six changing reels, up to 117,649 ways, and doghouse wilds that stick for the feature.",
+    badge: "Dynamic ways",
+    collection: "Betrix Originals",
+    hook: "Good dogs. Great surprises.",
+    description: "Your next winning pack.",
+    features: ["117,649 ways", "Sticky wilds", "Free spins"],
     maxWinMultiplier: 5000,
   },
   {
@@ -111,7 +143,11 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     category: "slots",
     path: "/games/bass-harbour/bass.html",
     thumbnail: "/games/bass-harbour/assets/bass-room.png",
-    tagline: "10 lines of angler wilds collecting cash fish at a growing multiplier level.",
+    badge: "Fishing slots",
+    collection: "Betrix Originals",
+    hook: "The next catch could be the one",
+    description: "Cast your luck. Collect your catch.",
+    features: ["10 paylines", "Cash fish", "Angler free spins"],
     maxWinMultiplier: 5000,
   },
   {
@@ -121,7 +157,11 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     category: "instant",
     path: "/games/grand-spin/grand.html",
     thumbnail: "/games/grand-spin/assets/grand-room-thumb.png",
-    tagline: "A 40-segment prize wheel with a spotlight number and a surprise boost each spin.",
+    badge: "Wheel show",
+    collection: "Betrix Originals",
+    hook: "Your moment on the wheel",
+    description: "Pick your numbers. Make it grand.",
+    features: ["40 segments", "Multiplier spotlight", "Wheel show"],
     maxWinMultiplier: 250,
   },
   {
@@ -131,7 +171,11 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     category: "table",
     path: "/games/betrix-tables/blackjack.html",
     thumbnail: "/games/betrix-tables/assets/table-room-thumb.png",
-    tagline: "Hit, stand, double or split at your private table.",
+    badge: "Card table",
+    collection: "Betrix Originals",
+    hook: "Your private table",
+    description: "Take your seat.",
+    features: ["Animated cards", "Table sounds", "Betrix Originals"],
     maxWinMultiplier: 2.5,
   },
   {
@@ -141,7 +185,11 @@ export const CASINO_GAMES: Html5CasinoGame[] = [
     category: "table",
     path: "/games/betrix-tables/baccarat.html",
     thumbnail: "/games/betrix-tables/assets/table-room-thumb.png",
-    tagline: "Classic punto banco with a surprise mega multiplier.",
+    badge: "Card table",
+    collection: "Betrix Originals",
+    hook: "Your private table",
+    description: "Take your seat.",
+    features: ["Animated cards", "Table sounds", "Betrix Originals"],
     maxWinMultiplier: 41,
   },
 ];
