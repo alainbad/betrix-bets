@@ -113,6 +113,9 @@ function AccountPage() {
           />
         </div>
 
+        <h2 className="mb-4 mt-10 text-xl font-bold text-foreground">Cash out</h2>
+        <WithdrawalPanel tier="player" />
+
         <h2 className="mb-4 mt-10 text-xl font-bold text-foreground">Casino history</h2>
         {rounds.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card py-12 text-center">
@@ -150,9 +153,6 @@ function AccountPage() {
             </table>
           </div>
         )}
-
-        <h2 className="mb-4 mt-10 text-xl font-bold text-foreground">Cash out</h2>
-        <WithdrawalPanel tier="player" />
       </div>
     </main>
   );
