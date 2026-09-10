@@ -159,10 +159,10 @@ function CasinoPage() {
                 <span className="absolute left-6 top-5 rounded-full border border-white/25 bg-black/35 px-3 py-1 text-xs uppercase tracking-widest text-white">
                   0{index + 1} / {game.badge}
                 </span>
-                <span className="absolute right-6 top-5 text-right text-[10px] uppercase tracking-[.2em] text-white/70">
-                  {game.collection}
+                <span className="absolute right-6 top-5 text-right text-[10px] uppercase tracking-[.2em] text-amber-200">
+                  {game.provider}
                 </span>
-                <span className="absolute bottom-6 right-6 flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-black/35 text-white transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                <span className="absolute bottom-6 right-6 flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-black/35 text-white transition-colors group-hover:bg-accent group-hover:text-accent-foreground">
                   <ArrowUpRight className="h-4 w-4" />
                 </span>
                 <div className="absolute bottom-6 left-6 right-20 text-white">
@@ -181,7 +181,7 @@ function CasinoPage() {
                   {game.demoOnly ? (
                     <button
                       onClick={() => openGame(game, true)}
-                      className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+                      className="rounded-lg bg-accent px-4 py-2 text-sm font-bold text-accent-foreground"
                     >
                       Play demo →
                     </button>
@@ -195,7 +195,7 @@ function CasinoPage() {
                       </button>
                       <button
                         onClick={() => openGame(game)}
-                        className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+                        className="rounded-lg bg-accent px-4 py-2 text-sm font-bold text-accent-foreground"
                       >
                         Play game →
                       </button>
