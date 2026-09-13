@@ -314,6 +314,63 @@ export async function fetchWithdrawalsForPlayer(
   }));
 }
 
+export interface AgentCommissionRow {
+  agentId: string;
+  agentAccountId: string;
+  agentUsername: string;
+  activePlayers: number;
+  totalBets: number;
+  totalTurnover: number;
+  totalPayouts: number;
+  ggr: number;
+  holdPercentage: number;
+  commissionRate: number;
+  commissionOwed: number;
+}
+
+// Monthly agent commission settlement report - 45% of GGR (turnover minus
+// payouts) per agent's own book, floored at zero so a losing period never
+// produces a negative payout. See get_agent_commission_report in
+// 20260913000000_agent_commission_report.sql - the RPC itself decides scope
+// from the caller's tier: an ultra_admin gets every agent, an agent gets
+// only their own row back.
+export async function fetchAgentCommissionReport(range: {
+  from: string;
+  to: string;
+}): Promise<AgentCommissionRow[]> {
+  const { data, error } = await supabase.rpc("get_agent_commission_report", {
+    p_start_date: range.from,
+    p_end_date: range.to,
+  });
+  if (error) throw error;
+  interface RpcRow {
+    agent_id: string;
+    agent_account_id: string;
+    agent_username: string;
+    active_players: number;
+    total_bets: number;
+    total_turnover: number;
+    total_payouts: number;
+    ggr: number;
+    hold_percentage: number;
+    commission_rate: number;
+    commission_owed: number;
+  }
+  return ((data ?? []) as RpcRow[]).map((row) => ({
+    agentId: row.agent_id,
+    agentAccountId: row.agent_account_id,
+    agentUsername: row.agent_username,
+    activePlayers: Number(row.active_players),
+    totalBets: Number(row.total_bets),
+    totalTurnover: Number(row.total_turnover),
+    totalPayouts: Number(row.total_payouts),
+    ggr: Number(row.ggr),
+    holdPercentage: Number(row.hold_percentage),
+    commissionRate: Number(row.commission_rate),
+    commissionOwed: Number(row.commission_owed),
+  }));
+}
+
 export interface BranchTurnover {
   playerCount: number;
   totalStaked: number;

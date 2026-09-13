@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AccountIdBadge } from "@/components/dashboard/AccountIdBadge";
+import { CommissionReport } from "@/components/dashboard/CommissionReport";
 import { CopyBadge } from "@/components/dashboard/CopyBadge";
 import { IdentifierTransferModal } from "@/components/dashboard/IdentifierTransferModal";
 import { WithdrawalPanel } from "@/components/dashboard/WithdrawalPanel";
@@ -113,6 +114,13 @@ export function AgentView() {
           }}
           onAction={(player, mode) => setAction({ player, mode })}
         />
+
+        <section>
+          <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-muted-foreground">
+            Commission report
+          </h2>
+          <CommissionReport scope="self" />
+        </section>
 
         <TransferHistory ledger={ledger} loading={loading} />
       </div>

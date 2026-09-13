@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AccountIdBadge } from "@/components/dashboard/AccountIdBadge";
+import { CommissionReport } from "@/components/dashboard/CommissionReport";
 import { CopyBadge } from "@/components/dashboard/CopyBadge";
 import { IdentifierTransferModal } from "@/components/dashboard/IdentifierTransferModal";
 import { MasterCodeSettings } from "@/components/dashboard/MasterCodeSettings";
@@ -37,7 +38,7 @@ interface LedgerRow {
   createdAt: string;
 }
 
-const TABS = ["Overview", "Agents", "Players", "All Users", "Transactions"] as const;
+const TABS = ["Overview", "Agents", "Players", "All Users", "Transactions", "Commissions"] as const;
 type Tab = (typeof TABS)[number];
 
 async function fetchAccountsWithRole(role: "agent"): Promise<TierAccount[]> {
@@ -170,6 +171,7 @@ export function UltraAdminView() {
         {tab === "Players" && <PlayersManagement />}
         {tab === "All Users" && <AllUsersManagement />}
         {tab === "Transactions" && <GlobalTransactions />}
+        {tab === "Commissions" && <CommissionReport scope="all" />}
       </div>
 
       <WithdrawalPanel tier="ultra_admin" />
