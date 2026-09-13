@@ -56,6 +56,12 @@ export function Header() {
             </div>
           ) : null}
 
+          {user && (
+            <span className="whitespace-nowrap text-xs font-bold text-foreground sm:hidden">
+              {formatCurrency(balance)}
+            </span>
+          )}
+
           <Link
             to={user ? "/account" : "/login"}
             className="inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-border bg-secondary text-foreground transition-colors hover:bg-accent hover:text-accent-foreground sm:h-10 sm:w-10"
