@@ -26,6 +26,12 @@ export interface ProfileDetail extends DownlineProfile {
   phone: string | null;
   avatarUrl: string | null;
   referralCode: string | null;
+  // The agent this account was referred by (parentId resolved to a
+  // display name), null when parentId is null - a root account (an
+  // agent with no referrer of their own) or a player never claimed by
+  // an agent.
+  parentUsername: string | null;
+  parentAccountId: string | null;
 }
 
 export interface LedgerEntry {
@@ -169,13 +175,17 @@ export async function fetchProfileByAccountId(accountId: string): Promise<Profil
   if (profileError) throw profileError;
   if (!profile) return null;
 
-  const [{ data: wallet }, roles] = await Promise.all([
+  const parentId = profile.parent_id as string | null;
+  const [{ data: wallet }, roles, { data: parent }] = await Promise.all([
     supabase
       .from("wallets")
       .select("available_balance")
       .eq("user_id", profile.id as string)
       .maybeSingle(),
     rolesByUserId([profile.id as string]),
+    parentId
+      ? supabase.from("profiles").select("username, account_id").eq("id", parentId).maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
 
   return {
@@ -183,7 +193,7 @@ export async function fetchProfileByAccountId(accountId: string): Promise<Profil
     username: profile.username as string,
     email: profile.email as string,
     accountId: profile.account_id as string,
-    parentId: profile.parent_id as string | null,
+    parentId,
     role: roles.get(profile.id as string) ?? "unknown",
     balance: Number(wallet?.available_balance ?? 0),
     status: profile.status as string,
@@ -191,6 +201,8 @@ export async function fetchProfileByAccountId(accountId: string): Promise<Profil
     avatarUrl: profile.avatar_url as string | null,
     referralCode: profile.referral_code as string | null,
     createdAt: profile.created_at as string,
+    parentUsername: (parent?.username as string | undefined) ?? null,
+    parentAccountId: (parent?.account_id as string | undefined) ?? null,
   };
 }
 
