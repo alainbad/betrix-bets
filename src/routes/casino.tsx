@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowUpRight, Dices, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -10,6 +10,7 @@ import {
 } from "@/lib/casino-data";
 import { GameModal } from "@/components/casino/GameModal";
 import { useAuth } from "@/lib/auth-context";
+import { detectHierarchyTier } from "@/lib/agent-hierarchy";
 import { useWallet } from "@/lib/wallet-store";
 import { cn } from "@/lib/utils";
 import heroCasino from "@/assets/hero-casino.jpg";
@@ -45,11 +46,30 @@ export const Route = createFileRoute("/casino")({
 function CasinoPage() {
   const { balance, refresh } = useWallet();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [preview, setPreview] = useState(false);
   const [category, setCategory] = useState<CasinoCategory | "all">("all");
   const [query, setQuery] = useState("");
   const [activeGame, setActiveGame] = useState<Html5CasinoGame | null>(null);
   const [liveBalance, setLiveBalance] = useState(balance);
+
+  // Agents run the cashier console, not the game floor - only ultra_admin
+  // and players (or signed-out visitors) reach this page. Checked
+  // asynchronously rather than gating the whole page behind a loading
+  // state, since the vast majority of visitors here are players/guests who
+  // shouldn't wait on a hierarchy lookup just to browse games.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    detectHierarchyTier(user.id)
+      .then((tier) => {
+        if (!cancelled && tier === "agent") navigate({ to: "/dashboard", replace: true });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [user, navigate]);
 
   const games = CASINO_GAMES.filter(
     (g) =>
