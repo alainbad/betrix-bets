@@ -173,6 +173,22 @@ function UserDetailPage() {
                       <CopyBadge value={profile.referralCode} title="Copy referral code" />
                     )}
                   </div>
+                  {profile.role === "player" && (
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Agent:{" "}
+                      {profile.parentAccountId ? (
+                        <Link
+                          to="/dashboard/users/$accountId"
+                          params={{ accountId: profile.parentAccountId }}
+                          className="font-semibold text-foreground hover:text-primary hover:underline"
+                        >
+                          {profile.parentUsername}
+                        </Link>
+                      ) : (
+                        <span className="font-semibold text-foreground">No agent assigned</span>
+                      )}
+                    </p>
+                  )}
                 </div>
               </div>
 
